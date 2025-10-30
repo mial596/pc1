@@ -10,6 +10,8 @@ import {
     PublicProfilePhrase,
     TradeOffer,
     FriendData,
+    Envelope,
+    GameUpgrade,
 } from '../types';
 
 // Helper function to handle API requests
@@ -58,6 +60,10 @@ export const getCatCatalog = (): Promise<CatImage[]> => {
 };
 
 // --- Shop ---
+export const getShopData = (): Promise<{ envelopes: Envelope[], upgrades: GameUpgrade[] }> => {
+    return apiRequest('/api/shop?resource=data', 'GET', '');
+};
+
 export const purchaseEnvelope = (token: string, envelopeId: EnvelopeTypeId): Promise<{ newCoins: number; newImages: CatImage[] }> => {
     return apiRequest('/api/shop', 'POST', token, { action: 'purchaseEnvelope', envelopeId });
 };
@@ -83,6 +89,19 @@ export const likePublicPhrase = (token: string, publicPhraseId: string): Promise
 export const getFriends = (token: string): Promise<FriendData> => {
     return apiRequest('/api/friends', 'GET', token);
 };
+
+export const addFriend = (token: string, targetUserId: string): Promise<{ success: boolean }> => {
+    return apiRequest('/api/friends', 'POST', token, { action: 'add', targetUserId });
+};
+
+export const respondToFriendRequest = (token: string, targetUserId: string, response: 'accept' | 'reject'): Promise<{ success: boolean }> => {
+    return apiRequest('/api/friends', 'PUT', token, { targetUserId, action: response });
+};
+
+export const removeFriend = (token: string, targetUserId: string): Promise<{ success: boolean }> => {
+    return apiRequest('/api/friends', 'DELETE', token, { targetUserId });
+};
+
 
 // --- Trading ---
 export const getTrades = (token: string): Promise<TradeOffer[]> => {

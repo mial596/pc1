@@ -21,7 +21,7 @@ export interface PlayerStats {
   xpToNextLevel: number;
 }
 
-export type EnvelopeTypeId = 'bronze' | 'silver' | 'gold';
+export type EnvelopeTypeId = 'bronze' | 'silver' | 'gold' | string;
 
 export interface Envelope {
   id: EnvelopeTypeId;
@@ -32,9 +32,10 @@ export interface Envelope {
   color: string;
   description: string;
   xp: number;
+  isFeatured?: boolean;
 }
 
-export type UpgradeId = 'goldenPaw' | 'betterBait' | 'extraTime';
+export type UpgradeId = 'goldenPaw' | 'betterBait' | 'extraTime' | string;
 
 export interface GameUpgrade {
     id: UpgradeId;

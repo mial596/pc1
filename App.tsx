@@ -21,8 +21,6 @@ import { SpinnerIcon } from './hooks/Icons';
 
 import * as apiService from './services/apiService';
 import { soundService, ttsService } from './services/audioService';
-import { ENVELOPES, UPGRADES, calculateEnvelopeCost } from './shopData';
-import { ALL_IMAGES_FLAT } from './initialData';
 import {
   UserProfile,
   CatImage,
@@ -30,6 +28,8 @@ import {
   EnvelopeTypeId,
   UpgradeId,
   FullDisplayData,
+  Envelope,
+  GameUpgrade,
 } from './types';
 
 type Page = 'home' | 'album' | 'shop' | 'games' | 'phrases' | 'community' | 'admin';
@@ -37,7 +37,8 @@ type Page = 'home' | 'album' | 'shop' | 'games' | 'phrases' | 'community' | 'adm
 const App: React.FC = () => {
   const { isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently, user } = useAuth0();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [allImages, setAllImages] = useState<CatImage[]>(ALL_IMAGES_FLAT);
+  const [allImages, setAllImages] = useState<CatImage[]>([]);
+  const [shopData, setShopData] = useState<{ envelopes: Envelope[], upgrades: GameUpgrade[] } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<Page>('home');
@@ -64,12 +65,14 @@ const App: React.FC = () => {
   const loadInitialData = useCallback(async () => {
     try {
       const token = await getAccessTokenSilently();
-      const [profile, catalog] = await Promise.all([
+      const [profile, catalog, dynamicShopData] = await Promise.all([
         apiService.getUserProfile(token),
         apiService.getCatCatalog(),
+        apiService.getShopData(),
       ]);
       setUserProfile(profile);
       setAllImages(catalog);
+      setShopData(dynamicShopData);
     } catch (err) {
       console.error("Failed to load initial data", err);
       setError("Failed to load your data. Please try refreshing the page.");
@@ -97,10 +100,15 @@ const App: React.FC = () => {
 
 
   const handlePurchaseEnvelope = async (envelopeId: EnvelopeTypeId) => {
-    if (!userProfile) return;
+    if (!userProfile || !shopData) return;
     
-    const envelope = ENVELOPES[envelopeId];
-    const cost = calculateEnvelopeCost(envelope, userProfile.data.playerStats.level);
+    const envelope = shopData.envelopes.find(e => e.id === envelopeId);
+    if (!envelope) return;
+
+    // Cost calculation is now done on the backend, but we check here for UI purposes.
+    // A more robust solution would re-calculate or get cost from backend pre-purchase.
+    const cost = envelope.baseCost + ((userProfile.data.playerStats.level - 1) * envelope.costIncreasePerLevel);
+
     if (userProfile.data.coins < cost) {
         showToast("¡No tienes suficientes monedas!");
         return;
@@ -119,7 +127,7 @@ const App: React.FC = () => {
             data: {
                 ...prev.data,
                 coins: result.newCoins,
-                unlockedImageIds: [...prev.data.unlockedImageIds, ...result.newImages.map(img => img.id)]
+                unlockedImageIds: [...new Set([...prev.data.unlockedImageIds, ...result.newImages.map(img => img.id)])]
             }
         };
       });
@@ -216,7 +224,7 @@ const App: React.FC = () => {
       case 'album':
         return <AlbumPage allImages={allImages} unlockedImageIds={userProfile.data.unlockedImageIds} />;
       case 'shop':
-        return <ShopPage onOpenShop={() => setShopModalOpen(true)} />;
+        return <ShopPage shopData={shopData} onOpenShop={() => setShopModalOpen(true)} />;
       case 'games':
         return <GameModeSelector 
           unlockedImages={unlockedImages}
@@ -267,8 +275,7 @@ const App: React.FC = () => {
       <ShopModal 
         isOpen={isShopModalOpen}
         onClose={() => setShopModalOpen(false)}
-        envelopes={ENVELOPES}
-        upgrades={UPGRADES}
+        shopData={shopData}
         userCoins={userProfile.data.coins}
         playerStats={userProfile.data.playerStats}
         purchasedUpgrades={userProfile.data.purchasedUpgrades}
