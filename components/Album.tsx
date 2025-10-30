@@ -28,16 +28,16 @@ const Album: React.FC<AlbumProps> = ({ allImages, unlockedImageIds }) => {
   return (
     <div className="container mx-auto p-4 sm:p-6">
       <header className="mb-8 text-center">
-        <h1 className="text-3xl sm:text-4xl font-black text-[var(--c-text)]">Álbum de Gatos</h1>
-        <p className="text-lg text-[var(--c-text-muted)] mt-2">¡Aquí está tu colección de amigos felinos!</p>
+        <h1 className="text-3xl sm:text-4xl font-black text-ink">Álbum de Gatos</h1>
+        <p className="text-lg text-ink/70 mt-2">¡Aquí está tu colección de amigos felinos!</p>
         <div className="max-w-md mx-auto mt-4">
-          <div className="flex justify-between font-bold text-sm text-[var(--c-text)] mb-1">
+          <div className="flex justify-between font-bold text-sm text-ink mb-1">
             <span>Progreso de Colección</span>
             <span>{totalUnlocked} / {totalImages}</span>
           </div>
-          <div className="w-full h-4 bg-[var(--c-bg)] rounded-full overflow-hidden border-2 border-[var(--c-text)]/50">
+          <div className="w-full h-4 bg-surface-darker rounded-full overflow-hidden border-2 border-ink/50">
             <div
-              className="h-full bg-[var(--c-primary)] transition-all duration-500"
+              className="h-full bg-primary transition-all duration-500"
               style={{ width: `${collectionPercentage}%` }}
             ></div>
           </div>
@@ -48,20 +48,20 @@ const Album: React.FC<AlbumProps> = ({ allImages, unlockedImageIds }) => {
         <div className="space-y-10">
           {groupedImages.map(([theme, images]) => (
             <section key={theme}>
-              <h2 className="text-2xl font-bold text-[var(--c-text)] mb-4 border-b-4 border-[var(--c-text)]/20 pb-2">{theme}</h2>
+              <h2 className="text-2xl font-bold text-ink mb-4 border-b-2 border-ink/20 pb-2 capitalize">{theme}</h2>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
                 {images.map(image => {
                   const isUnlocked = unlockedSet.has(image.id);
                   return (
                     <div
                       key={image.id}
-                      className={`aspect-square rounded-xl overflow-hidden transition-all duration-300 ${isUnlocked ? 'bg-white shadow-lg border-4 border-[var(--c-text)]' : 'bg-slate-200'}`}
+                      className={`aspect-square rounded-xl overflow-hidden transition-all duration-300 ${isUnlocked ? 'bg-paper shadow-lg border-4 border-ink/80' : 'bg-surface'}`}
                     >
                       {isUnlocked ? (
                         <img src={image.url} alt={image.theme} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center p-2">
-                           <CatSilhouetteIcon className="w-full h-full text-slate-400" />
+                           <CatSilhouetteIcon className="w-full h-full text-ink/30" />
                         </div>
                       )}
                     </div>
@@ -73,8 +73,8 @@ const Album: React.FC<AlbumProps> = ({ allImages, unlockedImageIds }) => {
         </div>
       ) : (
         <div className="text-center py-20">
-          <p className="text-xl font-bold text-[var(--c-text)]">El álbum está vacío.</p>
-          <p className="text-[var(--c-text-muted)]">¡Compra sobres en la tienda para empezar tu colección!</p>
+          <p className="text-xl font-bold text-ink">El álbum está vacío.</p>
+          <p className="text-ink/70">¡Compra sobres en la tienda para empezar tu colección!</p>
         </div>
       )}
     </div>

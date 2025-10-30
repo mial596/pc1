@@ -13,7 +13,7 @@ const FullDisplay: React.FC<FullDisplayProps> = ({ phrase, image, onClose }) => 
   if (!phrase) return null;
 
   return (
-    <div className="fixed inset-0 bg-[var(--c-text)]/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-popIn" style={{ zIndex: 'var(--z-full-display)' }} onClick={onClose}>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-popIn" style={{ zIndex: 'var(--z-full-display)' }} onClick={onClose}>
       <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white z-10">
         <CloseIcon className="w-10 h-10" />
       </button>

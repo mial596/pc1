@@ -67,12 +67,12 @@ const AdminPanel: React.FC = () => {
             return (
                 <div className="space-y-2">
                     {users.map(user => (
-                        <div key={user.id} className="card-cartoon p-3 flex justify-between items-center">
+                        <div key={user.id} className="card-themed p-3 flex justify-between items-center">
                             <div>
-                                <p className="font-bold">{user.email} <span className="text-xs text-liver/50">({user.role})</span></p>
-                                <p className="text-xs text-liver/70">{user.id}</p>
+                                <p className="font-bold">{user.username} <span className="text-xs text-ink/50">({user.role})</span></p>
+                                <p className="text-xs text-ink/70">{user.id}</p>
                             </div>
-                            <button onClick={() => handleSetVerified(user.id, !user.isVerified)} className={`btn-cartoon ${user.isVerified ? 'btn-cartoon-danger' : 'btn-cartoon-primary'}`}>
+                            <button onClick={() => handleSetVerified(user.id, !user.isVerified)} className={`btn-themed ${user.isVerified ? 'btn-themed-danger' : 'btn-themed-primary'}`}>
                                 {user.isVerified ? 'Un-verify' : 'Verify'}
                             </button>
                         </div>
@@ -85,13 +85,13 @@ const AdminPanel: React.FC = () => {
             return (
                 <div className="space-y-4">
                     {phrases.map(phrase => (
-                        <div key={phrase.publicPhraseId} className="card-cartoon p-3 flex justify-between items-center gap-4">
-                            <img src={phrase.imageUrl} alt="" className="w-16 h-16 rounded-md object-cover border-2 border-liver" />
+                        <div key={phrase.publicPhraseId} className="card-themed p-3 flex justify-between items-center gap-4">
+                            <img src={phrase.imageUrl} alt="" className="w-16 h-16 rounded-md object-cover border-2 border-ink/20" />
                             <div className="flex-grow">
                                 <p className="font-bold text-lg">"{phrase.text}"</p>
-                                <p className="text-sm text-liver/70">by {phrase.email}</p>
+                                <p className="text-sm text-ink/70">by {phrase.email}</p>
                             </div>
-                            <button onClick={() => handleCensorPhrase(phrase.publicPhraseId)} className="btn-cartoon btn-cartoon-danger !p-3">
+                            <button onClick={() => handleCensorPhrase(phrase.publicPhraseId)} className="btn-themed btn-themed-danger !p-3">
                                 <TrashIcon className="w-5 h-5" />
                             </button>
                         </div>
@@ -104,10 +104,10 @@ const AdminPanel: React.FC = () => {
 
     return (
         <div className="container mx-auto p-4 sm:p-6">
-            <h1 className="text-3xl sm:text-4xl font-black text-liver mb-6">Admin Panel</h1>
-            <div className="flex border-b-2 border-liver/20 mb-4">
-                <button onClick={() => setActiveTab('users')} className={`px-4 py-2 font-bold ${activeTab === 'users' ? 'border-b-4 border-liver text-liver' : 'text-liver/60'}`}>Users ({users.length})</button>
-                <button onClick={() => setActiveTab('phrases')} className={`px-4 py-2 font-bold ${activeTab === 'phrases' ? 'border-b-4 border-liver text-liver' : 'text-liver/60'}`}>Public Phrases ({phrases.length})</button>
+            <h1 className="text-3xl sm:text-4xl font-black text-ink mb-6">Admin Panel</h1>
+            <div className="flex border-b-2 border-ink/20 mb-4">
+                <button onClick={() => setActiveTab('users')} className={`px-4 py-2 font-bold ${activeTab === 'users' ? 'border-b-4 border-primary text-primary' : 'text-ink/60'}`}>Users ({users.length})</button>
+                <button onClick={() => setActiveTab('phrases')} className={`px-4 py-2 font-bold ${activeTab === 'phrases' ? 'border-b-4 border-primary text-primary' : 'text-ink/60'}`}>Public Phrases ({phrases.length})</button>
             </div>
             {renderContent()}
         </div>

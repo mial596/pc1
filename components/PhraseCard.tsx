@@ -25,9 +25,9 @@ const PhraseCard: React.FC<PhraseCardProps> = ({ phrase, image, onCardClick, onS
   return (
     <div
       onClick={onCardClick}
-      className="card-cartoon has-tape aspect-square flex flex-col justify-between p-2"
+      className="card-themed has-tape aspect-square flex flex-col justify-between p-2"
     >
-      <div className="flex-grow flex items-center justify-center rounded-md overflow-hidden mb-2 border-2 border-[var(--c-ink)] bg-gray-100">
+      <div className="flex-grow flex items-center justify-center rounded-md overflow-hidden mb-2 border-2 border-ink/30 bg-surface-darker">
         <img
           src={image?.url || DEFAULT_PIC_URL}
           alt={phrase.text}
@@ -39,14 +39,14 @@ const PhraseCard: React.FC<PhraseCardProps> = ({ phrase, image, onCardClick, onS
         <div className="flex-shrink-0 flex gap-1">
            <button
             onClick={handleSpeak}
-            className="btn-cartoon !p-2 bg-[var(--c-accent)]"
+            className="btn-themed !p-2 bg-accent"
             aria-label={`Speak phrase: ${phrase.text}`}
            >
             <SpeakerWaveIcon className="w-4 h-4 text-white" />
            </button>
            <button
             onClick={handleSelectImage}
-            className="btn-cartoon !p-2 bg-[var(--c-secondary)]"
+            className="btn-themed !p-2 bg-secondary"
             aria-label={`Change image for ${phrase.text}`}
            >
             <span className="text-sm">🖼️</span>

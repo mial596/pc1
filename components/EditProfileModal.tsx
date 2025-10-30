@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { CloseIcon, SpinnerIcon } from '../hooks/Icons';
@@ -20,7 +17,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, cu
 
     useEffect(() => {
         if (isOpen) {
-            setUsername(currentUserProfile.email);
+            setUsername(currentUserProfile.username);
             setBio(currentUserProfile.data.bio);
             setError('');
             setIsSaving(false);
@@ -52,49 +49,49 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, cu
     };
     
     return (
-        <div className="modal-cartoon-overlay">
-            <div className="modal-cartoon-content w-full max-w-lg">
-                <header className="flex justify-between items-center p-4 border-b-4 border-[var(--c-text)]">
-                    <h2 className="text-2xl font-black text-[var(--c-text)]">Editar Perfil</h2>
-                    <button onClick={onClose} className="text-[var(--c-text)]/70 hover:text-[var(--c-text)]">
+        <div className="modal-themed-overlay">
+            <div className="modal-themed-content w-full max-w-lg">
+                <header className="flex justify-between items-center p-4 border-b-2 border-ink/20">
+                    <h2 className="text-2xl font-black text-ink">Editar Perfil</h2>
+                    <button onClick={onClose} className="text-ink/70 hover:text-ink">
                         <CloseIcon className="w-8 h-8" />
                     </button>
                 </header>
 
                 <main className="flex-grow space-y-6 p-6">
                     <div>
-                        <label htmlFor="username" className="font-bold text-[var(--c-text)]/80 text-lg">Nombre de usuario</label>
+                        <label htmlFor="username" className="font-bold text-ink/80 text-lg">Nombre de usuario</label>
                         <input
                             id="username"
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="input-cartoon mt-1 text-lg"
+                            className="input-themed mt-1 text-lg"
                         />
-                         <p className="text-xs text-[var(--c-text)]/60 mt-1">De 3 a 20 caracteres (letras, números, _).</p>
+                         <p className="text-xs text-ink/60 mt-1">De 3 a 20 caracteres (letras, números, _).</p>
                     </div>
                     <div>
-                        <label htmlFor="bio" className="font-bold text-[var(--c-text)]/80 text-lg">Biografía</label>
+                        <label htmlFor="bio" className="font-bold text-ink/80 text-lg">Biografía</label>
                         <textarea
                             id="bio"
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
                             rows={3}
                             maxLength={150}
-                            className="input-cartoon mt-1 text-base"
+                            className="input-themed mt-1 text-base"
                             placeholder="Cuéntanos algo sobre ti..."
                         />
-                        <p className="text-right text-xs text-[var(--c-text)]/60 mt-1">{bio.length} / 150</p>
+                        <p className="text-right text-xs text-ink/60 mt-1">{bio.length} / 150</p>
                     </div>
 
-                    {error && <p className="text-sm text-red-500 bg-red-100 p-2 rounded-md border border-red-300">{error}</p>}
+                    {error && <p className="text-sm text-red-400 bg-red-900/50 p-2 rounded-md border border-red-400/50">{error}</p>}
                 </main>
                 
-                <footer className="p-4 bg-[var(--c-bg)]/50 border-t-4 border-[var(--c-text)] flex justify-end">
+                <footer className="p-4 bg-surface-darker border-t-2 border-ink/20 flex justify-end">
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="btn-cartoon btn-cartoon-primary flex items-center justify-center min-w-[120px]"
+                        className="btn-themed btn-themed-primary flex items-center justify-center min-w-[120px]"
                     >
                         {isSaving ? <SpinnerIcon className="w-6 h-6 animate-spin"/> : 'Guardar'}
                     </button>

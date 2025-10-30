@@ -63,11 +63,11 @@ const TradingPost: React.FC<TradingPostProps> = ({ currentUserProfile, preselect
     useEffect(() => {
        const fetchMyImages = async () => {
          const token = await getAccessTokenSilently();
-         const myProfile = await apiService.getPublicProfile(token, currentUserProfile.email);
+         const myProfile = await apiService.getPublicProfile(token, currentUserProfile.username);
          setMyImages(myProfile.unlockedImages);
        }
        fetchMyImages();
-    }, [currentUserProfile.email, getAccessTokenSilently]);
+    }, [currentUserProfile.username, getAccessTokenSilently]);
 
     const handleSelectFriend = async (friendId: string) => {
         const friend = friends.find(f => f.userId === friendId);

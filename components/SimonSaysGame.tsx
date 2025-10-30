@@ -125,30 +125,30 @@ const SimonSaysGame: React.FC<SimonSaysGameProps> = ({ mode, onGameEnd }) => {
     const xpEarned = score * Math.ceil(mode.rewardPerRound / 2);
 
     return (
-        <div className="w-full max-w-md mx-auto p-4 bg-[var(--c-text)] rounded-2xl shadow-2xl border-4 border-black text-[var(--c-surface)] select-none flex flex-col items-center relative">
+        <div className="w-full max-w-md mx-auto p-4 bg-ink rounded-2xl shadow-2xl border-4 border-black text-surface select-none flex flex-col items-center relative">
             
             {gameState === 'gameover' && (
                 <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10 p-4 animate-popIn">
                     <Confetti />
-                    <div className="relative card-cartoon p-6 w-full max-w-sm text-center bg-[var(--c-surface)]">
-                        <CatSilhouetteIcon className="w-16 h-16 mx-auto text-[var(--c-text)]/50 mb-4"/>
-                        <h2 className="text-3xl font-black text-[var(--c-text)]">¡Fin del Juego!</h2>
-                        <p className="text-xl my-4 text-[var(--c-text)]/80">
-                            Alcanzaste la ronda <span className="font-bold text-[var(--c-text)]">{score}</span>
+                    <div className="relative card-themed p-6 w-full max-w-sm text-center">
+                        <CatSilhouetteIcon className="w-16 h-16 mx-auto text-ink/50 mb-4"/>
+                        <h2 className="text-3xl font-black text-ink">¡Fin del Juego!</h2>
+                        <p className="text-xl my-4 text-ink/80">
+                            Alcanzaste la ronda <span className="font-bold text-ink">{score}</span>
                         </p>
-                        <div className="flex justify-center items-center gap-6 my-6 bg-[var(--c-bg)] p-3 rounded-xl border-2 border-[var(--c-text)]/20">
-                            <div className="flex items-center gap-2 font-bold text-[var(--c-text)]">
+                        <div className="flex justify-center items-center gap-6 my-6 bg-surface-darker p-3 rounded-xl border-2 border-ink/20">
+                            <div className="flex items-center gap-2 font-bold text-ink">
                                 <CoinIcon className="w-6 h-6 text-yellow-500" />
                                 <span className="text-lg">+{coinsEarned}</span>
                             </div>
-                            <div className="flex items-center gap-2 font-bold text-[var(--c-text)]">
+                            <div className="flex items-center gap-2 font-bold text-ink">
                                 <StarIcon className="w-6 h-6 text-yellow-400" />
                                 <span className="text-lg">+{xpEarned} XP</span>
                             </div>
                         </div>
                         <button
                             onClick={() => onGameEnd({ score, coinsEarned, xpEarned })}
-                            className="btn-cartoon btn-cartoon-primary w-full"
+                            className="btn-themed btn-themed-primary w-full"
                         >
                             Volver
                         </button>
@@ -156,9 +156,9 @@ const SimonSaysGame: React.FC<SimonSaysGameProps> = ({ mode, onGameEnd }) => {
                 </div>
             )}
 
-            <header className="w-full flex justify-between items-center mb-4 font-bold text-lg px-2">
+            <header className="w-full flex justify-between items-center mb-4 font-bold text-lg px-2 text-paper">
                 <h2 className="w-24">Ronda: {round + 1}</h2>
-                <h2 className="text-[var(--c-tan)] min-h-[1.75rem] text-center flex-grow">{statusMessage}</h2>
+                <h2 className="text-primary min-h-[1.75rem] text-center flex-grow">{statusMessage}</h2>
                 <div className="w-24"></div>
             </header>
             
@@ -185,9 +185,9 @@ const SimonSaysGame: React.FC<SimonSaysGameProps> = ({ mode, onGameEnd }) => {
                         )
                     })}
                 </div>
-                 <div className="absolute inset-[30%] bg-[var(--c-text)] rounded-full flex flex-col items-center justify-center border-8 border-black/50">
-                    <span className="text-4xl font-black text-[var(--c-surface)] drop-shadow-lg">{round + 1}</span>
-                    <span className="text-xs tracking-widest uppercase text-[var(--c-surface)]/60">Ronda</span>
+                 <div className="absolute inset-[30%] bg-ink rounded-full flex flex-col items-center justify-center border-8 border-black/50">
+                    <span className="text-4xl font-black text-surface drop-shadow-lg">{round + 1}</span>
+                    <span className="text-xs tracking-widest uppercase text-surface/60">Ronda</span>
                  </div>
             </div>
         </div>

@@ -47,7 +47,7 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: any) {
         const users = await usersCursor.toArray();
         const result = users.map((u: any) => ({
             id: u._id,
-            email: u.username,
+            username: u.username,
             role: u.role,
             isVerified: u.isVerified
         }));

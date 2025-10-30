@@ -30,31 +30,31 @@ const EnvelopeModal: React.FC<EnvelopeModalProps> = ({ isOpen, onClose, newImage
   if (!isOpen) return null;
 
   return (
-    <div className="modal-cartoon-overlay">
-      <div className="modal-cartoon-content w-full max-w-2xl text-center relative overflow-hidden">
+    <div className="modal-themed-overlay">
+      <div className="modal-themed-content w-full max-w-2xl text-center relative overflow-hidden">
         <Confetti />
         
         <div className="relative z-10 p-4 sm:p-6">
-            <button onClick={onClose} className="absolute top-2 right-2 text-slate-600 p-2 rounded-full hover:bg-slate-100 z-20 transition-colors">
+            <button onClick={onClose} className="absolute top-2 right-2 text-ink/70 p-2 rounded-full hover:bg-ink/10 z-20 transition-colors">
               <CloseIcon className="w-6 h-6" />
             </button>
-            <h2 className="text-2xl sm:text-4xl font-black text-[var(--c-text)] mb-2">¡Has abierto un {envelopeName}!</h2>
-            <p className="text-[var(--c-text-muted)] mb-6 text-lg">¡Nuevos gatos se unen a tu colección!</p>
-            <div className="overflow-y-auto max-h-[50vh] bg-[var(--c-bg)] p-2 rounded-lg border-2 border-[var(--c-text)]">
+            <h2 className="text-2xl sm:text-4xl font-black text-ink mb-2">¡Has abierto un {envelopeName}!</h2>
+            <p className="text-ink/70 mb-6 text-lg">¡Nuevos gatos se unen a tu colección!</p>
+            <div className="overflow-y-auto max-h-[50vh] bg-surface-darker p-2 rounded-lg border-2 border-ink/20">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-2">
                 {newImages.map((image, index) => (
                   <div key={image.id} className="flex flex-col items-center animate-popIn" style={{ animationDelay: `${index * 100}ms` }}>
-                    <div className="bg-white p-1 rounded-lg shadow-md aspect-square w-full border-2 border-[var(--c-text)]">
+                    <div className="bg-paper p-1 rounded-lg shadow-md aspect-square w-full border-2 border-ink/30">
                         <img src={image.url} alt={image.theme} className="w-full h-full object-cover rounded-md" />
                     </div>
-                    <p className="mt-2 text-sm font-bold text-[var(--c-text)] capitalize">{image.theme}</p>
+                    <p className="mt-2 text-sm font-bold text-ink capitalize">{image.theme}</p>
                   </div>
                 ))}
               </div>
             </div>
             <button
               onClick={onClose}
-              className="mt-6 btn-cartoon btn-cartoon-primary text-lg"
+              className="mt-6 btn-themed btn-themed-primary text-lg"
             >
               ¡Genial!
             </button>

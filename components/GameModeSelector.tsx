@@ -50,12 +50,12 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ unlockedImages, upg
 
             return (
                 <div>
-                    <button onClick={() => setSelectedGameId(null)} className="flex items-center gap-2 font-bold mb-4 text-liver/80 hover:text-liver">
+                    <button onClick={() => setSelectedGameId(null)} className="flex items-center gap-2 font-bold mb-4 text-ink/70 hover:text-primary">
                         <ArrowLeftIcon className="w-5 h-5"/>
-                        Back to Games
+                        Volver a Juegos
                     </button>
-                    <h2 className="text-3xl font-black text-liver mb-2">{game.name}</h2>
-                    <p className="text-liver/80 mb-6">{game.description}</p>
+                    <h2 className="text-3xl font-black text-ink mb-2">{game.name}</h2>
+                    <p className="text-ink/70 mb-6">{game.description}</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {modes.map(mode => {
                             let isLocked = false;
@@ -69,17 +69,17 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ unlockedImages, upg
                             }
 
                             return (
-                                <div key={mode.id} className={`card-cartoon p-4 flex flex-col ${isLocked ? 'bg-slate-200' : ''}`}>
+                                <div key={mode.id} className={`card-themed p-4 flex flex-col ${isLocked ? 'bg-disabled' : ''}`}>
                                     <h3 className="font-bold text-xl">{mode.name}</h3>
-                                    <p className="text-sm text-liver/70 flex-grow my-2">{mode.description}</p>
+                                    <p className="text-sm text-ink/70 flex-grow my-2">{mode.description}</p>
                                     {isLocked ? (
-                                        <div className="flex items-center justify-center gap-2 mt-2 text-red-500 font-semibold text-sm bg-red-100 p-2 rounded-md">
+                                        <div className="flex items-center justify-center gap-2 mt-2 text-accent font-semibold text-sm bg-accent/20 p-2 rounded-md">
                                             <LockIcon className="w-4 h-4"/>
                                             <span>{lockReason}</span>
                                         </div>
                                     ) : (
-                                        <button onClick={() => setActiveGameMode(mode)} className="btn-cartoon btn-cartoon-primary w-full mt-2">
-                                            Play
+                                        <button onClick={() => setActiveGameMode(mode)} className="btn-themed btn-themed-primary w-full mt-2">
+                                            Jugar
                                         </button>
                                     )}
                                 </div>
@@ -92,13 +92,13 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ unlockedImages, upg
 
         return (
             <div>
-                 <h1 className="text-3xl sm:text-4xl font-black text-liver mb-2 text-center">Play Games</h1>
-                 <p className="text-liver/80 text-center mb-8">Earn coins and XP to expand your cat collection!</p>
+                 <h1 className="text-3xl sm:text-4xl font-black text-ink mb-2 text-center">Jugar Juegos</h1>
+                 <p className="text-ink/70 text-center mb-8">¡Gana monedas y XP para ampliar tu colección de gatos!</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Object.entries(GAMES_DATA).map(([id, game]) => (
-                        <button key={id} onClick={() => setSelectedGameId(id)} className="card-cartoon p-6 text-left">
+                        <button key={id} onClick={() => setSelectedGameId(id)} className="card-themed p-6 text-left">
                             <h2 className="text-2xl font-bold">{game.name}</h2>
-                            <p className="text-liver/70">{game.description}</p>
+                            <p className="text-ink/70">{game.description}</p>
                         </button>
                     ))}
                 </div>

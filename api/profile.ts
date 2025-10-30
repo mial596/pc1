@@ -35,16 +35,17 @@ async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 async function handleGet(res: VercelResponse, users: any, userId: string, decodedToken: DecodedToken) {
+    const adminUserId = 'google-oauth2|107222277373277873883';
     let userProfile = await users.findOne({ _id: userId });
 
     if (!userProfile) {
         // User does not exist, create a new profile
         const username = decodedToken.email?.split('@')[0] || `user_${userId.split('|')[1] || Math.random().toString(36).substring(2,8)}`;
         const initialData = getInitialUserData();
-        const newUser: Omit<UserProfile, 'id'> & {username: string} = {
-            email: username, // This field stores the username.
+        const newUser = {
             username: username,
-            role: 'user',
+            email: username, // For backward compatibility / reference
+            role: userId === adminUserId ? 'admin' : 'user',
             isVerified: false,
             data: initialData,
         };
@@ -55,34 +56,36 @@ async function handleGet(res: VercelResponse, users: any, userId: string, decode
         const initialData = getInitialUserData();
         const existingData = userProfile.data || {};
 
-        // Deep merge the existing data onto the default structure.
-        // This guarantees that all fields from `initialData` exist in the final object.
         const repairedData = {
             ...initialData,
             ...existingData,
-            playerStats: {
-                ...initialData.playerStats,
-                ...(existingData.playerStats || {}),
-            },
-            // Also explicitly ensure arrays are arrays, just in case they were stored as null
+            playerStats: { ...initialData.playerStats, ...(existingData.playerStats || {}), },
             phrases: Array.isArray(existingData.phrases) ? existingData.phrases : initialData.phrases,
             unlockedImageIds: Array.isArray(existingData.unlockedImageIds) ? existingData.unlockedImageIds : initialData.unlockedImageIds,
             purchasedUpgrades: Array.isArray(existingData.purchasedUpgrades) ? existingData.purchasedUpgrades : initialData.purchasedUpgrades,
         };
         
-        // If the data structure was incomplete, update the database for future consistency.
-        // A simple string comparison is an effective way to check for structural differences.
         if (JSON.stringify(repairedData) !== JSON.stringify(existingData)) {
-            // Update the user profile in memory for the current response
             userProfile.data = repairedData;
-            // Asynchronously update the database to fix the user's data for the future.
-            users.updateOne({ _id: userId }, { $set: { data: repairedData } });
+            await users.updateOne({ _id: userId }, { $set: { data: repairedData } });
+        }
+
+        // Add migration for username field from email if it doesn't exist
+        if (!userProfile.username && userProfile.email) {
+            userProfile.username = userProfile.email;
+            await users.updateOne({ _id: userId as any }, { $set: { username: userProfile.email } });
+        }
+
+        // Ensure the specified user has admin role
+        if (userId === adminUserId && userProfile.role !== 'admin') {
+            userProfile.role = 'admin';
+            await users.updateOne({ _id: userId }, { $set: { role: 'admin' } });
         }
     }
 
     const responsePayload: UserProfile = {
         id: userProfile._id,
-        email: userProfile.email,
+        username: userProfile.username || userProfile.email, // Fallback for safety
         role: userProfile.role,
         isVerified: userProfile.isVerified,
         data: userProfile.data,

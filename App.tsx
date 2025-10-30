@@ -184,7 +184,7 @@ const App: React.FC = () => {
     if (!userProfile) return;
     const token = await getAccessTokenSilently();
     await apiService.updateProfile(token, { username, bio });
-    setUserProfile({ ...userProfile, email: username, data: { ...userProfile.data, bio } });
+    setUserProfile({ ...userProfile, username: username, data: { ...userProfile.data, bio } });
     setEditProfileModalOpen(false);
     showToast("Profile updated successfully!");
   }

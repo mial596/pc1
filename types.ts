@@ -76,7 +76,7 @@ export interface UserData {
 
 export interface UserProfile {
   id: string;
-  email: string; // This is actually the username
+  username: string;
   role: 'admin' | 'mod' | 'user';
   isVerified: boolean;
   data: UserData;
@@ -137,7 +137,7 @@ export type GameMode = MouseHuntMode | CatMemoryMode | SimonSaysMode | CatTrivia
 // --- Admin Panel Types ---
 export interface AdminUserView {
     id: string;
-    email: string; // This is username
+    username: string;
     role: 'admin' | 'mod' | 'user';
     isVerified: boolean;
 }

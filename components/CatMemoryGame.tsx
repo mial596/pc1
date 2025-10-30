@@ -106,8 +106,8 @@ const CatMemoryGame: React.FC<CatMemoryGameProps> = ({ mode, images, onGameEnd }
   const gridTemplateColumns = `repeat(${gridCols}, minmax(0, 1fr))`;
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 bg-[var(--c-bg)] rounded-lg shadow-lg border-4 border-[var(--c-text)]">
-        <div className="flex justify-between items-center mb-4 text-[var(--c-text)] font-bold">
+    <div className="w-full max-w-2xl mx-auto p-4 bg-surface-darker rounded-lg shadow-lg border-2 border-ink/20">
+        <div className="flex justify-between items-center mb-4 text-ink font-bold">
             <div className="text-xl">Pares: {pairsFound} / {mode.pairCount}</div>
             <div className="text-xl">Tiempo: {timeLeft}s</div>
         </div>
@@ -116,11 +116,11 @@ const CatMemoryGame: React.FC<CatMemoryGameProps> = ({ mode, images, onGameEnd }
                 <div key={card.id} className="aspect-square perspective cursor-pointer" onClick={() => handleCardClick(index)}>
                     <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${card.isFlipped || card.isMatched ? 'rotate-y-180' : ''}`}>
                         {/* Card Back */}
-                        <div className="absolute w-full h-full backface-hidden bg-[var(--c-blue)] rounded-lg flex items-center justify-center shadow-md border-2 border-[var(--c-text)]">
-                            <CatSilhouetteIcon className="w-3/4 h-3/4 text-[var(--c-surface)]/70" />
+                        <div className="absolute w-full h-full backface-hidden bg-secondary rounded-lg flex items-center justify-center shadow-md border-2 border-ink/30">
+                            <CatSilhouetteIcon className="w-3/4 h-3/4 text-paper/70" />
                         </div>
                         {/* Card Front */}
-                        <div className={`absolute w-full h-full backface-hidden rotate-y-180 bg-[var(--c-surface)] rounded-lg overflow-hidden shadow-md border-4 ${card.isMatched ? 'border-green-500' : 'border-[var(--c-text)]'}`}>
+                        <div className={`absolute w-full h-full backface-hidden rotate-y-180 bg-paper rounded-lg overflow-hidden shadow-md border-4 ${card.isMatched ? 'border-green-500' : 'border-ink/50'}`}>
                            <img src={card.url} alt="Gato" className="w-full h-full object-cover" />
                            {card.isMatched && <div className="absolute inset-0 bg-green-500/30"></div>}
                         </div>
