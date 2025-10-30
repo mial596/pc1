@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { UserProfile } from '../types';
-import { CoinIcon, StarIcon, StoreIcon, UsersIcon, BookIcon, HomeIcon, LogoutIcon, EditIcon, CatSilhouetteIcon } from './Icons';
+import { CoinIcon, StarIcon, StoreIcon, UsersIcon, BookIcon, HomeIcon, LogoutIcon, EditIcon, CatSilhouetteIcon, AdminIcon } from './Icons';
 
 type Page = 'home' | 'album' | 'shop' | 'games' | 'phrases' | 'community' | 'admin';
 
@@ -45,6 +45,9 @@ const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile,
             <NavLink onClick={() => onNavigate('phrases')} isActive={activePage === 'phrases'}>Frases</NavLink>
             <NavLink onClick={() => onNavigate('games')} isActive={activePage === 'games'}>Juegos</NavLink>
             <NavLink onClick={() => onNavigate('community')} isActive={activePage === 'community'}>Comunidad</NavLink>
+            {userProfile.role === 'admin' && (
+              <NavLink onClick={() => onNavigate('admin')} isActive={activePage === 'admin'}>Admin</NavLink>
+            )}
           </nav>
         </div>
 
