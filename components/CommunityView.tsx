@@ -84,7 +84,7 @@ const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile }) => 
         onClick: (view: View) => void;
         children: React.ReactNode;
     }> = ({ label, targetView, currentView, onClick, children }) => (
-         <button onClick={() => onClick(targetView)} className={`px-4 py-2 font-bold flex items-center gap-2 transition-colors ${currentView === targetView ? 'border-b-2 border-primary text-primary' : 'text-ink/60 hover:text-ink'}`}>
+         <button onClick={() => onClick(targetView)} className={`px-4 py-2 font-bold flex items-center gap-2 transition-colors ${currentView === targetView ? 'border-b-4 border-primary text-primary' : 'text-ink/60 hover:text-ink'}`}>
             {children} {label}
         </button>
     );

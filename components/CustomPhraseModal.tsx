@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { CatImage, Phrase } from '../types';
 import { CloseIcon, TrashIcon, GlobeIcon } from '../hooks/Icons';
@@ -98,9 +96,10 @@ const CustomPhraseModal: React.FC<CustomPhraseModalProps> = ({
 
                     <div>
                         <label htmlFor="isPublicToggle" className="flex items-center cursor-pointer group">
-                            <input type="checkbox" id="isPublicToggle" className="sr-only peer" checked={isPublic} onChange={() => setIsPublic(!isPublic)} />
-                            <div className="w-14 h-8 rounded-full bg-disabled peer-checked:bg-primary transition-colors duration-300 relative">
-                                <div className="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-6"></div>
+                             <div className="relative">
+                                <input type="checkbox" id="isPublicToggle" className="sr-only" checked={isPublic} onChange={() => setIsPublic(!isPublic)} />
+                                <div className={`block w-14 h-8 rounded-full transition-colors ${isPublic ? 'bg-primary' : 'bg-disabled'}`}></div>
+                                <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${isPublic ? 'translate-x-6' : ''}`}></div>
                             </div>
                             <div className="ml-3 font-semibold flex items-center gap-2 text-ink group-hover:text-primary transition-colors">
                                <GlobeIcon className="w-5 h-5" /> Hacerla pública en la comunidad

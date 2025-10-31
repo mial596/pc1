@@ -9,8 +9,6 @@ interface PublicFeedProps {
     onProfileClick: (username: string) => void;
 }
 
-const rotations = ['rotate-1', '-rotate-2', 'rotate-2', '-rotate-1'];
-
 const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }) => {
     const [feed, setFeed] = useState<PublicProfilePhrase[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -73,37 +71,32 @@ const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }
     }
 
     return (
-        <div className="max-w-2xl mx-auto space-y-12">
+        <div className="max-w-xl mx-auto space-y-8">
             <h1 className="text-3xl font-black text-ink text-center">Community Feed</h1>
-            {feed.map((phrase, index) => {
-                const rotationClass = rotations[index % rotations.length];
-                return (
-                    <div key={phrase.publicPhraseId} className={rotationClass}>
-                        <div className="card-themed has-tape p-4">
-                            <header className="flex items-center gap-3 mb-3">
-                                <button onClick={() => onProfileClick(phrase.username!)} className="font-bold text-lg text-ink hover:underline">
-                                    @{phrase.username}
-                                </button>
-                                {phrase.isUserVerified && <VerifiedIcon className="w-5 h-5 text-blue-500" title="Verified User" />}
-                            </header>
-                            <div className="aspect-square bg-surface-darker rounded-lg overflow-hidden border-2 border-ink/20 mb-3">
-                                <img src={phrase.imageUrl} alt={phrase.text} className="w-full h-full object-cover"/>
-                            </div>
-                            <p className="font-bold text-xl mb-3">{phrase.text}</p>
-                            <div className="flex items-center gap-3 mt-2">
-                                 <button
-                                    onClick={() => handleLike(phrase.publicPhraseId)}
-                                    className="btn-themed !p-2 bg-surface hover:bg-rose-900/50 active:bg-rose-800/50"
-                                    aria-label="Like phrase"
-                                 >
-                                    <HeartIcon className={`w-6 h-6 ${phrase.isLikedByMe ? 'text-rose-500' : 'text-ink/50'}`} solid={phrase.isLikedByMe} />
-                                 </button>
-                                 <span className="font-black text-lg text-ink/90">{phrase.likeCount}</span>
-                            </div>
-                        </div>
+            {feed.map((phrase) => (
+                <div key={phrase.publicPhraseId} className="card-themed p-4">
+                    <header className="flex items-center gap-3 mb-3">
+                        <button onClick={() => onProfileClick(phrase.username!)} className="font-bold text-lg text-ink hover:underline">
+                            @{phrase.username}
+                        </button>
+                        {phrase.isUserVerified && <VerifiedIcon className="w-5 h-5 text-blue-500" title="Verified User" />}
+                    </header>
+                    <div className="aspect-square bg-surface-darker rounded-lg overflow-hidden border-2 border-ink/20 mb-3">
+                        <img src={phrase.imageUrl} alt={phrase.text} className="w-full h-full object-cover"/>
                     </div>
-                );
-            })}
+                    <p className="font-bold text-xl mb-3">{phrase.text}</p>
+                    <div className="flex items-center gap-3 mt-2">
+                         <button
+                            onClick={() => handleLike(phrase.publicPhraseId)}
+                            className="btn-themed !p-2 bg-surface hover:bg-rose-900/50 active:bg-rose-800/50"
+                            aria-label="Like phrase"
+                         >
+                            <HeartIcon className={`w-6 h-6 ${phrase.isLikedByMe ? 'text-rose-500' : 'text-ink/50'}`} solid={phrase.isLikedByMe} />
+                         </button>
+                         <span className="font-black text-lg text-ink/90">{phrase.likeCount}</span>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 };

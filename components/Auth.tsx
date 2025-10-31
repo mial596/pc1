@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-// FIX: Corrected import path for constants.
 import { LOGO_URL } from '../constants';
 
 const Auth: React.FC = () => {

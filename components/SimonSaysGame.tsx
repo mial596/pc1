@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { SimonSaysMode } from '../types';
 import { soundService } from '../services/audioService';
@@ -163,24 +161,23 @@ const SimonSaysGame: React.FC<SimonSaysGameProps> = ({ mode, onGameEnd }) => {
             </header>
             
             <div className="relative w-full max-w-[350px] aspect-square">
-                <div className="absolute inset-0 grid grid-cols-2 gap-2 transform -rotate-45">
-                    {[0, 1, 3, 2].map((padPos, i) => {
-                         const colorIndex = i;
+                <div className="absolute inset-0 grid grid-cols-2 gap-2 transform">
+                    {[0, 1, 2, 3].map((padIndex) => {
                          return (
                             <button
-                                key={colorIndex}
-                                onClick={() => handlePadClick(colorIndex)}
+                                key={padIndex}
+                                onClick={() => handlePadClick(padIndex)}
                                 disabled={gameState !== 'playing'}
                                 className={`w-full h-full transition-all duration-150 transform active:scale-95 disabled:cursor-not-allowed
-                                    ${i === 0 ? 'rounded-tl-full' : ''}
-                                    ${i === 1 ? 'rounded-tr-full' : ''}
-                                    ${i === 2 ? 'rounded-bl-full' : ''}
-                                    ${i === 3 ? 'rounded-br-full' : ''}
-                                    ${PAD_COLORS[colorIndex]}
-                                    ${gameState === 'playing' ? PAD_HOVER_COLORS[colorIndex] : ''}
-                                    ${activePad === colorIndex ? `${PAD_GLOW_SHADOWS[colorIndex]} scale-105 brightness-125` : ''}`
+                                    ${padIndex === 0 ? 'rounded-tl-full' : ''}
+                                    ${padIndex === 1 ? 'rounded-tr-full' : ''}
+                                    ${padIndex === 2 ? 'rounded-bl-full' : ''}
+                                    ${padIndex === 3 ? 'rounded-br-full' : ''}
+                                    ${PAD_COLORS[padIndex]}
+                                    ${gameState === 'playing' ? PAD_HOVER_COLORS[padIndex] : ''}
+                                    ${activePad === padIndex ? `${PAD_GLOW_SHADOWS[padIndex]} scale-105 brightness-150` : ''}`
                                 }
-                                aria-label={`Pad ${colorIndex + 1}`}
+                                aria-label={`Pad ${padIndex + 1}`}
                             />
                         )
                     })}

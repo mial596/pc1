@@ -1,5 +1,5 @@
 import React from 'react';
-import { StoreIcon, SpinnerIcon } from '../hooks/Icons';
+import { StoreIcon, SpinnerIcon, EnvelopeIcon } from '../hooks/Icons';
 import { Envelope, GameUpgrade } from '../types';
 
 interface ShopPageProps {
@@ -8,14 +8,16 @@ interface ShopPageProps {
 }
 
 const FeaturedItem: React.FC<{ envelope: Envelope; onOpenShop: () => void; }> = ({ envelope, onOpenShop }) => (
-    <div className="bg-gradient-to-tr from-secondary to-primary p-6 rounded-2xl mb-12 shadow-lg text-white">
-        <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="text-8xl flex-shrink-0 animate-pulse">💌</div>
-            <div className="text-center md:text-left">
-                <p className="font-bold uppercase tracking-wider">¡Sobre Destacado!</p>
-                <h2 className="text-3xl font-black text-white">{envelope.name}</h2>
-                <p className="mt-1">{envelope.description}</p>
-                 <button onClick={onOpenShop} className="btn-themed bg-white text-paper mt-4">
+    <div className="featured-item-card relative overflow-hidden p-6 rounded-2xl mb-12 text-white text-center md:text-left shadow-lg" onClick={onOpenShop}>
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+            <div className="featured-item-icon flex-shrink-0 w-32 h-32 rounded-full flex items-center justify-center">
+                <EnvelopeIcon className="w-16 h-16 text-white drop-shadow-lg"/>
+            </div>
+            <div>
+                <p className="font-bold uppercase tracking-wider text-primary">¡Oferta Destacada!</p>
+                <h2 className="text-3xl font-black text-white drop-shadow-md">{envelope.name}</h2>
+                <p className="mt-1 text-ink/90">{envelope.description}</p>
+                 <button className="btn-themed bg-white text-paper mt-4 font-bold">
                     ¡Ir a la tienda!
                 </button>
             </div>
@@ -28,7 +30,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ shopData, onOpenShop }) => {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 text-center">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
             {shopData === null ? (
                 <div className="flex justify-center items-center h-64">
                     <SpinnerIcon className="w-12 h-12 animate-spin text-primary" />

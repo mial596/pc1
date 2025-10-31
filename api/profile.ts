@@ -11,6 +11,14 @@ async function handler(req: VercelRequest, res: VercelResponse) {
         const decodedToken = await verifyToken(req.headers.authorization);
         const userId = decodedToken.sub;
         const db = await getDb();
+        
+        // Data Migration: Ensure all cats have a rarity.
+        // This is an idempotent operation that fixes the collection.
+        await db.collection('cat_images').updateMany(
+            { rarity: { $exists: false } },
+            { $set: { rarity: 'common' } }
+        );
+
         const users = db.collection('users');
 
         switch (req.method) {

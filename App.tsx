@@ -220,6 +220,7 @@ const App: React.FC = () => {
           onPhraseClick={(phrase, image) => setFullDisplayData({ phrase, image })}
           onSelectImageClick={(phrase) => { setActivePhrase(phrase); setImageSelectorOpen(true); }}
           onSpeak={handleSpeak}
+          onAddNewPhrase={() => { setPhraseToEdit(null); setCustomPhraseModalOpen(true); }}
         />;
       case 'album':
         return <AlbumPage allImages={allImages} unlockedImageIds={userProfile.data.unlockedImageIds} />;

@@ -14,9 +14,6 @@ interface TriviaQuestion {
   correctAnswer: string;
 }
 
-// Fisher-Yates shuffle algorithm
-// The generic arrow function syntax can cause parsing issues in .tsx files.
-// Changed to a standard function declaration for better type inference compatibility.
 function shuffleArray<T>(array: T[]): T[] {
     const newArray = [...array];
     for (let i = newArray.length - 1; i > 0; i--) {
@@ -36,12 +33,7 @@ const CatTriviaGame: React.FC<CatTriviaGameProps> = ({ mode, images, onGameEnd }
 
     useEffect(() => {
         const generateQuestions = () => {
-            // FIX: Explicitly type `allThemes` as `string[]`. The type inference was failing,
-            // causing `wrongAnswers` to be typed as `unknown[]`, which resulted in the error on line 51.
             const allThemes: string[] = Array.from(new Set(images.map(img => img.theme)));
-            // Fix: Explicitly provide the generic type to shuffleArray.
-            // TypeScript's type inference for this generic function seems to be failing
-            // in this context, causing downstream type errors.
             const shuffledImages = shuffleArray<CatImage>(images);
             const generatedQs: TriviaQuestion[] = [];
 
@@ -49,9 +41,7 @@ const CatTriviaGame: React.FC<CatTriviaGameProps> = ({ mode, images, onGameEnd }
                 const imageForQ = shuffledImages[i];
                 const correctAnswer = imageForQ.theme;
                 const wrongAnswers = allThemes.filter(theme => theme !== correctAnswer);
-                // Fix: Explicitly providing the generic type `<string>` to `shuffleArray` to avoid type inference issues.
                 const shuffledWrong = shuffleArray<string>(wrongAnswers).slice(0, 3);
-                // Fix: Explicitly provide the generic type argument to `shuffleArray` to resolve the type error.
                 const options = shuffleArray<string>([correctAnswer, ...shuffledWrong]);
                 generatedQs.push({ image: imageForQ, options, correctAnswer });
             }
@@ -67,7 +57,6 @@ const CatTriviaGame: React.FC<CatTriviaGameProps> = ({ mode, images, onGameEnd }
             setSelectedAnswer(null);
             setIsAnswered(false);
         } else {
-            // Game over
             const coins = score * mode.rewardPerCorrect;
             const xp = Math.round(score * (mode.rewardPerCorrect / 2));
             soundService.play('reward');
@@ -105,29 +94,29 @@ const CatTriviaGame: React.FC<CatTriviaGameProps> = ({ mode, images, onGameEnd }
     };
 
     if (questions.length === 0) {
-        return <div className="text-center p-8 font-bold text-[var(--c-text)]">Cargando preguntas...</div>;
+        return <div className="text-center p-8 font-bold text-ink">Cargando preguntas...</div>;
     }
 
     const currentQuestion = questions[currentQuestionIndex];
     const timePercentage = (timeLeft / mode.timePerQuestion) * 100;
 
     return (
-        <div className="w-full max-w-xl mx-auto p-4 sm:p-6 bg-[var(--c-surface)] rounded-2xl shadow-lg border-4 border-[var(--c-text)] text-[var(--c-text)]">
+        <div className="w-full max-w-xl mx-auto p-4 sm:p-6 bg-surface rounded-2xl shadow-lg border-2 border-ink/20 text-ink">
             <header className="flex justify-between items-center mb-4 font-bold">
                 <div className="text-lg">Pregunta: {currentQuestionIndex + 1} / {questions.length}</div>
                 <div className="text-lg">Puntuación: {score}</div>
             </header>
             
-            <div className="w-full h-4 bg-[var(--c-bg)] rounded-full mb-4 overflow-hidden border-2 border-[var(--c-text)]/50">
+            <div className="w-full h-4 bg-surface-darker rounded-full mb-4 overflow-hidden border-2 border-ink/50">
                 <div 
-                    className="h-full bg-[var(--c-tan)] transition-all duration-1000 linear" 
+                    className="h-full bg-primary transition-all duration-1000 linear" 
                     style={{width: `${timePercentage}%`}}
                 />
             </div>
 
-            <div className="bg-[var(--c-surface)] p-4 rounded-lg mb-4">
+            <div className="bg-surface-darker p-4 rounded-lg mb-4">
                 <p className="text-center font-semibold text-xl mb-4">¿A qué tema pertenece este gato?</p>
-                <div className="w-full h-64 rounded-lg overflow-hidden flex items-center justify-center bg-[var(--c-bg)] border-2 border-[var(--c-text)]/20">
+                <div className="w-full h-64 rounded-lg overflow-hidden flex items-center justify-center bg-paper border-2 border-ink/20">
                     <img src={currentQuestion.image.url} alt="Gato misterioso" className="max-w-full max-h-full object-contain" />
                 </div>
             </div>
@@ -137,14 +126,14 @@ const CatTriviaGame: React.FC<CatTriviaGameProps> = ({ mode, images, onGameEnd }
                     const isCorrect = option === currentQuestion.correctAnswer;
                     const isSelected = option === selectedAnswer;
                     
-                    let stateClass = 'bg-[var(--c-surface)] hover:bg-[var(--c-bg)]';
+                    let stateClass = 'bg-surface hover:bg-ink/10';
                     if (isAnswered) {
                         if (isCorrect) {
-                            stateClass = 'bg-green-400 text-white transform scale-105';
+                            stateClass = 'bg-green-500 text-white transform scale-105 border-green-300';
                         } else if (isSelected) {
-                            stateClass = 'bg-red-400 text-white';
+                            stateClass = 'bg-accent text-white border-accent/50';
                         } else {
-                            stateClass = 'bg-gray-300 opacity-70';
+                            stateClass = 'bg-disabled opacity-60';
                         }
                     }
                     return (
@@ -152,7 +141,7 @@ const CatTriviaGame: React.FC<CatTriviaGameProps> = ({ mode, images, onGameEnd }
                             key={option}
                             onClick={() => handleAnswer(option)}
                             disabled={isAnswered}
-                            className={`p-4 text-lg rounded-xl font-bold text-center transition-all duration-300 border-4 border-[var(--c-text)] disabled:cursor-not-allowed ${stateClass}`}
+                            className={`p-4 text-lg rounded-xl font-bold text-center transition-all duration-300 border-2 border-ink/20 disabled:cursor-not-allowed ${stateClass}`}
                         >
                             {option}
                         </button>

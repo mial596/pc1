@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { GameMode, CatImage, UpgradeId, CatMemoryMode, CatTriviaMode } from '../types';
 import { GAMES_DATA, GAME_MODES } from '../gameData';
-import { ArrowLeftIcon, LockIcon } from '../hooks/Icons';
-
+import { ArrowLeftIcon, LockIcon, CatSilhouetteIcon, BrainIcon, QuestionMarkIcon, MusicNoteIcon } from '../hooks/Icons';
 import MouseHuntGame from './MouseHuntGame';
 import CatMemoryGame from './CatMemoryGame';
 import SimonSaysGame from './SimonSaysGame';
@@ -15,12 +14,19 @@ interface GameModeSelectorProps {
     onGameEnd: (results: { score: number; coinsEarned: number; xpEarned: number }) => void;
 }
 
+const gameIcons: { [key: string]: React.ReactNode } = {
+    mouseHunt: <span className="text-6xl">🐭</span>,
+    catMemory: <BrainIcon className="w-16 h-16"/>,
+    simonSays: <CatSilhouetteIcon className="w-16 h-16"/>,
+    catTrivia: <QuestionMarkIcon className="w-16 h-16"/>,
+    felineRhythm: <MusicNoteIcon className="w-16 h-16"/>,
+};
+
 const GameModeSelector: React.FC<GameModeSelectorProps> = ({ unlockedImages, upgrades, onGameEnd }) => {
     const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
     const [activeGameMode, setActiveGameMode] = useState<GameMode | null>(null);
     
     const handleGameEnd = (results: { score: number; coinsEarned: number; xpEarned: number }) => {
-        // Reset to mode selection after game ends
         setActiveGameMode(null);
         onGameEnd(results);
     };
@@ -38,7 +44,7 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ unlockedImages, upg
             case 'felineRhythm':
                 return <FelineRhythmGame mode={activeGameMode} onGameEnd={handleGameEnd} />;
             default:
-                setActiveGameMode(null); // Should not happen
+                setActiveGameMode(null);
                 return null;
         }
     }
@@ -64,13 +70,13 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ unlockedImages, upg
                                 const requiredImages = (mode as CatMemoryMode | CatTriviaMode).minImagesRequired;
                                 if (unlockedImages.length < requiredImages) {
                                     isLocked = true;
-                                    lockReason = `Requires ${requiredImages} images`;
+                                    lockReason = `Necesitas ${requiredImages} gatos`;
                                 }
                             }
 
                             return (
                                 <div key={mode.id} className={`card-themed p-4 flex flex-col ${isLocked ? 'bg-disabled' : ''}`}>
-                                    <h3 className="font-bold text-xl">{mode.name}</h3>
+                                    <h3 className="font-bold text-xl text-primary">{mode.name}</h3>
                                     <p className="text-sm text-ink/70 flex-grow my-2">{mode.description}</p>
                                     {isLocked ? (
                                         <div className="flex items-center justify-center gap-2 mt-2 text-accent font-semibold text-sm bg-accent/20 p-2 rounded-md">
@@ -96,7 +102,10 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ unlockedImages, upg
                  <p className="text-ink/70 text-center mb-8">¡Gana monedas y XP para ampliar tu colección de gatos!</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Object.entries(GAMES_DATA).map(([id, game]) => (
-                        <button key={id} onClick={() => setSelectedGameId(id)} className="card-themed p-6 text-left">
+                        <button key={id} onClick={() => setSelectedGameId(id)} className="game-select-card card-themed p-6 text-center">
+                            <div className="text-primary mx-auto mb-4">
+                                {gameIcons[id] || <CatSilhouetteIcon className="w-16 h-16"/>}
+                            </div>
                             <h2 className="text-2xl font-bold">{game.name}</h2>
                             <p className="text-ink/70">{game.description}</p>
                         </button>
