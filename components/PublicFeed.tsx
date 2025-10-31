@@ -109,7 +109,7 @@ const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }
                 </div>
             ) : (
                 <div className="text-center py-20 bg-surface rounded-lg">
-                    <p className="font-bold text-xl">The feed is quiet...</p>
+                    <p className="text-xl font-bold">The feed is quiet...</p>
                     <p className="text-ink/70">Be the first to share a public phrase!</p>
                 </div>
             )}

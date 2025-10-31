@@ -59,11 +59,14 @@ async function getPublicProfile(res: VercelResponse, db: any, username: string, 
     if (!profileUser) {
         return res.status(404).json({ message: 'User not found' });
     }
+    
+    // Defensively handle cases where the user's data object might not exist.
+    const userData = profileUser.data || {};
 
     const phrasesCursor = publicPhrases.find({ userId: profileUser._id }).sort({ _id: -1 });
     const phrases = await phrasesCursor.toArray();
 
-    const unlockedImageIds = profileUser.data.unlockedImageIds || [];
+    const unlockedImageIds = userData.unlockedImageIds || [];
     const unlockedImages = await catImages.find({ id: { $in: unlockedImageIds } }).project({ _id: 0 }).toArray();
 
     const response = {
@@ -71,7 +74,7 @@ async function getPublicProfile(res: VercelResponse, db: any, username: string, 
         username: profileUser.username,
         role: profileUser.role,
         isVerified: profileUser.isVerified,
-        bio: profileUser.data.bio,
+        bio: userData.bio || '', // Provide a default value for bio.
         phrases: phrases.map((p: any) => ({
             publicPhraseId: p._id.toHexString(),
             text: p.text,

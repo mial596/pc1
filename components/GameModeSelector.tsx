@@ -60,7 +60,7 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ unlockedImages, upg
                         <ArrowLeftIcon className="w-5 h-5"/>
                         Volver a Juegos
                     </button>
-                    <h2 className="text-3xl font-black text-ink mb-2">{game.name}</h2>
+                    <h2 className="text-3xl font-black text-ink mb-2 font-spooky">{game.name}</h2>
                     <p className="text-ink/70 mb-6">{game.description}</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {modes.map(mode => {
