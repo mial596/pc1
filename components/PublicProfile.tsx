@@ -46,7 +46,6 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
         setProfile({ ...profile, phrases: updatedPhrases });
         try {
             const token = await getAccessTokenSilently();
-            // FIX: Pass the profile's userId as the third argument (authorId) to the API call.
             await apiService.likePublicPhrase(token, publicPhraseId, profile.userId);
         } catch (err) {
             setProfile({ ...profile, phrases: originalPhrases });
@@ -93,7 +92,6 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
 
     const { friendships, friendRequestsSent, friendRequestsReceived } = currentUserProfile.data;
     const isSelf = currentUserProfile.id === profile.userId;
-    // FIX: Check friendships array of objects instead of old friends array of strings
     const isFriend = friendships.some(f => f.userId === profile.userId);
     const isRequestSent = friendRequestsSent.includes(profile.userId);
     const isRequestReceived = friendRequestsReceived.includes(profile.userId);

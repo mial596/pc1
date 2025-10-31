@@ -56,7 +56,6 @@ const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }
 
         try {
             const token = await getAccessTokenSilently();
-            // FIX: Pass the phrase's authorId (userId) as the third argument.
             await apiService.likePublicPhrase(token, publicPhraseId, phraseToLike.userId);
         } catch (err) {
             setFeed(originalFeed);

@@ -25,6 +25,4 @@ export const getInitialUserData = (): Omit<UserData, 'phrases' | 'unlockedImageI
     friendRequestsSent: [],
     friendRequestsReceived: [],
     tradeNotifications: 0,
-    dailyMissions: [],
-    lastMissionReset: new Date(0).toISOString(), // A very old date to trigger initial reset
 });

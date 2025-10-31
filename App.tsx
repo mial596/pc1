@@ -16,7 +16,6 @@ import ImageSelector from './components/ImageSelector';
 import CustomPhraseModal from './components/CustomPhraseModal';
 import FullDisplay from './components/FullDisplay';
 import EditProfileModal from './components/EditProfileModal';
-import PictoChatModal from './components/PictoChatModal';
 import Toast from './components/Toast';
 import { SpinnerIcon } from './hooks/Icons';
 
@@ -31,7 +30,6 @@ import {
   FullDisplayData,
   Envelope,
   GameUpgrade,
-  DailyMission,
 } from './types';
 
 type Page = 'home' | 'album' | 'shop' | 'games' | 'phrases' | 'community' | 'admin';
@@ -51,7 +49,6 @@ const App: React.FC = () => {
   const [isImageSelectorOpen, setImageSelectorOpen] = useState(false);
   const [isCustomPhraseModalOpen, setCustomPhraseModalOpen] = useState(false);
   const [isEditProfileModalOpen, setEditProfileModalOpen] = useState(false);
-  const [isPictoChatOpen, setPictoChatOpen] = useState(false);
   
   const [fullDisplayData, setFullDisplayData] = useState<FullDisplayData | null>(null);
   const [newlyUnlockedImages, setNewlyUnlockedImages] = useState<CatImage[]>([]);
@@ -204,40 +201,6 @@ const App: React.FC = () => {
     }
   };
 
-  const handleClaimMission = async (mission: DailyMission) => {
-    if (!userProfile) return;
-    
-    // Optimistic UI update
-    const updatedMissions = userProfile.data.dailyMissions.map(m => 
-      m.id === mission.id ? { ...m, isClaimed: true } : m
-    );
-    setUserProfile(prev => ({
-      ...prev!,
-      data: {
-        ...prev!.data,
-        coins: prev!.data.coins + mission.rewardCoins,
-        playerStats: {
-          ...prev!.data.playerStats,
-          xp: prev!.data.playerStats.xp + mission.rewardXp,
-        },
-        dailyMissions: updatedMissions
-      }
-    }));
-    showToast(`+${mission.rewardCoins} Monedas & +${mission.rewardXp} XP!`);
-    soundService.play('reward');
-
-    try {
-      const token = await getAccessTokenSilently();
-      const freshProfile = await apiService.claimDailyMissionReward(token, mission.id);
-      setUserProfile(freshProfile); // Sync with backend state
-    } catch (err) {
-      console.error("Failed to claim mission", err);
-      showToast("Error claiming reward.");
-      // Revert optimistic update (or better, just reload)
-      loadInitialData();
-    }
-  };
-
   if (isAuthLoading || (isAuthenticated && isLoading)) {
     return (
       <div className="w-screen h-screen flex justify-center items-center bg-paper">
@@ -266,8 +229,6 @@ const App: React.FC = () => {
           onSelectImageClick={(phrase) => { setActivePhrase(phrase); setImageSelectorOpen(true); }}
           onSpeak={handleSpeak}
           onAddNewPhrase={() => { setPhraseToEdit(null); setCustomPhraseModalOpen(true); }}
-          onClaimMission={handleClaimMission}
-          onOpenPictoChat={() => setPictoChatOpen(true)}
         />;
       case 'album':
         return <AlbumPage allImages={allImages} unlockedImageIds={userProfile.data.unlockedImageIds} />;
@@ -344,17 +305,6 @@ const App: React.FC = () => {
         onClose={() => setEditProfileModalOpen(false)}
         currentUserProfile={userProfile}
         onSave={handleSaveProfile}
-       />
-       <PictoChatModal 
-        isOpen={isPictoChatOpen}
-        onClose={() => setPictoChatOpen(false)}
-        onFirstChat={() => {
-          // If a chat mission exists and isn't complete, refresh profile to update progress
-          const chatMission = userProfile.data.dailyMissions.find(m => m.type === 'CHAT_WITH_PICTO');
-          if (chatMission && chatMission.progress < chatMission.goal) {
-            loadInitialData();
-          }
-        }}
        />
       {fullDisplayData && (
         <FullDisplay

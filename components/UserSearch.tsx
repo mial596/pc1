@@ -23,12 +23,17 @@ const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser }) => {
             return;
         }
         setIsLoading(true);
-        // FIX: Pass the authentication token to the searchUsers API call.
-        const token = await getAccessTokenSilently();
-        const users = await apiService.searchUsers(token, searchQuery);
-        setResults(users);
-        setIsLoading(false);
-        setHasSearched(true);
+        try {
+            const token = await getAccessTokenSilently();
+            const users = await apiService.searchUsers(token, searchQuery);
+            setResults(users);
+        } catch (error) {
+            console.error("User search failed:", error);
+            setResults([]);
+        } finally {
+            setIsLoading(false);
+            setHasSearched(true);
+        }
     }, [getAccessTokenSilently]);
 
     useDebounce(() => performSearch(query), 500, [query]);

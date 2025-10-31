@@ -159,25 +159,47 @@ body {
 .shiny-effect {
   position: relative;
   overflow: hidden;
+  --glow-color: var(--c-primary);
+  animation: shiny-glow 2.5s infinite alternate ease-in-out, shiny-pulse 4s infinite alternate ease-in-out;
 }
-.shiny-effect::after {
+
+.shiny-effect::before, .shiny-effect::after {
   content: '';
   position: absolute;
   top: -50%;
   left: -50%;
   width: 200%;
   height: 200%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Holographic rainbow overlay */
+.shiny-effect::before {
+  background-image: conic-gradient(
+    from 180deg at 50% 50%,
+    #ff00de, #c500ff, #5900ff, #008dff, #00ffc5, #a6ff00, #ff8300, #ff00de
+  );
+  opacity: 0.35;
+  mix-blend-mode: color-dodge;
+  animation: shiny-spin 5s linear infinite;
+}
+
+/* Bright glint sweep */
+.shiny-effect::after {
   background-image: linear-gradient(
     115deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.4) 50%,
-    transparent 60%
+    transparent 20%,
+    rgba(255, 255, 255, 0.85) 48%,
+    rgba(255, 255, 255, 0.85) 52%,
+    transparent 80%
   );
+  filter: brightness(1.5);
   transform: rotate(20deg);
-  animation: shiny-sweep 3s ease-in-out infinite;
-  z-index: 3;
-  pointer-events: none;
+  animation: shiny-sweep 3.5s ease-in-out infinite;
+  mix-blend-mode: screen;
 }
+
 
 /* --- New UI Styles --- */
 
@@ -236,29 +258,29 @@ body {
     background: radial-gradient(circle, #166534 0%, var(--c-surface) 80%);
 }
 
-/* Daily Missions */
+/* Daily Mission Progress Bar */
 .daily-mission-progress-bar {
-    background-color: var(--c-surface-darker);
+    height: 0.75rem;
+    background-color: var(--c-ink)/20;
     border-radius: 9999px;
     overflow: hidden;
-    height: 1rem;
-    border: 2px solid var(--c-ink)/20;
 }
 .daily-mission-progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--c-secondary), var(--c-primary));
-    transition: width 0.5s ease-in-out;
+    background-color: var(--c-primary);
+    transition: width 0.3s ease-in-out;
 }
 
-/* Picto Chat Modal */
+/* Picto Chat */
 .picto-chat-message-user {
     background-color: var(--c-primary);
     color: white;
-    border-radius: 20px 20px 4px 20px;
+    border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
 }
 .picto-chat-message-model {
-    background-color: var(--c-surface-darker);
-    border-radius: 20px 20px 20px 4px;
+    background-color: var(--c-ink)/20;
+    color: var(--c-ink);
+    border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
 }
 
 /* --- Animations --- */
@@ -273,11 +295,28 @@ body {
 @property --angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 @keyframes spin { to { --angle: 360deg; } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-@keyframes shiny-sweep {
+@keyframes shiny-glow {
   from {
-    transform: translateX(-100%) rotate(20deg);
+    box-shadow: 0 0 8px #fff, 0 0 16px var(--glow-color), 0 0 24px var(--glow-color);
   }
   to {
-    transform: translateX(100%) rotate(20deg);
+    box-shadow: 0 0 16px #fff, 0 0 32px var(--glow-color), 0 0 48px var(--glow-color);
+  }
+}
+@keyframes shiny-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@keyframes shiny-sweep {
+  0% {
+    transform: translateX(-150%) rotate(20deg);
+  }
+  100% {
+    transform: translateX(150%) rotate(20deg);
+  }
+}
+@keyframes shiny-pulse {
+  to {
+    transform: scale(1.02);
   }
 }

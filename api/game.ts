@@ -3,7 +3,6 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
 import { updateMissionProgress } from './friends.js';
-import { updateDailyMissionProgress } from './_utils/missions.js';
 import { Db } from 'mongodb';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
@@ -61,9 +60,6 @@ async function saveGameResults(res: VercelResponse, db: Db, userId: string, resu
         // 2. Update 'PLAY_GAMES' mission progress
         await updateMissionProgress(friendships, userId, friendId, 'PLAY_GAMES', 1);
     }
-    
-    // Update Daily Mission Progress
-    await updateDailyMissionProgress(db, userId, 'PLAY_ANY_GAME', 1);
     
     // Re-fetch the user profile to send back the updated state
     const updatedProfile = await users.findOne({ _id: userId as any });

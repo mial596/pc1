@@ -29,8 +29,6 @@ const FelineRhythmGame: React.FC<FelineRhythmGameProps> = ({ mode, onGameEnd }) 
     
     const gameAreaRef = useRef<HTMLDivElement>(null);
     const startTimeRef = useRef<number>(0);
-    // FIX: Initialize useRef with a value (null) to satisfy its signature.
-    // The previous code `useRef<number>()` was missing the required argument.
     const gameLoopRef = useRef<number | null>(null);
 
     useEffect(() => {

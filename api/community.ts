@@ -17,8 +17,7 @@ async function handler(req: VercelRequest, res: VercelResponse) {
         
         if (resource === 'catalog') {
             const catalog = db.collection('cat_images');
-            // FIX: MongoDB driver returns _id, so we project to match the CatImage type.
-            const allImages = await catalog.find({}).project({ _id: 0, id: 1, url: 1, theme: 1, rarity: 1 }).sort({ id: 1 }).toArray();
+            const allImages = await catalog.find({}).project({ _id: 0, id: 1, url: 1, theme: 1, rarity: 1, isShiny: 1 }).sort({ id: 1 }).toArray();
             return res.status(200).json(allImages);
         }
 

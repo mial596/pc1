@@ -3,7 +3,6 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
 import { CatImage, Envelope, EnvelopeTypeId } from '../../types.js';
-import { updateDailyMissionProgress } from './_utils/missions.js';
 
 
 const calculateEnvelopeCost = (envelope: Envelope, playerLevel: number): number => {
@@ -88,10 +87,7 @@ async function handler(req: VercelRequest, res: VercelResponse) {
                     }
                 );
                 
-                // Update mission progress after purchase
-                await updateDailyMissionProgress(db, userId, 'OPEN_ENVELOPE', 1);
-
-                // Re-fetch user profile to return the most up-to-date state including mission progress
+                // Re-fetch user profile to return the most up-to-date state
                 const updatedProfile = await users.findOne({ _id: userId as any });
 
                 return res.status(200).json({ updatedProfile, newImages });

@@ -5,7 +5,6 @@ import { verifyToken } from './_utils/auth.js';
 import { FriendData, Friendship, UserProfile } from '../../types.js';
 import { ALL_MISSIONS } from '../../gameData/missions.js';
 import { ObjectId, Db } from 'mongodb';
-import { updateDailyMissionProgress } from './_utils/missions.js';
 
 
 const MAX_FRIENDSHIP_LEVEL = 10;
@@ -114,8 +113,6 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
 
         if(!isLiked) {
              await updateMissionProgress(friendships, userId, authorId, 'LIKE_PHRASES', 1);
-             // Also update daily mission progress
-             await updateDailyMissionProgress(db, userId, 'LIKE_PUBLIC_PHRASE', 1);
         }
         
         const updatedProfile = await users.findOne({ _id: userId });
@@ -216,21 +213,24 @@ export async function updateMissionProgress(friendships: any, user1Id: string, u
     if (user1Id === user2Id) return; // Don't give progress for liking your own phrases
     const friendship = await friendships.findOne({
         $or: [{ user1Id, user2Id }, { user1Id: user2Id, user2Id: user1Id }],
-        'activeMission.missionId': { $in: ALL_MISSIONS.filter(m => m.type === missionType).map(m => m.id) },
+        'activeMission.missionId': { $exists: true },
         'activeMission.isCompleted': false
     });
-
+    
     if (friendship && friendship.activeMission) {
-        const newProgress = friendship.activeMission.progress + progressAmount;
-        const isCompleted = newProgress >= friendship.activeMission.goal;
-        await friendships.updateOne({ _id: friendship._id }, {
-            $set: {
-                'activeMission.progress': newProgress,
-                'activeMission.isCompleted': isCompleted
-            }
-        });
+        const missionInfo = ALL_MISSIONS.find(m => m.id === friendship.activeMission.missionId);
+        if (missionInfo && missionInfo.type === missionType) {
+            const newProgress = friendship.activeMission.progress + progressAmount;
+            const isCompleted = newProgress >= friendship.activeMission.goal;
+            
+            await friendships.updateOne({ _id: friendship._id }, {
+                $set: {
+                    'activeMission.progress': newProgress,
+                    'activeMission.isCompleted': isCompleted
+                }
+            });
+        }
     }
 }
-
 
 export default handler;

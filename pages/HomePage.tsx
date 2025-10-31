@@ -1,8 +1,7 @@
 import React from 'react';
-import { Phrase, CatImage, UserProfile, DailyMission } from '../types';
+import { Phrase, CatImage, UserProfile } from '../types';
 import PhraseCard from '../components/PhraseCard';
-import DailyMissions from '../components/DailyMissions';
-import { PlusIcon, ChatBubbleIcon } from '../hooks/Icons';
+import { PlusIcon } from '../hooks/Icons';
 
 interface HomePageProps {
   userProfile: UserProfile;
@@ -11,8 +10,6 @@ interface HomePageProps {
   onSelectImageClick: (phrase: Phrase) => void;
   onSpeak: (text: string) => void;
   onAddNewPhrase: () => void;
-  onClaimMission: (mission: DailyMission) => void;
-  onOpenPictoChat: () => void;
 }
 
 const HomePage: React.FC<HomePageProps> = ({ 
@@ -21,11 +18,9 @@ const HomePage: React.FC<HomePageProps> = ({
   onPhraseClick, 
   onSelectImageClick, 
   onSpeak, 
-  onAddNewPhrase,
-  onClaimMission,
-  onOpenPictoChat
+  onAddNewPhrase
 }) => {
-  const { phrases, dailyMissions } = userProfile.data;
+  const { phrases } = userProfile.data;
 
   const getImageForPhrase = (phrase: Phrase): CatImage | null => {
     if (!phrase.selectedImageId) return null;
@@ -35,10 +30,6 @@ const HomePage: React.FC<HomePageProps> = ({
   return (
     <div className="container mx-auto p-4">
       
-      <section className="mb-8">
-        <DailyMissions missions={dailyMissions} onClaim={onClaimMission} />
-      </section>
-
       <section>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           <div
@@ -60,15 +51,6 @@ const HomePage: React.FC<HomePageProps> = ({
           ))}
         </div>
       </section>
-
-      <button
-        onClick={onOpenPictoChat}
-        className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 btn-themed btn-themed-secondary !rounded-full !p-4 shadow-2xl animate-float"
-        title="Ask Picto!"
-      >
-        <ChatBubbleIcon className="w-8 h-8 text-white" />
-      </button>
-
     </div>
   );
 };

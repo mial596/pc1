@@ -12,7 +12,6 @@ import {
     FriendData,
     Envelope,
     GameUpgrade,
-    ChatMessage,
 } from '../types';
 
 // Helper function to handle API requests
@@ -116,15 +115,6 @@ export const claimFriendMissionReward = (token: string, friendshipId: string): P
 export const saveGameResults = (token: string, results: { coinsEarned: number; xpEarned: number }): Promise<UserProfile> => {
     return apiRequest('/api/game', 'POST', token, { action: 'saveResults', results });
 };
-
-// --- Daily Missions & AI Chat ---
-export const claimDailyMissionReward = (token: string, missionId: string): Promise<UserProfile> => {
-    return apiRequest('/api/missions', 'POST', token, { action: 'claimReward', missionId });
-};
-
-export const chatWithPicto = (token: string, history: ChatMessage[]): Promise<{ reply: string }> => {
-    return apiRequest('/api/missions', 'POST', token, { action: 'chat', history });
-}
 
 // --- Trading ---
 export const getTrades = (token: string): Promise<TradeOffer[]> => {
