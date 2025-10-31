@@ -17,11 +17,11 @@ const FullDisplay: React.FC<FullDisplayProps> = ({ phrase, image, onClose }) => 
       <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white z-10">
         <CloseIcon className="w-10 h-10" />
       </button>
-      <div className={`w-full max-w-md aspect-square mb-6 flex items-center justify-center ${image?.isShiny ? 'shiny-effect' : ''}`}>
+      <div className={`w-full max-w-2xl aspect-square mb-6 flex items-center justify-center rounded-2xl shadow-2xl border-8 border-white bg-white overflow-hidden ${image?.isShiny ? 'shiny-effect' : ''}`}>
         <img
           src={image ? image.url : DEFAULT_PIC_URL}
           alt={phrase.text}
-          className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border-8 border-white bg-white"
+          className="w-full h-full object-cover"
         />
       </div>
       <h1 className="text-4xl md:text-5xl font-black text-center text-white text-stroke">{phrase.text}</h1>

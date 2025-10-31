@@ -6,7 +6,7 @@ import MobileMenu from './components/MobileMenu';
 import HomePage from './pages/HomePage';
 import AlbumPage from './pages/AlbumPage';
 import ShopPage from './pages/ShopPage';
-import GameModeSelector from './components/GameModeSelector';
+import JuegosPage from './pages/JuegosPage';
 import PhraseEditorPage from './pages/PhraseEditorPage';
 import CommunityView from './components/CommunityView';
 import AdminPanel from './components/AdminPanel';
@@ -248,9 +248,8 @@ const App: React.FC = () => {
       case 'shop':
         return <ShopPage shopData={shopData} onOpenShop={() => setShopModalOpen(true)} />;
       case 'games':
-        return <GameModeSelector 
+        return <JuegosPage 
           unlockedImages={unlockedImages}
-          upgrades={userProfile.data.purchasedUpgrades}
           onGameEnd={handleGameEnd}
         />;
       case 'phrases':

@@ -7,7 +7,7 @@ import { FriendData, Friendship } from '../../types.js';
 import { ObjectId, Db, Collection } from 'mongodb';
 import { resolveProfilePicturesForUsers } from './profile.js';
 // FIX: Add ALL_MISSIONS import
-import { ALL_MISSIONS } from '../../gameData/missions.js';
+import { ALL_MISSIONS } from '../gameData/missions.js';
 
 const MAX_FRIENDSHIP_LEVEL = 10;
 const XP_PER_LEVEL = 200;

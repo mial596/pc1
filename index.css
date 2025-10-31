@@ -324,6 +324,53 @@ body {
     border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
 }
 
+/* --- NEW GAME STYLES --- */
+
+/* Rompecatgramas (Jigsaw) */
+.puzzle-grid {
+  display: grid;
+  gap: 2px;
+  padding: 4px;
+  background: var(--c-surface-darker);
+  border: 2px solid var(--c-ink)/20;
+}
+.puzzle-piece {
+  background-size: 300% 300%; /* For 3x3 grid */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+  cursor: pointer;
+}
+.puzzle-piece.selected {
+  transform: scale(0.9);
+  box-shadow: 0 0 15px 5px var(--c-primary);
+  z-index: 10;
+}
+.puzzle-piece.correct {
+  border: 2px solid #4ade80; /* green-400 */
+}
+
+/* Atrapa Pictos (Catcher Game) */
+.catcher-game-area {
+  background-color: var(--c-surface-darker);
+  background-image:
+    radial-gradient(var(--c-ink)/10 1px, transparent 1px),
+    radial-gradient(var(--c-ink)/10 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+}
+
+.falling-item {
+  position: absolute;
+  font-size: 2rem;
+  user-select: none;
+  animation: fall linear forwards;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh);
+  }
+}
+
 /* --- Animations --- */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }

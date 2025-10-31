@@ -5,6 +5,7 @@ import { verifyToken } from './_utils/auth.js';
 import { ObjectId, Db } from 'mongodb';
 import { CatImage } from '../../types.js';
 import { resolveProfilePicturesForUsers } from './profile.js';
+import { updateMissionProgress } from './friends.js';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     try {
@@ -104,6 +105,7 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
     };
 
     await db.collection('trades').insertOne(newTrade);
+    await updateMissionProgress(friendships, userId, toUserId, 'SEND_TRADE', 1);
     await users.updateOne({ _id: toUserId as any }, { $inc: { "data.tradeNotifications": 1 } });
     
     return res.status(201).json({ success: true });

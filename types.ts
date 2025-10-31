@@ -1,5 +1,7 @@
 // types.ts
 
+import React from "react";
+
 export interface CatImage {
   id: number;
   url: string;
@@ -104,56 +106,22 @@ export interface UserProfile {
   data: UserData;
 }
 
-// --- Game Modes ---
-interface BaseGameMode {
-  gameId: 'mouseHunt' | 'catMemory' | 'simonSays' | 'catTrivia' | 'felineRhythm';
-  id: string; // e.g., 'mouseHunt-easy'
-  name: string; // e.g., 'Fácil'
+
+// --- Game Center Types ---
+export interface GameProps {
+  unlockedImages: CatImage[];
+  onGameEnd: (results: { score: number; coinsEarned: number; xpEarned: number }) => void;
+}
+
+export interface Game {
+  id: string;
+  name: string;
+  category: 'Asociación y memoria' | 'Creatividad y expresión' | 'Sonidos y reconocimiento' | 'Aprendizaje y lógica' | 'Mini-juegos más dinámicos';
   description: string;
+  component: React.FC<GameProps>;
+  minImagesRequired?: number;
+  icon: React.ReactNode;
 }
-
-export interface MouseHuntMode extends BaseGameMode {
-  gameId: 'mouseHunt';
-  gridSize: number;
-  mouseDuration: number;
-  gameDuration: number;
-  maxMice: number;
-  rewardMultiplier: number;
-}
-
-export interface CatMemoryMode extends BaseGameMode {
-    gameId: 'catMemory';
-    pairCount: number;
-    gameDuration: number;
-    rewardPerPair: number;
-    minImagesRequired: number;
-}
-
-export interface SimonSaysMode extends BaseGameMode {
-    gameId: 'simonSays';
-    gameDuration: number;
-    initialSequenceLength: number;
-    speedMs: number;
-    rewardPerRound: number;
-}
-
-export interface CatTriviaMode extends BaseGameMode {
-    gameId: 'catTrivia';
-    gameDuration: number;
-    questionCount: number;
-    timePerQuestion: number;
-    rewardPerCorrect: number;
-    minImagesRequired: number;
-}
-
-export interface FelineRhythmMode extends BaseGameMode {
-    gameId: 'felineRhythm';
-    gameDuration: number;
-    noteCount: number;
-    rewardMultiplier: number;
-}
-
-export type GameMode = MouseHuntMode | CatMemoryMode | SimonSaysMode | CatTriviaMode | FelineRhythmMode;
 
 
 // --- Admin Panel Types ---

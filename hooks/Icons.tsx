@@ -55,6 +55,15 @@ export const MusicNoteIcon: React.FC<{ className?: string }> = ({ className }) =
     <Icon className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" /></Icon>
 );
 
+export const PuzzleIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></Icon>
+);
+
+export const GamepadIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M11 17a2 2 0 100-4 2 2 0 000 4zM17 10H7a4 4 0 00-4 4v1a4 4 0 004 4h10a4 4 0 004-4v-1a4 4 0 00-4-4zM13 10V7a1 1 0 00-1-1H5a1 1 0 00-1 1v3" /></Icon>
+);
+
+
 export const TrashIcon: React.FC<{ className?: string }> = ({ className }) => (
     <Icon className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></Icon>
 );
