@@ -59,9 +59,13 @@ async function handler(req: VercelRequest, res: VercelResponse) {
                 if (currentUser.data.coins < cost) {
                     return res.status(402).json({ message: "Not enough coins." });
                 }
+                
+                const themeQuery = (envelope.catThemePool && envelope.catThemePool.length > 0)
+                    ? { theme: { $in: envelope.catThemePool } }
+                    : {};
 
-                const allImages = await catalog.find({}).project({_id: 0}).toArray();
-                const newImages = getRandomImages(allImages as any[], currentUser.data.unlockedImageIds, envelope.imageCount);
+                const potentialImages = await catalog.find(themeQuery).project({_id: 0}).toArray();
+                const newImages = getRandomImages(potentialImages as any[], currentUser.data.unlockedImageIds, envelope.imageCount);
                 const newImageIds = newImages.map(img => img.id);
 
                 const newCoins = currentUser.data.coins - cost;

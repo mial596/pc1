@@ -18,24 +18,24 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
     const [error, setError] = useState<string | null>(null);
     const { getAccessTokenSilently } = useAuth0();
 
-    const fetchProfile = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const token = await getAccessTokenSilently();
-            const data = await apiService.getPublicProfile(token, username);
-            setProfile(data);
-        } catch (err) {
-            setError('Could not load profile. This user may not exist.');
-            console.error(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [username, getAccessTokenSilently]);
-
     useEffect(() => {
+        const fetchProfile = async () => {
+            if (!username) return;
+            setIsLoading(true);
+            setError(null);
+            try {
+                const token = await getAccessTokenSilently();
+                const data = await apiService.getPublicProfile(token, username);
+                setProfile(data);
+            } catch (err) {
+                setError('Could not load profile. This user may not exist.');
+                console.error(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
         fetchProfile();
-    }, [fetchProfile]);
+    }, [username, getAccessTokenSilently]);
     
     const handleLike = async (publicPhraseId: string) => {
         if (!profile) return;

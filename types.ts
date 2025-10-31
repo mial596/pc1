@@ -33,6 +33,7 @@ export interface Envelope {
   description: string;
   xp: number;
   isFeatured?: boolean;
+  catThemePool: string[];
 }
 
 export type UpgradeId = 'goldenPaw' | 'betterBait' | 'extraTime' | string;

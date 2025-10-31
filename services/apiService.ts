@@ -137,3 +137,23 @@ export const adminSetVerifiedStatus = (token: string, userId: string, isVerified
 export const adminCensorPhrase = (token: string, publicPhraseId: string): Promise<{ success: boolean }> => {
     return apiRequest('/api/admin', 'POST', token, { action: 'censorPhrase', publicPhraseId });
 };
+
+export const adminGetCatCatalog = (token: string): Promise<CatImage[]> => {
+    return apiRequest('/api/admin?resource=cats', 'GET', token);
+};
+
+export const adminGetEnvelopes = (token: string): Promise<Envelope[]> => {
+    return apiRequest('/api/admin?resource=envelopes', 'GET', token);
+};
+
+export const adminGetThemes = (token: string): Promise<string[]> => {
+    return apiRequest('/api/admin?resource=themes', 'GET', token);
+};
+
+export const adminAddCat = (token: string, catData: { url: string; theme: string; rarity: 'common' | 'rare' | 'epic' }): Promise<{ success: boolean }> => {
+    return apiRequest('/api/admin', 'POST', token, { action: 'addCat', ...catData });
+};
+
+export const adminAddEnvelope = (token: string, envelopeData: Omit<Envelope, 'isFeatured'> & {isFeatured: boolean}): Promise<{ success: boolean }> => {
+    return apiRequest('/api/admin', 'POST', token, { action: 'addEnvelope', ...envelopeData });
+};

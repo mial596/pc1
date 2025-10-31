@@ -67,6 +67,21 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: any) {
         }));
         return res.status(200).json(result);
     }
+    
+    if (resource === 'cats') {
+        const cats = await db.collection('cat_images').find({}).sort({ id: 1 }).toArray();
+        return res.status(200).json(cats);
+    }
+    
+    if (resource === 'envelopes') {
+        const envelopes = await db.collection('envelopes').find({}).sort({ baseCost: 1 }).toArray();
+        return res.status(200).json(envelopes);
+    }
+
+    if (resource === 'themes') {
+        const themes = await db.collection('cat_images').distinct('theme');
+        return res.status(200).json(themes);
+    }
 
     return res.status(400).send('Invalid resource requested.');
 }
@@ -97,6 +112,32 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: any) {
             );
         }
         return res.status(200).json({ success: true });
+    }
+
+    if (action === 'addCat') {
+        const { url, theme, rarity } = req.body;
+        if (!url || !theme || !rarity) {
+            return res.status(400).json({ message: "URL, theme, and rarity are required." });
+        }
+        const cats = db.collection('cat_images');
+        const lastCat = await cats.find().sort({ id: -1 }).limit(1).toArray();
+        const nextId = lastCat.length > 0 ? lastCat[0].id + 1 : 1;
+
+        const newCat = { id: nextId, url, theme, rarity };
+        await cats.insertOne(newCat);
+        return res.status(201).json({ success: true });
+    }
+
+    if (action === 'addEnvelope') {
+        const envelopeData = req.body;
+        delete envelopeData.action; // Remove action field before inserting
+
+        if (!envelopeData.id || !envelopeData.name || !envelopeData.baseCost) {
+            return res.status(400).json({ message: "ID, name, and baseCost are required." });
+        }
+
+        await db.collection('envelopes').insertOne(envelopeData);
+        return res.status(201).json({ success: true });
     }
 
     return res.status(400).send('Invalid action requested.');
