@@ -1,14 +1,13 @@
 import React from 'react';
-import { Envelope, GameUpgrade, PlayerStats, UpgradeId, EnvelopeTypeId } from '../types';
+import { Envelope, GameUpgrade, UpgradeId, EnvelopeTypeId, UserProfile, CatImage } from '../types';
 import { CloseIcon, CoinIcon, LockIcon, SpinnerIcon } from '../hooks/Icons';
 
 interface ShopModalProps {
     isOpen: boolean;
     onClose: () => void;
     shopData: { envelopes: Envelope[], upgrades: GameUpgrade[] } | null;
-    userCoins: number;
-    playerStats: PlayerStats;
-    purchasedUpgrades: UpgradeId[];
+    userProfile: UserProfile;
+    allImages: CatImage[];
     onPurchaseEnvelope: (envelopeId: EnvelopeTypeId) => void;
     onPurchaseUpgrade: (upgradeId: UpgradeId) => void;
 }
@@ -17,13 +16,14 @@ const ShopModal: React.FC<ShopModalProps> = ({
     isOpen,
     onClose,
     shopData,
-    userCoins,
-    playerStats,
-    purchasedUpgrades,
+    userProfile,
+    allImages,
     onPurchaseEnvelope,
     onPurchaseUpgrade,
 }) => {
     if (!isOpen) return null;
+
+    const { data: userData } = userProfile;
 
     const calculateEnvelopeCost = (envelope: Envelope, playerLevel: number): number => {
         return envelope.baseCost + ((playerLevel - 1) * envelope.costIncreasePerLevel);
@@ -51,8 +51,25 @@ const ShopModal: React.FC<ShopModalProps> = ({
                                 <h3 className="text-xl font-bold text-ink mb-4">Sobres de Gatos</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {shopData.envelopes.map((envelope: Envelope) => {
-                                        const cost = calculateEnvelopeCost(envelope, playerStats.level);
-                                        const canAfford = userCoins >= cost;
+                                        const originalCost = calculateEnvelopeCost(envelope, userData.playerStats.level);
+
+                                        const envelopeImagePool = allImages.filter(img =>
+                                            !envelope.catThemePool || envelope.catThemePool.length === 0 || envelope.catThemePool.includes(img.theme)
+                                        );
+                                        const unlockedIdsInPool = new Set(
+                                            userData.unlockedImageIds.filter(id => envelopeImagePool.some(img => img.id === id))
+                                        );
+                                        const remainingCount = envelopeImagePool.length - unlockedIdsInPool.size;
+                                        const isCompleted = remainingCount <= 0;
+                                        
+                                        const imagesToGet = isCompleted ? 0 : Math.min(remainingCount, envelope.imageCount);
+
+                                        const proratedCost = isCompleted || envelope.imageCount === 0
+                                            ? originalCost
+                                            : Math.ceil(originalCost * (imagesToGet / envelope.imageCount));
+                                            
+                                        const canAfford = userData.coins >= proratedCost;
+
                                         return (
                                             <div key={envelope.id} className="card-themed p-4 flex flex-col items-center text-center">
                                                 <div className={`w-24 h-16 rounded-lg flex items-center justify-center text-5xl mb-3 bg-gradient-to-br ${envelope.color}`}>
@@ -60,14 +77,22 @@ const ShopModal: React.FC<ShopModalProps> = ({
                                                 </div>
                                                 <h4 className="font-bold text-lg">{envelope.name}</h4>
                                                 <p className="text-sm text-ink/70 flex-grow">{envelope.description}</p>
-                                                <p className="text-xs my-2 text-ink/60">Costo aumenta por nivel</p>
-                                                <button
-                                                    onClick={() => onPurchaseEnvelope(envelope.id)}
-                                                    disabled={!canAfford}
-                                                    className="btn-themed btn-themed-primary w-full flex items-center justify-center gap-2 mt-2"
-                                                >
-                                                    <CoinIcon className="w-5 h-5" /> {cost}
-                                                </button>
+                                                <p className="text-xs my-2 text-ink/60">Contiene {envelope.imageCount} gatos</p>
+                                                
+                                                {isCompleted ? (
+                                                    <button disabled className="btn-themed btn-themed-secondary w-full mt-2">
+                                                        ¡Completado!
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => onPurchaseEnvelope(envelope.id)}
+                                                        disabled={!canAfford}
+                                                        className="btn-themed btn-themed-primary w-full flex items-center justify-center gap-2 mt-2"
+                                                    >
+                                                        <CoinIcon className="w-5 h-5" /> {proratedCost}
+                                                    </button>
+                                                )}
+                                                {!isCompleted && <p className="text-xs mt-2 text-ink/60">Quedan {remainingCount} por desbloquear</p>}
                                             </div>
                                         );
                                     })}
@@ -79,9 +104,9 @@ const ShopModal: React.FC<ShopModalProps> = ({
                                 <h3 className="text-xl font-bold text-ink mb-4">Mejoras de Juego</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {shopData.upgrades.map((upgrade: GameUpgrade) => {
-                                        const isPurchased = purchasedUpgrades.includes(upgrade.id);
-                                        const canAfford = userCoins >= upgrade.cost;
-                                        const levelMet = playerStats.level >= upgrade.levelRequired;
+                                        const isPurchased = userData.purchasedUpgrades.includes(upgrade.id);
+                                        const canAfford = userData.coins >= upgrade.cost;
+                                        const levelMet = userData.playerStats.level >= upgrade.levelRequired;
                                         const canPurchase = !isPurchased && canAfford && levelMet;
 
                                         return (

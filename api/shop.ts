@@ -4,13 +4,6 @@ import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
 import { CatImage, Envelope, EnvelopeTypeId } from '../../types.js';
 
-// Helper function to get random images
-const getRandomImages = (allImages: CatImage[], unlockedIds: number[], count: number): CatImage[] => {
-    const availableImages = allImages.filter(img => !unlockedIds.includes(img.id));
-    const shuffled = availableImages.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-};
-
 const calculateEnvelopeCost = (envelope: Envelope, playerLevel: number): number => {
   return envelope.baseCost + ((playerLevel - 1) * envelope.costIncreasePerLevel);
 };
@@ -54,36 +47,44 @@ async function handler(req: VercelRequest, res: VercelResponse) {
                     return res.status(400).json({ message: "Invalid envelopeId." });
                 }
                 
-                const cost = calculateEnvelopeCost(envelope as any, currentUser.data.playerStats.level);
-
-                if (currentUser.data.coins < cost) {
-                    return res.status(402).json({ message: "Not enough coins." });
-                }
-                
+                // --- Dynamic Pricing Logic ---
                 const themeQuery = (envelope.catThemePool && envelope.catThemePool.length > 0)
                     ? { theme: { $in: envelope.catThemePool } }
                     : {};
 
-                const potentialImages = await catalog.find(themeQuery).project({_id: 0}).toArray();
-                const newImages = getRandomImages(potentialImages as any[], currentUser.data.unlockedImageIds, envelope.imageCount);
+                const allImagesInPool = await catalog.find(themeQuery).project({_id: 0}).toArray();
+                const unlockedIds = new Set(currentUser.data.unlockedImageIds || []);
+                const remainingImages = allImagesInPool.filter(img => !unlockedIds.has(img.id));
+
+                if (remainingImages.length === 0) {
+                    return res.status(400).json({ message: "Ya tienes todos los gatos de este sobre." });
+                }
+                
+                const imagesToGetCount = Math.min(remainingImages.length, envelope.imageCount);
+                const originalCost = calculateEnvelopeCost(envelope as any, currentUser.data.playerStats.level);
+                
+                const proratedCost = envelope.imageCount > 0 
+                    ? Math.ceil(originalCost * (imagesToGetCount / envelope.imageCount))
+                    : originalCost;
+
+                if (currentUser.data.coins < proratedCost) {
+                    return res.status(402).json({ message: "Not enough coins." });
+                }
+                
+                // Get a random subset of the remaining images
+                const shuffledRemaining = remainingImages.sort(() => 0.5 - Math.random());
+                const newImages = shuffledRemaining.slice(0, imagesToGetCount);
                 const newImageIds = newImages.map(img => img.id);
 
-                const newCoins = currentUser.data.coins - cost;
+                const newCoins = currentUser.data.coins - proratedCost;
                 
-                if (newImageIds.length > 0) {
-                    await users.updateOne(
-                        { _id: userId as any },
-                        {
-                            $set: { 'data.coins': newCoins },
-                            $addToSet: { 'data.unlockedImageIds': { $each: newImageIds } }
-                        }
-                    );
-                } else {
-                     await users.updateOne(
-                        { _id: userId as any },
-                        { $set: { 'data.coins': newCoins } }
-                    );
-                }
+                await users.updateOne(
+                    { _id: userId as any },
+                    {
+                        $set: { 'data.coins': newCoins },
+                        $addToSet: { 'data.unlockedImageIds': { $each: newImageIds } }
+                    }
+                );
 
                 return res.status(200).json({ newCoins, newImages });
             }

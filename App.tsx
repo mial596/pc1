@@ -293,9 +293,8 @@ const App: React.FC = () => {
         isOpen={isShopModalOpen}
         onClose={() => setShopModalOpen(false)}
         shopData={shopData}
-        userCoins={userProfile.data.coins}
-        playerStats={userProfile.data.playerStats}
-        purchasedUpgrades={userProfile.data.purchasedUpgrades}
+        userProfile={userProfile}
+        allImages={allImages}
         onPurchaseEnvelope={handlePurchaseEnvelope}
         onPurchaseUpgrade={() => { /* Implement upgrade purchase */ }}
       />
