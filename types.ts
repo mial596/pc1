@@ -53,9 +53,11 @@ export interface TradeOffer {
   fromUserId: string;
   fromUsername: string;
   fromUserVerified: boolean;
+  fromUserProfilePictureUrl?: string;
   toUserId: string;
   toUsername: string;
   toUserVerified: boolean;
+  toUserProfilePictureUrl?: string;
   offeredImages: CatImage[];
   requestedImages: CatImage[];
   status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
@@ -85,6 +87,7 @@ export interface UserData {
     playerStats: PlayerStats;
     purchasedUpgrades: UpgradeId[];
     bio: string;
+    profilePictureId: number | null;
     friendships: Friendship[];
     friendRequestsSent: string[]; // array of user IDs
     friendRequestsReceived: string[]; // array of user IDs
@@ -97,6 +100,7 @@ export interface UserProfile {
   username: string;
   role: 'admin' | 'mod' | 'user';
   isVerified: boolean;
+  profilePictureUrl?: string;
   data: UserData;
 }
 
@@ -158,6 +162,7 @@ export interface AdminUserView {
     username: string;
     role: 'admin' | 'mod' | 'user';
     isVerified: boolean;
+    profilePictureUrl?: string;
 }
 
 export interface PublicPhrase {
@@ -174,6 +179,7 @@ export interface PublicPhrase {
 export interface SearchableUser {
     username: string;
     isVerified: boolean;
+    profilePictureUrl?: string;
 }
 
 export interface PublicProfilePhrase {
@@ -187,6 +193,7 @@ export interface PublicProfilePhrase {
     // Optional fields for when phrase is part of a feed
     username?: string;
     isUserVerified?: boolean;
+    profilePictureUrl?: string;
 }
 
 export interface PublicProfileData {
@@ -195,6 +202,7 @@ export interface PublicProfileData {
     role: 'admin' | 'mod' | 'user';
     isVerified: boolean;
     bio: string;
+    profilePictureUrl?: string;
     phrases: PublicProfilePhrase[];
     unlockedImages: CatImage[];
 }
@@ -204,12 +212,14 @@ export interface Friend {
     username: string;
     isVerified: boolean;
     role: 'admin' | 'mod' | 'user';
+    profilePictureUrl?: string;
     friendship: Friendship | null; // Detailed friendship data
 }
 
 export interface FriendRequest {
     userId: string;
     username: string;
+    profilePictureUrl?: string;
 }
 
 export interface FriendData {

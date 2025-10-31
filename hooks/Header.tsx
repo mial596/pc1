@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { UserProfile } from '../types';
-import { CoinIcon, StarIcon, StoreIcon, UsersIcon, BookIcon, HomeIcon, LogoutIcon, EditIcon, CatSilhouetteIcon, AdminIcon } from './Icons';
+import { CoinIcon, StoreIcon, LogoutIcon, CatSilhouetteIcon } from './Icons';
 import { LOGO_URL } from '../constants';
 
 type Page = 'home' | 'album' | 'shop' | 'games' | 'phrases' | 'community' | 'admin';
@@ -28,8 +28,7 @@ const NavLink: React.FC<{
 
 const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile, activePage }) => {
   const { logout } = useAuth0();
-  const { playerStats, coins } = userProfile.data;
-  const xpPercentage = (playerStats.xp / playerStats.xpToNextLevel) * 100;
+  const { coins } = userProfile.data;
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-surface/90 backdrop-blur-sm border-b-2 border-primary z-40">
@@ -66,8 +65,15 @@ const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile,
           </div>
 
           <div className="flex items-center gap-2">
-             <button onClick={onOpenProfile} className="font-bold hover:text-primary transition-colors">
-                {userProfile.username}
+             <button onClick={onOpenProfile} className="flex items-center gap-2 font-bold hover:text-primary transition-colors p-1 rounded-full hover:bg-ink/10">
+                <div className="w-10 h-10 rounded-full bg-surface-darker border-2 border-primary flex items-center justify-center">
+                  {userProfile.profilePictureUrl ? (
+                    <img src={userProfile.profilePictureUrl} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                  ) : (
+                    <CatSilhouetteIcon className="w-6 h-6 text-ink/70" />
+                  )}
+                </div>
+                <span className="hidden md:inline">{userProfile.username}</span>
             </button>
             <button
               onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}

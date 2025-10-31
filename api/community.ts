@@ -3,6 +3,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
 import { ObjectId } from 'mongodb';
+import { resolveProfilePictureUrl, resolveProfilePicturesForUsers } from './profile.js';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
@@ -21,7 +22,6 @@ async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(200).json(allImages);
         }
 
-        // For all other resources, authentication is required.
         const decodedToken = await verifyToken(req.headers.authorization);
         const currentUserId = decodedToken.sub;
         
@@ -59,21 +59,21 @@ async function getPublicProfile(res: VercelResponse, db: any, username: string, 
         return res.status(404).json({ message: 'User not found' });
     }
     
-    // Defensively handle cases where the user's data object might not exist.
     const userData = profileUser.data || {};
-
     const phrasesCursor = publicPhrases.find({ userId: profileUser._id }).sort({ _id: -1 });
     const phrases = await phrasesCursor.toArray();
-
     const unlockedImageIds = userData.unlockedImageIds || [];
     const unlockedImages = await catImages.find({ id: { $in: unlockedImageIds } }).project({ _id: 0 }).toArray();
+
+    const profilePictureUrl = await resolveProfilePictureUrl(db, profileUser);
 
     const response = {
         userId: profileUser._id,
         username: profileUser.username,
         role: profileUser.role,
         isVerified: profileUser.isVerified,
-        bio: userData.bio || '', // Provide a default value for bio.
+        bio: userData.bio || '',
+        profilePictureUrl: profilePictureUrl,
         phrases: phrases.map((p: any) => ({
             publicPhraseId: p._id.toHexString(),
             text: p.text,
@@ -81,7 +81,7 @@ async function getPublicProfile(res: VercelResponse, db: any, username: string, 
             imageTheme: p.imageTheme,
             likeCount: p.likes?.length || 0,
             isLikedByMe: p.likes?.includes(currentUserId) || false,
-            userId: p.userId, // Pass authorId for mission updates
+            userId: p.userId,
         })),
         unlockedImages: unlockedImages,
     };
@@ -93,23 +93,30 @@ async function searchUsers(res: VercelResponse, db: any, query: string) {
         return res.status(200).json([]);
     }
     const users = db.collection('users');
-    // Using a regex for case-insensitive search.
     const searchCursor = users.find({ username: { $regex: `^${query}`, $options: 'i' } })
         .limit(10)
-        .project({ username: 1, isVerified: 1 });
+        .project({ username: 1, isVerified: 1, data: { profilePictureId: 1 } });
     const searchResults = await searchCursor.toArray();
-    const response = searchResults.map((u: any) => ({
+
+    const usersWithPics = await resolveProfilePicturesForUsers(db, searchResults);
+
+    const response = usersWithPics.map((u: any) => ({
         username: u.username,
         isVerified: u.isVerified || false,
+        profilePictureUrl: u.profilePictureUrl,
     }));
     return res.status(200).json(response);
 }
 
 async function getPublicFeed(res: VercelResponse, db: any, currentUserId: string) {
     const publicPhrases = db.collection('public_phrases');
-    // Get latest 20 phrases
     const feedCursor = publicPhrases.find({}).sort({ _id: -1 }).limit(20);
     const feedPhrases = await feedCursor.toArray();
+
+    const userIds = [...new Set(feedPhrases.map(p => p.userId))];
+    const users = await db.collection('users').find({ _id: { $in: userIds } }).project({_id: 1, data: { profilePictureId: 1 }}).toArray();
+    const usersWithPics = await resolveProfilePicturesForUsers(db, users);
+    const userPicMap = new Map(usersWithPics.map(u => [u._id, u.profilePictureUrl]));
 
     const response = feedPhrases.map((p: any) => ({
         publicPhraseId: p._id.toHexString(),
@@ -120,7 +127,8 @@ async function getPublicFeed(res: VercelResponse, db: any, currentUserId: string
         isLikedByMe: p.likes?.includes(currentUserId) || false,
         username: p.username,
         isUserVerified: p.isUserVerified,
-        userId: p.userId, // Pass authorId for mission updates
+        userId: p.userId,
+        profilePictureUrl: userPicMap.get(p.userId),
     }));
     return res.status(200).json(response);
 }

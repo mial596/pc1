@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
 import { PublicProfilePhrase } from '../types';
-import { SpinnerIcon, HeartIcon, VerifiedIcon } from '../hooks/Icons';
+import { SpinnerIcon, HeartIcon, VerifiedIcon, CatSilhouetteIcon } from '../hooks/Icons';
 
 interface PublicFeedProps {
     currentUserId: string;
@@ -83,11 +83,20 @@ const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {feed.map((phrase) => (
                         <div key={phrase.publicPhraseId} className="card-themed p-3">
-                            <header className="flex items-center gap-2 mb-2">
-                                <button onClick={() => onProfileClick(phrase.username!)} className="font-bold text-base text-ink hover:underline">
-                                    @{phrase.username}
+                            <header className="flex items-center gap-3 mb-2">
+                                <button onClick={() => onProfileClick(phrase.username!)} className="flex items-center gap-2">
+                                    <div className="w-10 h-10 rounded-full bg-surface-darker border-2 border-primary flex items-center justify-center">
+                                        {phrase.profilePictureUrl ? (
+                                            <img src={phrase.profilePictureUrl} alt={phrase.username} className="w-full h-full object-cover rounded-full" />
+                                        ) : (
+                                            <CatSilhouetteIcon className="w-6 h-6 text-ink/70" />
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                       <span className="font-bold text-base text-ink hover:underline">@{phrase.username}</span>
+                                       {phrase.isUserVerified && <VerifiedIcon className="w-4 h-4 text-blue-500" title="Verified User" />}
+                                    </div>
                                 </button>
-                                {phrase.isUserVerified && <VerifiedIcon className="w-4 h-4 text-blue-500" title="Verified User" />}
                             </header>
                             <div className="aspect-square bg-surface-darker rounded-md overflow-hidden border-2 border-ink/20 mb-2">
                                 <img src={phrase.imageUrl} alt={phrase.text} className="w-full h-full object-cover"/>

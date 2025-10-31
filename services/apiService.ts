@@ -48,7 +48,7 @@ export const saveUserData = (token: string, data: Partial<UserProfile['data']>):
     return apiRequest('/api/profile', 'POST', token, { data });
 };
 
-export const updateProfile = (token: string, data: { username: string; bio: string }): Promise<void> => {
+export const updateProfile = (token: string, data: { username: string; bio: string; profilePictureId: number | null }): Promise<void> => {
     return apiRequest('/api/profile', 'PUT', token, data);
 };
 
@@ -81,7 +81,7 @@ export const getPublicFeed = (token: string): Promise<PublicProfilePhrase[]> => 
     return apiRequest('/api/community?resource=feed', 'GET', token);
 }
 
-export const likePublicPhrase = (token: string, publicPhraseId: string, authorId: string): Promise<{ success: boolean; liked: boolean; updatedProfile: UserProfile }> => {
+export const likePublicPhrase = (token: string, publicPhraseId: string, authorId: string): Promise<{ success: boolean; liked: boolean }> => {
     return apiRequest('/api/friends', 'POST', token, { action: 'like', publicPhraseId, authorId });
 };
 

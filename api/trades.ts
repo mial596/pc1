@@ -4,7 +4,7 @@ import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
 import { ObjectId, Db } from 'mongodb';
 import { CatImage } from '../../types.js';
-import { updateMissionProgress } from './friends.js';
+import { resolveProfilePicturesForUsers } from './profile.js';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     try {
@@ -41,26 +41,33 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
         $or: [{ fromUserId: userId }, { toUserId: userId }],
         status: 'pending'
     }).sort({ createdAt: -1 }).toArray();
+    
+    // Batch fetch user data
+    const userIds = [...new Set(trades.flatMap(t => [t.fromUserId, t.toUserId]))];
+    const usersCursor = await usersCollection.find({ _id: { $in: userIds } }).project({ username: 1, isVerified: 1, data: {profilePictureId: 1} }).toArray();
+    const usersWithPics = await resolveProfilePicturesForUsers(db, usersCursor);
+    const userMap = new Map(usersWithPics.map(u => [u._id, u]));
 
     const result = await Promise.all(trades.map(async (trade) => {
-        const [fromUser, toUser, offeredImages, requestedImages] = await Promise.all([
-            usersCollection.findOne({ _id: trade.fromUserId }),
-            usersCollection.findOne({ _id: trade.toUserId }),
+        const [offeredImages, requestedImages] = await Promise.all([
             imagesCollection.find({ id: { $in: trade.offeredImageIds } }).project({_id: 0}).toArray(),
             imagesCollection.find({ id: { $in: trade.requestedImageIds } }).project({_id: 0}).toArray(),
         ]);
+        const fromUser = userMap.get(trade.fromUserId);
+        const toUser = userMap.get(trade.toUserId);
         return {
             ...trade,
             fromUsername: fromUser?.username || '?',
             fromUserVerified: fromUser?.isVerified || false,
+            fromUserProfilePictureUrl: fromUser?.profilePictureUrl,
             toUsername: toUser?.username || '?',
             toUserVerified: toUser?.isVerified || false,
+            toUserProfilePictureUrl: toUser?.profilePictureUrl,
             offeredImages,
             requestedImages,
         };
     }));
     
-    // Clear notifications
     await usersCollection.updateOne({ _id: userId as any }, { $set: { "data.tradeNotifications": 0 } });
 
     return res.status(200).json(result);
@@ -79,10 +86,10 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
 
     if (!fromUser || !toUser) return res.status(404).json({ message: "User not found." });
     
+    const isFriendInOldSystem = fromUser.data?.friends?.includes(toUserId);
     const friendship = await friendships.findOne({ $or: [{ user1Id: userId, user2Id: toUserId }, { user1Id: toUserId, user2Id: userId }] });
-    if (!friendship) return res.status(403).json({ message: "Can only trade with friends." });
+    if (!friendship && !isFriendInOldSystem) return res.status(403).json({ message: "Can only trade with friends." });
     
-    // Validate ownership
     const fromOwns = offeredImageIds.every(id => fromUser.data.unlockedImageIds.includes(id));
     const toOwns = requestedImageIds.every(id => toUser.data.unlockedImageIds.includes(id));
     if (!fromOwns || !toOwns) return res.status(400).json({ message: "Invalid trade items." });
@@ -98,9 +105,6 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
 
     await db.collection('trades').insertOne(newTrade);
     await users.updateOne({ _id: toUserId as any }, { $inc: { "data.tradeNotifications": 1 } });
-    
-    // Update mission progress
-    await updateMissionProgress(friendships, userId, toUserId, 'SEND_TRADE', 1);
     
     return res.status(201).json({ success: true });
 }
@@ -118,12 +122,10 @@ async function handlePut(req: VercelRequest, res: VercelResponse, db: Db, userId
         return res.status(200).json({ success: true });
     }
     
-    // Handle 'accept'
     const users = db.collection('users');
     const fromUser = await users.findOne({ _id: trade.fromUserId as any });
     const toUser = await users.findOne({ _id: trade.toUserId as any });
     
-    // Final validation before swap
     const fromOwns = trade.offeredImageIds.every((id:number) => fromUser?.data.unlockedImageIds.includes(id));
     const toOwns = trade.requestedImageIds.every((id:number) => toUser?.data.unlockedImageIds.includes(id));
     if(!fromOwns || !toOwns) {
@@ -131,7 +133,6 @@ async function handlePut(req: VercelRequest, res: VercelResponse, db: Db, userId
         return res.status(409).json({ message: 'Trade failed, one or more items no longer available.' });
     }
     
-    // Perform the swap
     await users.updateOne({ _id: fromUser?._id }, {
         $pullAll: { "data.unlockedImageIds": trade.offeredImageIds },
         $addToSet: { "data.unlockedImageIds": { $each: trade.requestedImageIds } }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
 import { UserProfile, FriendData, Friend } from '../types';
-import { SpinnerIcon, UsersIcon, VerifiedIcon, ArrowLeftIcon } from '../hooks/Icons';
+import { SpinnerIcon, UsersIcon, VerifiedIcon, ArrowLeftIcon, CatSilhouetteIcon } from '../hooks/Icons';
 import FriendshipView from './FriendshipView';
 
 interface FriendsManagerProps {
@@ -96,7 +96,16 @@ const FriendsManager: React.FC<FriendsManagerProps> = ({ currentUserProfile, onP
                     {data?.requests && data.requests.length > 0 ? (
                         data.requests.map(req => (
                             <div key={req.userId} className="card-themed p-3 flex justify-between items-center">
-                                <span className="font-bold">{req.username}</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-surface-darker border-2 border-primary flex items-center justify-center">
+                                        {req.profilePictureUrl ? (
+                                            <img src={req.profilePictureUrl} alt={req.username} className="w-full h-full object-cover rounded-full" />
+                                        ) : (
+                                            <CatSilhouetteIcon className="w-6 h-6 text-ink/70" />
+                                        )}
+                                    </div>
+                                    <span className="font-bold">{req.username}</span>
+                                </div>
                                 <div className="flex gap-2">
                                     <button onClick={() => handleRequestResponse(req.userId, 'accept')} className="btn-themed btn-themed-primary !py-1 !px-3">Aceptar</button>
                                     <button onClick={() => handleRequestResponse(req.userId, 'reject')} className="btn-themed bg-gray-600 text-white !py-1 !px-3">Rechazar</button>
@@ -115,9 +124,18 @@ const FriendsManager: React.FC<FriendsManagerProps> = ({ currentUserProfile, onP
                     {data?.friends && data.friends.length > 0 ? (
                         data.friends.map(friend => (
                             <div key={friend.userId} className="card-themed p-3 flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => setSelectedFriend(friend)} className="font-bold hover:underline">{friend.username}</button>
-                                    {friend.isVerified && <VerifiedIcon className="w-5 h-5 text-blue-400" />}
+                                <div className="flex items-center gap-3">
+                                     <div className="w-10 h-10 rounded-full bg-surface-darker border-2 border-primary flex items-center justify-center">
+                                        {friend.profilePictureUrl ? (
+                                            <img src={friend.profilePictureUrl} alt={friend.username} className="w-full h-full object-cover rounded-full" />
+                                        ) : (
+                                            <CatSilhouetteIcon className="w-6 h-6 text-ink/70" />
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => setSelectedFriend(friend)} className="font-bold hover:underline">{friend.username}</button>
+                                        {friend.isVerified && <VerifiedIcon className="w-5 h-5 text-blue-400" />}
+                                    </div>
                                 </div>
                                 <button onClick={() => handleRemoveFriend(friend.userId)} className="btn-themed btn-themed-danger !py-1 !px-3">Eliminar</button>
                             </div>

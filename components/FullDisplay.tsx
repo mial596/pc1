@@ -17,7 +17,7 @@ const FullDisplay: React.FC<FullDisplayProps> = ({ phrase, image, onClose }) => 
       <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white z-10">
         <CloseIcon className="w-10 h-10" />
       </button>
-      <div className="w-full max-w-md aspect-square mb-6 flex items-center justify-center">
+      <div className={`w-full max-w-md aspect-square mb-6 flex items-center justify-center ${image?.isShiny ? 'shiny-effect' : ''}`}>
         <img
           src={image ? image.url : DEFAULT_PIC_URL}
           alt={phrase.text}

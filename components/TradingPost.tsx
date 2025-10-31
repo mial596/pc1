@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
 import { UserProfile, TradeOffer, CatImage, Friend, PublicProfileData } from '../types';
-import { SpinnerIcon, TradeIcon, VerifiedIcon, ArrowLeftIcon, CloseIcon } from '../hooks/Icons';
+import { SpinnerIcon, TradeIcon, VerifiedIcon, ArrowLeftIcon, CloseIcon, CatSilhouetteIcon } from '../hooks/Icons';
 
 interface TradingPostProps {
     currentUserProfile: UserProfile;
@@ -33,13 +33,24 @@ const TradeOfferCard: React.FC<{
     onCancel: (id: string) => void;
 }> = ({ trade, currentUserId, onAccept, onReject, onCancel }) => {
     const isIncoming = trade.toUserId === currentUserId;
+    const partnerUsername = isIncoming ? trade.fromUsername : trade.toUsername;
+    const partnerAvatar = isIncoming ? trade.fromUserProfilePictureUrl : trade.toUserProfilePictureUrl;
 
     return (
         <div className="trade-offer-card bg-surface border-2 border-ink/20 rounded-lg p-4 mb-4">
             <div className="flex justify-between items-center mb-3">
-                <p className="font-bold text-lg">
-                    {isIncoming ? `Oferta de @${trade.fromUsername}` : `Oferta para @${trade.toUsername}`}
-                </p>
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-surface-darker border-2 border-primary flex items-center justify-center">
+                        {partnerAvatar ? (
+                            <img src={partnerAvatar} alt={partnerUsername} className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                            <CatSilhouetteIcon className="w-5 h-5 text-ink/70" />
+                        )}
+                    </div>
+                    <p className="font-bold text-lg">
+                        {isIncoming ? `Oferta de @${partnerUsername}` : `Oferta para @${partnerUsername}`}
+                    </p>
+                </div>
                 <span className="text-xs text-ink/60">{new Date(trade.createdAt).toLocaleDateString()}</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -117,6 +128,10 @@ const TradingPost: React.FC<TradingPostProps> = ({ currentUserProfile, preselect
     }, [fetchData]);
 
     const handleSelectFriend = async (friendId: string) => {
+        if (!friendId) {
+            setTradePartner(null);
+            return;
+        }
         const friend = friends.find(f => f.userId === friendId);
         if(!friend) return;
         
@@ -255,8 +270,8 @@ const TradingPost: React.FC<TradingPostProps> = ({ currentUserProfile, preselect
                 </button>
             )}
             <div className="flex border-b-2 border-ink/20 mb-4">
-                <button onClick={() => setActiveTab('offers')} className={`px-4 py-2 font-bold ${activeTab === 'offers' ? 'border-b-4 border-primary text-primary' : 'text-ink/60'}`}>Mis Ofertas</button>
-                <button onClick={() => setActiveTab('new')} className={`px-4 py-2 font-bold ${activeTab === 'new' ? 'border-b-4 border-primary text-primary' : 'text-ink/60'}`}>Nuevo Intercambio</button>
+                 <button onClick={() => { setActiveTab('offers'); setTradePartner(null); }} className="tab-solid-base tab-solid" data-active={activeTab === 'offers'}>Mis Ofertas</button>
+                 <button onClick={() => setActiveTab('new')} className="tab-solid-base tab-solid" data-active={activeTab === 'new'}>Nuevo Intercambio</button>
             </div>
              {isLoading ? <div className="flex justify-center p-8"><SpinnerIcon className="w-8 h-8 animate-spin mx-auto mt-8" /></div> : (
                 activeTab === 'offers' ? renderOffers() : renderNewTrade()

@@ -47,7 +47,6 @@ body {
   border-radius: 16px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out;
-  cursor: pointer;
 }
 .card-themed:hover {
   transform: translateY(-5px);
@@ -202,6 +201,48 @@ body {
 
 
 /* --- New UI Styles --- */
+
+/* Solid Tabs */
+.tab-solid {
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.2s ease-in-out;
+  border: 2px solid transparent;
+  border-bottom: 0;
+  margin-bottom: -2px; /* Overlap the main border */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tab-solid-active {
+  background-color: var(--c-surface);
+  border-color: var(--c-ink)/20;
+  color: var(--c-primary);
+}
+.tab-solid:not(.tab-solid-active):hover {
+  background-color: var(--c-ink)/10;
+}
+
+/* Solid base for tabs */
+.tab-solid-base {
+  background: transparent;
+  border-radius: 8px 8px 0 0;
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+}
+.tab-solid-base[data-active="true"] {
+  background: var(--c-surface);
+  color: var(--c-primary);
+}
+
+
+/* Mobile Menu */
+.mobile-menu-solid {
+  background-color: var(--c-surface);
+  border-top: 2px solid var(--c-primary);
+}
+
 
 /* Featured Item (Shop) */
 .featured-item-card { background: var(--c-surface-darker); background-image: url('https://www.transparenttextures.com/patterns/subtle-carbon.png'); cursor: pointer; }

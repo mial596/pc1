@@ -171,11 +171,24 @@ const App: React.FC = () => {
     setPhraseToEdit(null);
   }
 
-  const handleSaveProfile = async (username: string, bio: string) => {
+  const handleSaveProfile = async (profileData: { username: string; bio: string; profilePictureId: number | null }) => {
     if (!userProfile) return;
     const token = await getAccessTokenSilently();
-    await apiService.updateProfile(token, { username, bio });
-    setUserProfile({ ...userProfile, username: username, data: { ...userProfile.data, bio } });
+    await apiService.updateProfile(token, profileData);
+    
+    // Optimistically update UI
+    const newProfilePictureUrl = allImages.find(img => img.id === profileData.profilePictureId)?.url;
+    setUserProfile({
+      ...userProfile,
+      username: profileData.username,
+      profilePictureUrl: newProfilePictureUrl,
+      data: {
+        ...userProfile.data,
+        bio: profileData.bio,
+        profilePictureId: profileData.profilePictureId,
+      }
+    });
+
     setEditProfileModalOpen(false);
     showToast("Profile updated successfully!");
   }
@@ -305,6 +318,7 @@ const App: React.FC = () => {
         onClose={() => setEditProfileModalOpen(false)}
         currentUserProfile={userProfile}
         onSave={handleSaveProfile}
+        unlockedImages={unlockedImages}
        />
       {fullDisplayData && (
         <FullDisplay

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
 import { AdminUserView, PublicPhrase, TradeOffer } from '../types';
-import { SpinnerIcon, TrashIcon } from '../hooks/Icons';
+import { SpinnerIcon, TrashIcon, CatSilhouetteIcon } from '../hooks/Icons';
 
 import ManageCats from './ManageCats';
 import ManageEnvelopes from './ManageEnvelopes';
@@ -27,7 +27,7 @@ const AdminPanel: React.FC = () => {
     const TabButton: React.FC<{ tabId: Tab, children: React.ReactNode }> = ({ tabId, children }) => (
         <button
             onClick={() => setActiveTab(tabId)}
-            className={`px-4 py-2 font-bold transition-colors ${activeTab === tabId ? 'border-b-4 border-primary text-primary' : 'text-ink/60 hover:text-ink'}`}
+            className={`tab-solid ${activeTab === tabId ? 'tab-solid-active' : 'text-ink/70'}`}
         >
             {children}
         </button>
@@ -82,9 +82,18 @@ const ManageUsers: React.FC = () => {
         <div className="space-y-2">
             {users.map((user: AdminUserView) => (
                 <div key={user.id} className="card-themed p-3 flex justify-between items-center">
-                    <div>
-                        <p className="font-bold">{user.username} <span className="text-xs text-ink/50">({user.role})</span></p>
-                        <p className="text-xs text-ink/70">{user.id}</p>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-surface-darker border-2 border-primary flex items-center justify-center flex-shrink-0">
+                            {user.profilePictureUrl ? (
+                                <img src={user.profilePictureUrl} alt={user.username} className="w-full h-full object-cover rounded-full" />
+                            ) : (
+                                <CatSilhouetteIcon className="w-6 h-6 text-ink/70" />
+                            )}
+                        </div>
+                        <div>
+                           <p className="font-bold">{user.username} <span className="text-xs text-ink/50">({user.role})</span></p>
+                           <p className="text-xs text-ink/70">{user.id}</p>
+                        </div>
                     </div>
                     <button onClick={() => handleSetVerified(user.id, !user.isVerified)} className={`btn-themed ${user.isVerified ? 'btn-themed-danger' : 'btn-themed-primary'}`}>
                         {user.isVerified ? 'Un-verify' : 'Verify'}

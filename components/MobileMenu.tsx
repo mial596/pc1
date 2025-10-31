@@ -18,9 +18,11 @@ const NavItem: React.FC<{
 }> = ({ icon, label, isActive, onClick }) => (
   <button
     onClick={onClick}
-    className={`flex flex-col items-center justify-center w-full h-full transition-colors ${isActive ? 'text-primary' : 'text-ink/60 hover:text-primary'}`}
+    className={`flex flex-col items-center justify-center w-full h-16 transition-all duration-200 ease-in-out ${isActive ? 'text-primary' : 'text-ink/60 hover:text-primary'}`}
   >
-    <div className="w-7 h-7">{icon}</div>
+    <div className={`p-2 rounded-lg transition-colors ${isActive ? 'bg-primary/10' : ''}`}>
+      <div className="w-7 h-7">{icon}</div>
+    </div>
     <span className="text-xs font-bold">{label}</span>
   </button>
 );
@@ -33,7 +35,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ activePage, onNavigate, userPro
       <div className="relative">
         <UsersIcon />
         {data.tradeNotifications > 0 && (
-            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-surface">
+            <span className="absolute -top-1 -right-2 bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-surface">
                 {data.tradeNotifications}
             </span>
         )}
@@ -49,7 +51,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ activePage, onNavigate, userPro
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-surface border-t-2 border-primary z-40">
+    <nav className="mobile-menu-solid lg:hidden fixed bottom-0 left-0 right-0 h-20 z-40">
       <div className="flex justify-around items-center h-full">
         {navItems.map(item => (
           <NavItem

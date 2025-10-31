@@ -2,9 +2,10 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
-import { ObjectId } from 'mongodb';
+import { ObjectId, Db } from 'mongodb';
 import { MASTER_IMAGE_CATALOG_DATA } from './_shared/catalog-data.js';
-import { CatImage, Envelope, TradeOffer } from '../../types.js';
+import { CatImage, Envelope } from '../../types.js';
+import { resolveProfilePicturesForUsers } from './profile.js';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     try {
@@ -38,20 +39,21 @@ async function handler(req: VercelRequest, res: VercelResponse) {
     }
 }
 
-async function handleGet(req: VercelRequest, res: VercelResponse, db: any) {
+async function handleGet(req: VercelRequest, res: VercelResponse, db: Db) {
     const { resource } = req.query;
 
     if (resource === 'users') {
-        const usersCursor = db.collection('users').find({}, {
-            projection: { _id: 1, username: 1, role: 1, isVerified: 1 },
+        const usersCursor = await db.collection('users').find({}, {
+            projection: { _id: 1, username: 1, role: 1, isVerified: 1, data: { profilePictureId: 1 } },
             sort: { username: 1 }
-        });
-        const users = await usersCursor.toArray();
-        const result = users.map((u: any) => ({
+        }).toArray();
+        const usersWithPics = await resolveProfilePicturesForUsers(db, usersCursor);
+        const result = usersWithPics.map((u: any) => ({
             id: u._id,
             username: u.username,
             role: u.role,
-            isVerified: u.isVerified
+            isVerified: u.isVerified,
+            profilePictureUrl: u.profilePictureUrl,
         }));
         return res.status(200).json(result);
     }
@@ -71,7 +73,6 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: any) {
     }
     
     if (resource === 'cats') {
-        // Migration: ensure all cats have isShiny field
         await db.collection('cat_images').updateMany({ isShiny: { $exists: false } }, { $set: { isShiny: false } });
         const cats = await db.collection('cat_images').find({}).sort({ id: 1 }).toArray();
         return res.status(200).json(cats);

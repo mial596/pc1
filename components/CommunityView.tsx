@@ -38,7 +38,7 @@ const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile, onPro
                 if (selectedUsername) {
                     return (
                         <div>
-                            <button onClick={() => setView('search')} className="flex items-center gap-2 font-bold mb-4 text-ink/70 hover:text-ink">
+                            <button onClick={() => { setView('search'); setSelectedUsername(null); }} className="flex items-center gap-2 font-bold mb-4 text-ink/70 hover:text-ink">
                                 <ArrowLeftIcon className="w-5 h-5"/>
                                 Volver a la Búsqueda
                             </button>
@@ -72,28 +72,27 @@ const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile, onPro
     const TabButton: React.FC<{
         label: string;
         targetView: View;
-        currentView: View;
-        onClick: (view: View) => void;
         children: React.ReactNode;
-    }> = ({ label, targetView, currentView, onClick, children }) => (
-         <button onClick={() => onClick(targetView)} className={`px-4 py-2 font-bold flex items-center gap-2 transition-colors ${currentView === targetView ? 'border-b-4 border-primary text-primary' : 'text-ink/60 hover:text-ink'}`}>
-            {children} {label}
+    }> = ({ label, targetView, children }) => (
+         <button onClick={() => setView(targetView)} className={`tab-solid ${view === targetView ? 'tab-solid-active' : 'text-ink/70'}`}>
+            {children}
+            <span className="hidden sm:inline ml-2">{label}</span>
         </button>
     );
 
     return (
         <div className="container mx-auto p-4 sm:p-6">
             <div className="flex border-b-2 border-ink/20 mb-6">
-                <TabButton label="Feed" targetView="feed" currentView={view} onClick={setView}>
+                <TabButton label="Feed" targetView="feed">
                     <span className="text-xl">📰</span>
                 </TabButton>
-                <TabButton label="Buscar" targetView="search" currentView={view} onClick={setView}>
+                <TabButton label="Buscar" targetView="search">
                      <span className="text-xl">🔍</span>
                 </TabButton>
-                 <TabButton label="Amigos" targetView="friends" currentView={view} onClick={setView}>
+                 <TabButton label="Amigos" targetView="friends">
                     <UsersIcon className="w-5 h-5"/>
                 </TabButton>
-                <TabButton label="Intercambio" targetView="trading" currentView={view} onClick={setView}>
+                <TabButton label="Intercambio" targetView="trading">
                     <TradeIcon className="w-5 h-5" />
                 </TabButton>
             </div>

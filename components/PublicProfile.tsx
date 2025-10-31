@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
 import { PublicProfileData, UserProfile } from '../types';
-import { SpinnerIcon, VerifiedIcon, ModIcon, AdminIcon, HeartIcon, TradeIcon, PlusIcon, UsersIcon } from '../hooks/Icons';
+import { SpinnerIcon, VerifiedIcon, ModIcon, AdminIcon, HeartIcon, TradeIcon, PlusIcon, UsersIcon, CatSilhouetteIcon } from '../hooks/Icons';
 
 interface PublicProfileProps {
     username: string;
@@ -47,6 +47,7 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
         try {
             const token = await getAccessTokenSilently();
             await apiService.likePublicPhrase(token, publicPhraseId, profile.userId);
+            onFriendAction(); // Refresh user profile to get mission progress
         } catch (err) {
             setProfile({ ...profile, phrases: originalPhrases });
             console.error("Failed to like phrase", err);
@@ -123,7 +124,14 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
 
     return (
         <div className="max-w-4xl mx-auto">
-            <header className="text-center mb-8 bg-surface p-6 rounded-lg">
+            <header className="text-center mb-8 bg-surface p-6 rounded-lg flex flex-col items-center">
+                 <div className="w-24 h-24 rounded-full bg-surface-darker border-4 border-primary flex items-center justify-center mb-4">
+                  {profile.profilePictureUrl ? (
+                    <img src={profile.profilePictureUrl} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                  ) : (
+                    <CatSilhouetteIcon className="w-16 h-16 text-ink/70" />
+                  )}
+                </div>
                 <div className="flex justify-center items-center gap-2">
                     <h1 className="text-4xl font-black text-ink">{profile.username}</h1>
                     {profile.isVerified && <VerifiedIcon className="w-7 h-7 text-blue-400" title="Verified"/>}

@@ -33,26 +33,31 @@ const PhraseEditorPage: React.FC<PhraseEditorPageProps> = ({
 
       <div className="space-y-4">
         {customPhrases.length > 0 ? (
-          customPhrases.map(phrase => (
-            <div key={phrase.id} className="card-themed p-3 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4 flex-grow">
-                <img
-                  src={getImageForPhrase(phrase)?.url}
-                  alt={phrase.text}
-                  className="w-16 h-16 rounded-md object-cover border-2 border-ink/20 bg-surface-darker"
-                />
-                <span className="font-bold text-lg text-ink">{phrase.text}</span>
+          customPhrases.map(phrase => {
+            const image = getImageForPhrase(phrase);
+            return (
+              <div key={phrase.id} className="card-themed p-3 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 flex-grow">
+                  <div className={`relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 ${image?.isShiny ? 'shiny-effect' : ''}`}>
+                    <img
+                      src={image?.url}
+                      alt={phrase.text}
+                      className="w-full h-full object-cover border-2 border-ink/20 bg-surface-darker"
+                    />
+                  </div>
+                  <span className="font-bold text-lg text-ink">{phrase.text}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => onSetPhraseToEdit(phrase)} className="btn-themed btn-themed-secondary !p-3">
+                    <EditIcon className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => onDeletePhrase(phrase.id)} className="btn-themed btn-themed-danger !p-3">
+                    <TrashIcon className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => onSetPhraseToEdit(phrase)} className="btn-themed btn-themed-secondary !p-3">
-                  <EditIcon className="w-5 h-5" />
-                </button>
-                <button onClick={() => onDeletePhrase(phrase.id)} className="btn-themed btn-themed-danger !p-3">
-                  <TrashIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="text-center py-20 bg-surface rounded-lg border-2 border-ink/20">
             <p className="text-xl font-bold text-ink">No tienes frases personalizadas.</p>

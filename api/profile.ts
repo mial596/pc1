@@ -4,7 +4,29 @@ import { getDb } from './_utils/mongodb.js';
 import { verifyToken, DecodedToken } from './_utils/auth.js';
 import { getInitialUserData } from './_shared/data.js';
 import { UserProfile, Phrase, Friendship } from '../../types.js';
-import { Db, ObjectId } from 'mongodb';
+import { Db, ObjectId, WithId } from 'mongodb';
+
+export async function resolveProfilePictureUrl(db: Db, user: WithId<any> | null): Promise<string | undefined> {
+    if (user?.data?.profilePictureId) {
+        const image = await db.collection('cat_images').findOne({ id: user.data.profilePictureId });
+        return image?.url;
+    }
+    return undefined;
+}
+
+export async function resolveProfilePicturesForUsers(db: Db, users: any[]) {
+    const picIds = users.map(u => u.data?.profilePictureId).filter(id => id != null);
+    if (picIds.length === 0) return users.map(u => ({ ...u, profilePictureUrl: undefined }));
+
+    const images = await db.collection('cat_images').find({ id: { $in: picIds } }).project({ id: 1, url: 1 }).toArray();
+    const imageUrlMap = new Map(images.map(img => [img.id, img.url]));
+
+    return users.map(u => ({
+        ...u,
+        profilePictureUrl: u.data?.profilePictureId ? imageUrlMap.get(u.data.profilePictureId) : undefined
+    }));
+}
+
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     try {
@@ -12,8 +34,6 @@ async function handler(req: VercelRequest, res: VercelResponse) {
         const userId = decodedToken.sub;
         const db = await getDb();
         
-        // Data Migration: Ensure all cats have a rarity.
-        // This is an idempotent operation that fixes the collection.
         await db.collection('cat_images').updateMany(
             { rarity: { $exists: false } },
             { $set: { rarity: 'common' } }
@@ -76,29 +96,16 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
             friendRequestsReceived: Array.isArray(existingData.friendRequestsReceived) ? existingData.friendRequestsReceived : initialData.friendRequestsReceived,
         };
         
-        // Data Migration: old friends array to new friendships collection
         if (repairedData.friends && Array.isArray(repairedData.friends) && repairedData.friends.length > 0) {
             const friendshipsCollection = db.collection('friendships');
             for (const friendId of repairedData.friends) {
-                // Check if a friendship document already exists to prevent duplicates
                 const existingFriendship = await friendshipsCollection.findOne({
-                    $or: [
-                        { user1Id: userId, user2Id: friendId },
-                        { user1Id: friendId, user2Id: userId }
-                    ]
+                    $or: [ { user1Id: userId, user2Id: friendId }, { user1Id: friendId, user2Id: userId } ]
                 });
                 if (!existingFriendship) {
-                    const newFriendshipDoc = {
-                        user1Id: userId,
-                        user2Id: friendId,
-                        level: 1,
-                        xp: 0,
-                        activeMission: null,
-                    };
-                    await friendshipsCollection.insertOne(newFriendshipDoc);
+                    await friendshipsCollection.insertOne({ user1Id: userId, user2Id: friendId, level: 1, xp: 0, activeMission: null });
                 }
             }
-             // Once migrated, remove the old friends array
             await users.updateOne({ _id: userId }, { $unset: { "data.friends": "" } });
             delete repairedData.friends;
         }
@@ -119,7 +126,6 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
         }
     }
     
-    // Fetch full friendship data to populate the profile
     const friendshipsCollection = db.collection('friendships');
     const friendshipDocs = await friendshipsCollection.find({ $or: [{ user1Id: userId }, { user2Id: userId }] }).toArray();
     const friendships: Friendship[] = friendshipDocs.map(doc => ({
@@ -129,13 +135,15 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
         xp: doc.xp,
         activeMission: doc.activeMission,
     }));
-
+    
+    const profilePictureUrl = await resolveProfilePictureUrl(db, userProfile);
 
     const responsePayload: UserProfile = {
         id: userProfile._id,
         username: userProfile.username || userProfile.email,
         role: userProfile.role,
         isVerified: userProfile.isVerified,
+        profilePictureUrl: profilePictureUrl,
         data: {
             ...userProfile.data,
             friendships: friendships,
@@ -147,9 +155,7 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
 
 async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userId: string) {
     const { data } = req.body;
-    if (!data) {
-        return res.status(400).json({ message: 'No data provided to update.' });
-    }
+    if (!data) return res.status(400).json({ message: 'No data provided to update.' });
     const users = db.collection('users');
 
     const updateObject: { [key: string]: any } = {};
@@ -162,32 +168,21 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
         }
     }
 
-    if (Object.keys(updateObject).length === 0) {
-        return res.status(200).json({ message: 'No fields to update.' });
-    }
+    if (Object.keys(updateObject).length === 0) return res.status(200).json({ message: 'No fields to update.' });
 
     const result = await users.updateOne({ _id: userId as any }, { $set: updateObject });
-
-    if (result.matchedCount === 0) {
-        return res.status(404).json({ message: 'User not found.' });
-    }
-
+    if (result.matchedCount === 0) return res.status(404).json({ message: 'User not found.' });
     return res.status(200).send('User data saved successfully.');
 }
 
 async function handlePut(req: VercelRequest, res: VercelResponse, users: any, userId: string) {
-    const { username, bio } = req.body;
-    if (!username || bio === undefined) {
-        return res.status(400).json({ message: 'Username and bio are required.' });
-    }
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-        return res.status(400).json({ message: 'Invalid username format.' });
-    }
+    const { username, bio, profilePictureId } = req.body;
+    if (!username || bio === undefined) return res.status(400).json({ message: 'Username and bio are required.' });
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) return res.status(400).json({ message: 'Invalid username format.' });
     const existingUser = await users.findOne({ username: username, _id: { $ne: userId } });
-    if (existingUser) {
-        return res.status(409).json({ message: 'Username is already taken.' });
-    }
-    const updateData = { 'data.bio': bio, username: username };
+    if (existingUser) return res.status(409).json({ message: 'Username is already taken.' });
+    
+    const updateData = { 'data.bio': bio, 'data.profilePictureId': profilePictureId, username: username };
     await users.updateOne({ _id: userId as any }, { $set: updateData });
     const db = await getDb();
     await db.collection('public_phrases').updateMany({ userId: userId }, { $set: { username: username } });

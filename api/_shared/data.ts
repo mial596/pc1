@@ -20,6 +20,7 @@ export const getInitialUserData = (): Omit<UserData, 'phrases' | 'unlockedImageI
     playerStats: { level: 1, xp: 0, xpToNextLevel: 100 },
     purchasedUpgrades: [],
     bio: "¡Hola! Soy nuevo en PictoCat.",
+    profilePictureId: null,
     friendships: [],
     friends: [],
     friendRequestsSent: [],
