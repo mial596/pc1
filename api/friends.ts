@@ -41,6 +41,8 @@ async function handleGet(res: VercelResponse, db: Db, userId: string) {
 
     const currentUser = await users.findOne({ _id: userId });
     if (!currentUser) return res.status(404).json({ message: "User not found." });
+    
+    const currentUserData = currentUser.data || {};
 
     const friendDocs = await friendships.find({ $or: [{ user1Id: userId }, { user2Id: userId }] }).toArray();
     const friendIds = friendDocs.map(f => f.user1Id === userId ? f.user2Id : f.user1Id);
@@ -49,7 +51,8 @@ async function handleGet(res: VercelResponse, db: Db, userId: string) {
       ? await users.find({ _id: { $in: friendIds } }).project({ username: 1, isVerified: 1, role: 1 }).toArray()
       : [];
 
-    const requestIds = currentUser.data.friendRequestsReceived || [];
+    // FIX: Ensure friendRequestsReceived is treated as an array to prevent crashes with malformed data.
+    const requestIds = Array.isArray(currentUserData.friendRequestsReceived) ? currentUserData.friendRequestsReceived : [];
     const requestsData = requestIds.length > 0
       ? await users.find({ _id: { $in: requestIds } }).project({ username: 1 }).toArray()
       : [];
@@ -95,9 +98,15 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
         if (!targetUserId || userId === targetUserId) return res.status(400).json({ message: "Invalid target user." });
         const targetUser = await users.findOne({ _id: targetUserId });
         if (!targetUser) return res.status(404).json({ message: "Target user not found." });
+        
+        const targetUserData = targetUser.data || {};
 
         const existingFriendship = await friendships.findOne({ $or: [{ user1Id: userId, user2Id: targetUserId }, { user1Id: targetUserId, user2Id: userId }] });
-        const hasSentRequest = targetUser.data.friendRequestsReceived?.includes(userId);
+        
+        // FIX: Ensure friendRequestsReceived is treated as an array before calling .includes().
+        const targetUserRequests = Array.isArray(targetUserData.friendRequestsReceived) ? targetUserData.friendRequestsReceived : [];
+        const hasSentRequest = targetUserRequests.includes(userId);
+        
         if(existingFriendship || hasSentRequest) return res.status(409).json({message: "Already friends or request sent."});
 
         await users.updateOne({ _id: userId as any }, { $addToSet: { "data.friendRequestsSent": targetUserId } });

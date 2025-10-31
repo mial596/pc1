@@ -16,6 +16,10 @@ const ManageCats: React.FC = () => {
     const [theme, setTheme] = useState('');
     const [rarity, setRarity] = useState<'common' | 'rare' | 'epic'>('common');
 
+    // Import state
+    const [isImporting, setIsImporting] = useState(false);
+    const [importMessage, setImportMessage] = useState('');
+
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -54,6 +58,22 @@ const ManageCats: React.FC = () => {
             setIsSubmitting(false);
         }
     };
+
+    const handleImport = async () => {
+        if (!window.confirm('This will import the master cat catalog from the source code. This may take a moment. Continue?')) return;
+        setIsImporting(true);
+        setImportMessage('');
+        try {
+            const token = await getAccessTokenSilently();
+            const result = await apiService.adminImportCatCatalog(token);
+            setImportMessage(result.message || 'Import successful!');
+            await fetchData(); // Refresh catalog
+        } catch (err) {
+            setImportMessage(err instanceof Error ? err.message : 'Import failed.');
+        } finally {
+            setIsImporting(false);
+        }
+    };
     
     if (isLoading) {
         return <div className="flex justify-center p-8"><SpinnerIcon className="w-8 h-8 animate-spin" /></div>;
@@ -61,6 +81,17 @@ const ManageCats: React.FC = () => {
 
     return (
         <div>
+            <div className="card-themed p-4 mb-6 bg-secondary/20 border-secondary">
+                <h3 className="text-xl font-bold mb-2">Master Catalog Import</h3>
+                <p className="text-sm text-ink/80 mb-4">
+                    Import all cats from the application's master catalog file. This will only add cats that do not already exist in the database (based on URL).
+                </p>
+                <button onClick={handleImport} disabled={isImporting} className="btn-themed btn-themed-secondary">
+                    {isImporting ? <SpinnerIcon className="w-5 h-5 animate-spin"/> : 'Start Import'}
+                </button>
+                {importMessage && <p className="text-sm mt-2 font-bold">{importMessage}</p>}
+            </div>
+
             <div className="card-themed p-4 mb-6">
                 <h3 className="text-xl font-bold mb-4">Add New Cat</h3>
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">

@@ -3,6 +3,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
 import { ObjectId } from 'mongodb';
+import { MASTER_IMAGE_CATALOG_DATA } from './_shared/catalog-data.js';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     try {
@@ -139,6 +140,37 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: any) {
         await db.collection('envelopes').insertOne(envelopeData);
         return res.status(201).json({ success: true });
     }
+
+    if (action === 'importCatCatalog') {
+        const catsCollection = db.collection('cat_images');
+        await catsCollection.createIndex({ url: 1 }, { unique: true });
+
+        const allCatsSeed = Object.values(MASTER_IMAGE_CATALOG_DATA).flat();
+        const existingUrls = new Set((await catsCollection.find({}, { projection: { url: 1, _id: 0 } }).toArray()).map((c: {url: string}) => c.url));
+        
+        const newCatsToInsert = [];
+        let lastCatArr = await catsCollection.find().sort({ id: -1 }).limit(1).toArray();
+        let nextId = lastCatArr.length > 0 ? lastCatArr[0].id + 1 : 1;
+        
+        for (const catSeed of allCatsSeed) {
+            if (!existingUrls.has(catSeed.url)) {
+                newCatsToInsert.push({
+                    id: nextId,
+                    url: catSeed.url,
+                    theme: catSeed.theme,
+                    rarity: catSeed.rarity,
+                });
+                nextId++;
+            }
+        }
+
+        if (newCatsToInsert.length > 0) {
+            await catsCollection.insertMany(newCatsToInsert);
+        }
+
+        return res.status(200).json({ success: true, message: `Imported ${newCatsToInsert.length} new cats.` });
+    }
+
 
     return res.status(400).send('Invalid action requested.');
 }

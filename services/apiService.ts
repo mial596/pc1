@@ -170,3 +170,7 @@ export const adminAddCat = (token: string, catData: { url: string; theme: string
 export const adminAddEnvelope = (token: string, envelopeData: Omit<Envelope, 'isFeatured'> & {isFeatured: boolean}): Promise<{ success: boolean }> => {
     return apiRequest('/api/admin', 'POST', token, { action: 'addEnvelope', ...envelopeData });
 };
+
+export const adminImportCatCatalog = (token: string): Promise<{ success: boolean; message: string }> => {
+    return apiRequest('/api/admin', 'POST', token, { action: 'importCatCatalog' });
+};
