@@ -2,75 +2,92 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
-import { FriendData } from '../types.js';
-import { ObjectId } from 'mongodb';
+import { FriendData, Friendship } from '../types.js';
+import { ALL_MISSIONS } from '../../gameData/missions.js';
+import { ObjectId, Db } from 'mongodb';
+
+const MAX_FRIENDSHIP_LEVEL = 10;
+const XP_PER_LEVEL = 200;
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         const decodedToken = await verifyToken(req.headers.authorization);
         const userId = decodedToken.sub;
         const db = await getDb();
-        const users = db.collection('users');
-
-        // FIX: Cast userId to any to resolve MongoDB driver type mismatch for _id.
-        const currentUser = await users.findOne({ _id: userId as any });
-        if (!currentUser) {
-            return res.status(404).json({ message: "Current user not found." });
-        }
 
         switch (req.method) {
             case 'GET':
-                return await handleGet(res, users, currentUser);
+                return await handleGet(res, db, userId);
             case 'POST':
                 return await handlePost(req, res, db, userId);
             case 'PUT':
-                return await handlePut(req, res, users, userId);
+                return await handlePut(req, res, db, userId);
             case 'DELETE':
-                return await handleDelete(req, res, users, userId);
+                return await handleDelete(req, res, db, userId);
             default:
                 res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
                 return res.status(405).end(`Method ${req.method} Not Allowed`);
         }
     } catch (error) {
         console.error('Friends API error:', error);
-        if (error instanceof Error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         return res.status(500).json({ message: 'Internal Server Error', error: errorMessage });
     }
 }
 
-async function handleGet(res: VercelResponse, users: any, currentUser: any) {
-    const friendIds = currentUser.data.friends || [];
-    const requestIds = currentUser.data.friendRequestsReceived || [];
+async function handleGet(res: VercelResponse, db: Db, userId: string) {
+    const users = db.collection('users');
+    const friendships = db.collection('friendships');
 
-    const friendsData = friendIds.length > 0 
+    const currentUser = await users.findOne({ _id: userId });
+    if (!currentUser) return res.status(404).json({ message: "User not found." });
+
+    const friendDocs = await friendships.find({ $or: [{ user1Id: userId }, { user2Id: userId }] }).toArray();
+    const friendIds = friendDocs.map(f => f.user1Id === userId ? f.user2Id : f.user1Id);
+    
+    const friendsData = friendIds.length > 0
       ? await users.find({ _id: { $in: friendIds } }).project({ username: 1, isVerified: 1, role: 1 }).toArray()
       : [];
+
+    const requestIds = currentUser.data.friendRequestsReceived || [];
     const requestsData = requestIds.length > 0
       ? await users.find({ _id: { $in: requestIds } }).project({ username: 1 }).toArray()
       : [];
 
     const response: FriendData = {
-        friends: friendsData.map((u: any) => ({ userId: u._id, username: u.username, isVerified: u.isVerified, role: u.role })),
+        friends: friendsData.map((u: any) => {
+            const friendshipDoc = friendDocs.find(f => (f.user1Id === userId && f.user2Id === u._id) || (f.user1Id === u._id && f.user2Id === userId));
+            const friendship: Friendship | null = friendshipDoc ? {
+                _id: friendshipDoc._id.toHexString(),
+                userId: u._id,
+                level: friendshipDoc.level,
+                xp: friendshipDoc.xp,
+                activeMission: friendshipDoc.activeMission,
+            } : null;
+
+            return { userId: u._id, username: u.username, isVerified: u.isVerified, role: u.role, friendship };
+        }),
         requests: requestsData.map((u: any) => ({ userId: u._id, username: u.username })),
     };
     return res.status(200).json(response);
 }
 
-async function handlePost(req: VercelRequest, res: VercelResponse, db: any, userId: string) {
-    const { action, targetUserId, publicPhraseId } = req.body;
+async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userId: string) {
+    const { action, targetUserId, publicPhraseId, authorId, friendshipId, missionId } = req.body;
     const users = db.collection('users');
-    
+    const friendships = db.collection('friendships');
+
     if (action === 'like') {
-        if (!publicPhraseId) return res.status(400).json({ message: "publicPhraseId is required." });
+        if (!publicPhraseId || !authorId) return res.status(400).json({ message: "publicPhraseId and authorId are required." });
         const phrases = db.collection('public_phrases');
         const phrase = await phrases.findOne({ _id: new ObjectId(publicPhraseId) });
         if (!phrase) return res.status(404).json({ message: "Phrase not found." });
         const isLiked = phrase.likes?.includes(userId);
         const updateOperation = isLiked ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
         await phrases.updateOne({ _id: new ObjectId(publicPhraseId) }, updateOperation);
+        if(!isLiked) {
+             await updateMissionProgress(friendships, userId, authorId, 'LIKE_PHRASES', 1);
+        }
         return res.status(200).json({ success: true, liked: !isLiked });
     }
 
@@ -78,48 +95,100 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: any, user
         if (!targetUserId || userId === targetUserId) return res.status(400).json({ message: "Invalid target user." });
         const targetUser = await users.findOne({ _id: targetUserId });
         if (!targetUser) return res.status(404).json({ message: "Target user not found." });
-        
-        const isAlreadyFriends = targetUser.data.friends?.includes(userId);
+
+        const existingFriendship = await friendships.findOne({ $or: [{ user1Id: userId, user2Id: targetUserId }, { user1Id: targetUserId, user2Id: userId }] });
         const hasSentRequest = targetUser.data.friendRequestsReceived?.includes(userId);
-        if(isAlreadyFriends || hasSentRequest) return res.status(409).json({message: "Already friends or request sent."});
+        if(existingFriendship || hasSentRequest) return res.status(409).json({message: "Already friends or request sent."});
 
         await users.updateOne({ _id: userId as any }, { $addToSet: { "data.friendRequestsSent": targetUserId } });
         await users.updateOne({ _id: targetUserId as any }, { $addToSet: { "data.friendRequestsReceived": userId } });
         return res.status(200).json({ success: true });
     }
+    
+    if(action === 'startMission') {
+        if(!friendshipId || !missionId) return res.status(400).json({ message: "friendshipId and missionId are required." });
+        const missionData = ALL_MISSIONS.find(m => m.id === missionId);
+        if(!missionData) return res.status(404).json({ message: "Mission not found." });
+
+        const newMission = {
+            missionId: missionData.id,
+            progress: 0,
+            goal: missionData.goal,
+            isCompleted: false,
+        };
+        await friendships.updateOne({_id: new ObjectId(friendshipId)}, {$set: { activeMission: newMission }});
+        return res.status(200).json({ success: true });
+    }
+    
+    if(action === 'claimReward') {
+        if(!friendshipId) return res.status(400).json({ message: "friendshipId is required." });
+        const friendship = await friendships.findOne({_id: new ObjectId(friendshipId)});
+        if(!friendship || !friendship.activeMission?.isCompleted) return res.status(400).json({ message: "No completed mission to claim."});
+        const missionData = ALL_MISSIONS.find(m => m.id === friendship.activeMission.missionId);
+        if(!missionData) return res.status(404).json({ message: "Mission data not found." });
+
+        let newXp = friendship.xp + missionData.rewardXp;
+        let newLevel = friendship.level;
+        while(newXp >= XP_PER_LEVEL && newLevel < MAX_FRIENDSHIP_LEVEL) {
+            newXp -= XP_PER_LEVEL;
+            newLevel += 1;
+        }
+
+        await friendships.updateOne({_id: new ObjectId(friendshipId)}, { $set: { level: newLevel, xp: newXp, activeMission: null }});
+        return res.status(200).json({ success: true, newXp, newLevel });
+    }
 
     return res.status(400).json({ message: "Invalid action specified." });
 }
 
-async function handlePut(req: VercelRequest, res: VercelResponse, users: any, userId: string) {
+async function handlePut(req: VercelRequest, res: VercelResponse, db: Db, userId: string) {
     const { targetUserId, action } = req.body;
-    if (!targetUserId || !['accept', 'reject'].includes(action)) {
-        return res.status(400).json({ message: "Invalid data." });
-    }
+    if (!targetUserId || !['accept', 'reject'].includes(action)) return res.status(400).json({ message: "Invalid data." });
     
-    // Always remove the request regardless of action
+    const users = db.collection('users');
     await users.updateOne({ _id: userId as any }, { $pull: { "data.friendRequestsReceived": targetUserId } });
     await users.updateOne({ _id: targetUserId as any }, { $pull: { "data.friendRequestsSent": userId } });
     
     if (action === 'accept') {
-        await users.updateOne({ _id: userId as any }, { $addToSet: { "data.friends": targetUserId } });
-        await users.updateOne({ _id: targetUserId as any }, { $addToSet: { "data.friends": userId } });
+        await db.collection('friendships').insertOne({
+            user1Id: userId,
+            user2Id: targetUserId,
+            level: 1,
+            xp: 0,
+            activeMission: null,
+        });
     }
 
     return res.status(200).json({ success: true });
 }
 
-async function handleDelete(req: VercelRequest, res: VercelResponse, users: any, userId: string) {
+async function handleDelete(req: VercelRequest, res: VercelResponse, db: Db, userId: string) {
     const { targetUserId } = req.body;
-    if (!targetUserId) {
-        return res.status(400).json({ message: "Invalid target user." });
-    }
-
-    // Remove from both users' friend lists
-    await users.updateOne({ _id: userId as any }, { $pull: { "data.friends": targetUserId } });
-    await users.updateOne({ _id: targetUserId as any }, { $pull: { "data.friends": userId } });
-
+    if (!targetUserId) return res.status(400).json({ message: "Invalid target user." });
+    await db.collection('friendships').deleteOne({
+        $or: [{ user1Id: userId, user2Id: targetUserId }, { user1Id: targetUserId, user2Id: userId }]
+    });
     return res.status(200).json({ success: true });
 }
+
+export async function updateMissionProgress(friendships: any, user1Id: string, user2Id: string, missionType: string, progressAmount: number) {
+    const friendship = await friendships.findOne({
+        $or: [{ user1Id, user2Id }, { user1Id: user2Id, user2Id: user1Id }],
+        'activeMission.missionId': { $in: ALL_MISSIONS.filter(m => m.type === missionType).map(m => m.id) },
+        'activeMission.isCompleted': false
+    });
+
+    if (friendship && friendship.activeMission) {
+        const newProgress = friendship.activeMission.progress + progressAmount;
+        const isCompleted = newProgress >= friendship.activeMission.goal;
+        await friendships.updateOne({ _id: friendship._id }, {
+            $set: {
+                'activeMission.progress': newProgress,
+                'activeMission.isCompleted': isCompleted
+            }
+        });
+    }
+}
+
 
 export default handler;

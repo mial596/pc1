@@ -81,11 +81,12 @@ export const getPublicFeed = (token: string): Promise<PublicProfilePhrase[]> => 
     return apiRequest('/api/community?resource=feed', 'GET', token);
 }
 
-export const likePublicPhrase = (token: string, publicPhraseId: string): Promise<{ success: boolean; liked: boolean }> => {
-    return apiRequest('/api/friends', 'POST', token, { action: 'like', publicPhraseId });
+export const likePublicPhrase = (token: string, publicPhraseId: string, authorId: string): Promise<{ success: boolean; liked: boolean }> => {
+    return apiRequest('/api/friends', 'POST', token, { action: 'like', publicPhraseId, authorId });
 };
 
-// --- Friends ---
+
+// --- Friends & Missions ---
 export const getFriends = (token: string): Promise<FriendData> => {
     return apiRequest('/api/friends', 'GET', token);
 };
@@ -102,6 +103,18 @@ export const removeFriend = (token: string, targetUserId: string): Promise<{ suc
     return apiRequest('/api/friends', 'DELETE', token, { targetUserId });
 };
 
+export const startFriendMission = (token: string, friendshipId: string, missionId: string): Promise<{ success: boolean }> => {
+    return apiRequest('/api/friends', 'POST', token, { action: 'startMission', friendshipId, missionId });
+};
+
+export const claimFriendMissionReward = (token: string, friendshipId: string): Promise<{ success: boolean; newXp: number; newLevel: number }> => {
+    return apiRequest('/api/friends', 'POST', token, { action: 'claimReward', friendshipId });
+};
+
+// --- Game ---
+export const saveGameResults = (token: string, results: { coinsEarned: number; xpEarned: number }): Promise<{ success: boolean }> => {
+    return apiRequest('/api/game', 'POST', token, { action: 'saveResults', results });
+};
 
 // --- Trading ---
 export const getTrades = (token: string): Promise<TradeOffer[]> => {

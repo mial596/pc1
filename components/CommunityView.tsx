@@ -9,20 +9,13 @@ import { ArrowLeftIcon, TradeIcon, UsersIcon } from '../hooks/Icons';
 
 interface CommunityViewProps {
   currentUserProfile: UserProfile;
+  onProfileUpdate: () => void;
 }
 
-const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile }) => {
+const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile, onProfileUpdate }) => {
     type View = 'feed' | 'search' | 'profile' | 'trading' | 'friends';
     const [view, setView] = useState<View>('feed');
     const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
-    const [profileKey, setProfileKey] = useState(Date.now()); // Used to force re-render of profile
-
-    // This function will be called by child components to trigger a refresh of the user profile
-    const refreshUserProfile = useCallback(() => {
-        // A real implementation would re-fetch the user profile here.
-        // For now, we'll just force a re-render of the component that needs it.
-        setProfileKey(Date.now());
-    }, []);
 
     const handleSelectUser = (username: string) => {
         setSelectedUsername(username);
@@ -50,11 +43,10 @@ const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile }) => 
                                 Volver a la Búsqueda
                             </button>
                             <PublicProfile 
-                                key={profileKey} // Force re-mount on user profile data change
                                 username={selectedUsername} 
                                 currentUserProfile={currentUserProfile} 
                                 onStartTrade={handleStartTrade}
-                                onFriendAction={refreshUserProfile}
+                                onFriendAction={onProfileUpdate}
                             />
                         </div>
                     );
@@ -69,7 +61,7 @@ const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile }) => 
                 return <TradingPost currentUserProfile={currentUserProfile} preselectedFriendName={selectedUsername} onBack={handleBackToCommunity}/>
             
             case 'friends':
-                return <FriendsManager currentUserProfile={currentUserProfile} onProfileClick={handleSelectUser} />;
+                return <FriendsManager currentUserProfile={currentUserProfile} onProfileClick={handleSelectUser} onProfileUpdate={onProfileUpdate} />;
 
             case 'feed':
             default:

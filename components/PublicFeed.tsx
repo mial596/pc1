@@ -36,6 +36,12 @@ const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }
     const handleLike = async (publicPhraseId: string) => {
         const originalFeed = [...feed];
         
+        const phraseToLike = feed.find(p => p.publicPhraseId === publicPhraseId);
+        if (!phraseToLike || !phraseToLike.userId) {
+            console.error("Cannot like phrase: author ID is missing.");
+            return;
+        }
+
         const updatedFeed = feed.map(p => {
             if (p.publicPhraseId === publicPhraseId) {
                 return {
@@ -50,7 +56,8 @@ const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }
 
         try {
             const token = await getAccessTokenSilently();
-            await apiService.likePublicPhrase(token, publicPhraseId);
+            // FIX: Pass the phrase's authorId (userId) as the third argument.
+            await apiService.likePublicPhrase(token, publicPhraseId, phraseToLike.userId);
         } catch (err) {
             setFeed(originalFeed);
             console.error("Failed to like phrase", err);

@@ -192,6 +192,33 @@ const App: React.FC = () => {
   const handleSpeak = (text: string) => {
     ttsService.speak(text);
   };
+  
+  const handleGameEnd = async (results: { coinsEarned: number; xpEarned: number }) => {
+    if (!userProfile) return;
+    // Update UI immediately for responsiveness
+    const updatedProfile = {
+      ...userProfile,
+      data: {
+        ...userProfile.data,
+        coins: userProfile.data.coins + results.coinsEarned,
+      }
+    };
+    setUserProfile(updatedProfile);
+    showToast(`+${results.coinsEarned} monedas!`);
+    
+    // Send results to backend to process bonuses and missions
+    try {
+      const token = await getAccessTokenSilently();
+      await apiService.saveGameResults(token, results);
+      // Optionally, re-fetch profile data to get coin bonuses from friends
+      // For now, we rely on the optimistic update.
+    } catch (err) {
+      console.error("Failed to save game results", err);
+      // Revert optimistic update if backend call fails
+      setUserProfile(userProfile);
+      showToast("Error saving game results.");
+    }
+  };
 
   if (isAuthLoading || (isAuthenticated && isLoading)) {
     return (
@@ -230,18 +257,7 @@ const App: React.FC = () => {
         return <GameModeSelector 
           unlockedImages={unlockedImages}
           upgrades={userProfile.data.purchasedUpgrades}
-          onGameEnd={async (results) => {
-            const updatedProfile = {
-              ...userProfile,
-              data: {
-                ...userProfile.data,
-                coins: userProfile.data.coins + results.coinsEarned,
-              }
-            };
-            setUserProfile(updatedProfile);
-            await saveData({ coins: updatedProfile.data.coins });
-            showToast(`+${results.coinsEarned} coins & +${results.xpEarned} XP!`);
-          }}
+          onGameEnd={handleGameEnd}
         />;
       case 'phrases':
         return <PhraseEditorPage 
@@ -251,7 +267,7 @@ const App: React.FC = () => {
           onDeletePhrase={handleDeletePhrase}
         />;
       case 'community':
-        return <CommunityView currentUserProfile={userProfile} />;
+        return <CommunityView currentUserProfile={userProfile} onProfileUpdate={loadInitialData} />;
       case 'admin':
         return userProfile.role === 'admin' ? <AdminPanel /> : <div>Access Denied</div>;
       default:

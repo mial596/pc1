@@ -4,6 +4,7 @@ import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
 import { ObjectId, Db } from 'mongodb';
 import { CatImage } from '../../types.js';
+import { updateMissionProgress } from './friends.js';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     try {
@@ -72,11 +73,14 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
     }
     
     const users = db.collection('users');
+    const friendships = db.collection('friendships');
     const fromUser = await users.findOne({ _id: userId as any });
     const toUser = await users.findOne({ _id: toUserId as any });
 
     if (!fromUser || !toUser) return res.status(404).json({ message: "User not found." });
-    if (!fromUser.data.friends?.includes(toUserId)) return res.status(403).json({ message: "Can only trade with friends." });
+    
+    const friendship = await friendships.findOne({ $or: [{ user1Id: userId, user2Id: toUserId }, { user1Id: toUserId, user2Id: userId }] });
+    if (!friendship) return res.status(403).json({ message: "Can only trade with friends." });
     
     // Validate ownership
     const fromOwns = offeredImageIds.every(id => fromUser.data.unlockedImageIds.includes(id));
@@ -94,6 +98,9 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
 
     await db.collection('trades').insertOne(newTrade);
     await users.updateOne({ _id: toUserId as any }, { $inc: { "data.tradeNotifications": 1 } });
+    
+    // Update mission progress
+    await updateMissionProgress(friendships, userId, toUserId, 'SEND_TRADE', 1);
     
     return res.status(201).json({ success: true });
 }

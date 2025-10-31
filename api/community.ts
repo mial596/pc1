@@ -79,6 +79,7 @@ async function getPublicProfile(res: VercelResponse, db: any, username: string, 
             imageTheme: p.imageTheme,
             likeCount: p.likes?.length || 0,
             isLikedByMe: p.likes?.includes(currentUserId) || false,
+            userId: p.userId, // Pass authorId for mission updates
         })),
         unlockedImages: unlockedImages,
     };
@@ -117,6 +118,7 @@ async function getPublicFeed(res: VercelResponse, db: any, currentUserId: string
         isLikedByMe: p.likes?.includes(currentUserId) || false,
         username: p.username,
         isUserVerified: p.isUserVerified,
+        userId: p.userId, // Pass authorId for mission updates
     }));
     return res.status(200).json(response);
 }

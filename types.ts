@@ -61,6 +61,21 @@ export interface TradeOffer {
   createdAt: string; // ISO string
 }
 
+// --- Friendship & Missions ---
+export interface Mission {
+    missionId: string;
+    progress: number;
+    goal: number;
+    isCompleted: boolean;
+}
+
+export interface Friendship {
+    _id: string; // MongoDB ObjectId as a string
+    userId: string;
+    level: number;
+    xp: number;
+    activeMission: Mission | null;
+}
 
 export interface UserData {
     coins: number;
@@ -69,10 +84,11 @@ export interface UserData {
     playerStats: PlayerStats;
     purchasedUpgrades: UpgradeId[];
     bio: string;
-    friends: string[]; // array of user IDs
+    friendships: Friendship[];
     friendRequestsSent: string[]; // array of user IDs
     friendRequestsReceived: string[]; // array of user IDs
     tradeNotifications: number;
+    friends?: string[]; // Old structure, for migration purpose
 }
 
 export interface UserProfile {
@@ -169,6 +185,8 @@ export interface PublicProfilePhrase {
     // Optional fields for when phrase is part of a feed
     username?: string;
     isUserVerified?: boolean;
+    // FIX: Add userId to carry author ID for actions like 'like' from a feed.
+    userId?: string;
 }
 
 export interface PublicProfileData {
@@ -186,6 +204,7 @@ export interface Friend {
     username: string;
     isVerified: boolean;
     role: 'admin' | 'mod' | 'user';
+    friendship: Friendship | null; // Detailed friendship data
 }
 
 export interface FriendRequest {

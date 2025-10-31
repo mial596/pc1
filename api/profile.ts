@@ -3,8 +3,8 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken, DecodedToken } from './_utils/auth.js';
 import { getInitialUserData } from './_shared/data.js';
-import { UserProfile, Phrase } from '../../types.js';
-import { Db } from 'mongodb';
+import { UserProfile, Phrase, Friendship } from '../../types.js';
+import { Db, ObjectId } from 'mongodb';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     try {
@@ -23,7 +23,7 @@ async function handler(req: VercelRequest, res: VercelResponse) {
 
         switch (req.method) {
             case 'GET':
-                return await handleGet(res, users, userId, decodedToken);
+                return await handleGet(req, res, db, userId, decodedToken);
             case 'POST':
                 return await handlePost(req, res, db, userId);
             case 'PUT':
@@ -42,8 +42,9 @@ async function handler(req: VercelRequest, res: VercelResponse) {
     }
 }
 
-async function handleGet(res: VercelResponse, users: any, userId: string, decodedToken: DecodedToken) {
+async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId: string, decodedToken: DecodedToken) {
     const adminUserId = 'google-oauth2|107222277373277873883';
+    const users = db.collection('users');
     let userProfile = await users.findOne({ _id: userId });
 
     if (!userProfile) {
@@ -73,30 +74,70 @@ async function handleGet(res: VercelResponse, users: any, userId: string, decode
             purchasedUpgrades: Array.isArray(existingData.purchasedUpgrades) ? existingData.purchasedUpgrades : initialData.purchasedUpgrades,
         };
         
+        // Data Migration: old friends array to new friendships collection
+        if (repairedData.friends && Array.isArray(repairedData.friends) && repairedData.friends.length > 0) {
+            const friendshipsCollection = db.collection('friendships');
+            for (const friendId of repairedData.friends) {
+                // Check if a friendship document already exists to prevent duplicates
+                const existingFriendship = await friendshipsCollection.findOne({
+                    $or: [
+                        { user1Id: userId, user2Id: friendId },
+                        { user1Id: friendId, user2Id: userId }
+                    ]
+                });
+                if (!existingFriendship) {
+                    const newFriendshipDoc = {
+                        user1Id: userId,
+                        user2Id: friendId,
+                        level: 1,
+                        xp: 0,
+                        activeMission: null,
+                    };
+                    await friendshipsCollection.insertOne(newFriendshipDoc);
+                }
+            }
+             // Once migrated, remove the old friends array
+            await users.updateOne({ _id: userId }, { $unset: { "data.friends": "" } });
+            delete repairedData.friends;
+        }
+
         if (JSON.stringify(repairedData) !== JSON.stringify(existingData)) {
             userProfile.data = repairedData;
             await users.updateOne({ _id: userId }, { $set: { data: repairedData } });
         }
 
-        // Add migration for username field from email if it doesn't exist
         if (!userProfile.username && userProfile.email) {
             userProfile.username = userProfile.email;
             await users.updateOne({ _id: userId as any }, { $set: { username: userProfile.email } });
         }
 
-        // Ensure the specified user has admin role
         if (userId === adminUserId && userProfile.role !== 'admin') {
             userProfile.role = 'admin';
             await users.updateOne({ _id: userId }, { $set: { role: 'admin' } });
         }
     }
+    
+    // Fetch full friendship data to populate the profile
+    const friendshipsCollection = db.collection('friendships');
+    const friendshipDocs = await friendshipsCollection.find({ $or: [{ user1Id: userId }, { user2Id: userId }] }).toArray();
+    const friendships: Friendship[] = friendshipDocs.map(doc => ({
+        _id: doc._id.toHexString(),
+        userId: doc.user1Id === userId ? doc.user2Id : doc.user1Id,
+        level: doc.level,
+        xp: doc.xp,
+        activeMission: doc.activeMission,
+    }));
+
 
     const responsePayload: UserProfile = {
         id: userProfile._id,
-        username: userProfile.username || userProfile.email, // Fallback for safety
+        username: userProfile.username || userProfile.email,
         role: userProfile.role,
         isVerified: userProfile.isVerified,
-        data: userProfile.data,
+        data: {
+            ...userProfile.data,
+            friendships: friendships,
+        },
     };
     
     return res.status(200).json(responsePayload);
@@ -109,11 +150,9 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
     }
     const users = db.collection('users');
 
-    // Sanitize and prepare the update object
     const updateObject: { [key: string]: any } = {};
     for (const key in data) {
         if (Object.prototype.hasOwnProperty.call(data, key)) {
-            // Handle phrases specially to ensure public phrases are updated
             if (key === 'phrases') {
                 await updatePublicPhrases(db, userId, data.phrases);
             }
@@ -136,40 +175,23 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
 
 async function handlePut(req: VercelRequest, res: VercelResponse, users: any, userId: string) {
     const { username, bio } = req.body;
-
     if (!username || bio === undefined) {
         return res.status(400).json({ message: 'Username and bio are required.' });
     }
-    
     if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
         return res.status(400).json({ message: 'Invalid username format.' });
     }
-    
-    // Check if username is already taken by another user
     const existingUser = await users.findOne({ username: username, _id: { $ne: userId } });
     if (existingUser) {
         return res.status(409).json({ message: 'Username is already taken.' });
     }
-
-    const updateData: { email: string, 'data.bio': string, username: string } = {
-        email: username, // email field holds the username
-        'data.bio': bio,
-        username: username
-    };
-
+    const updateData = { 'data.bio': bio, username: username };
     await users.updateOne({ _id: userId as any }, { $set: updateData });
-
-    // Also update username in public phrases
     const db = await getDb();
-    await db.collection('public_phrases').updateMany(
-        { userId: userId },
-        { $set: { username: username } }
-    );
-
+    await db.collection('public_phrases').updateMany({ userId: userId }, { $set: { username: username } });
     return res.status(200).json({ message: 'Profile updated successfully' });
 }
 
-// Helper to manage public phrases when user saves their phrase list
 async function updatePublicPhrases(db: Db, userId: string, newPhrases: Phrase[]) {
     const publicPhrasesCollection = db.collection('public_phrases');
     const catImagesCollection = db.collection('cat_images');
@@ -178,14 +200,10 @@ async function updatePublicPhrases(db: Db, userId: string, newPhrases: Phrase[])
     const user = await usersCollection.findOne({ _id: userId as any });
     if (!user) return;
 
-    // Find all phrases the user wants to be public
     const publicPhraseIntents = newPhrases.filter(p => p.isPublic && p.isCustom);
     const publicPhraseIds = publicPhraseIntents.map(p => p.id);
-    
-    // Remove any phrases from public that are no longer marked as public
     await publicPhrasesCollection.deleteMany({ userId: userId, phraseId: { $nin: publicPhraseIds } });
 
-    // Add/update public phrases
     for (const phrase of publicPhraseIntents) {
         if (!phrase.selectedImageId) continue;
         const image = await catImagesCollection.findOne({ id: phrase.selectedImageId });
@@ -198,6 +216,5 @@ async function updatePublicPhrases(db: Db, userId: string, newPhrases: Phrase[])
         );
     }
 }
-
 
 export default handler;
