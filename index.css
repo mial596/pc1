@@ -188,9 +188,3 @@ body {
 @property --angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 @keyframes spin { to { --angle: 360deg; } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-```
-
-</content>
-  </change>
-</changes>
-```
