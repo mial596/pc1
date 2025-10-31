@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { UserProfile } from '../types';
 import { CoinIcon, StarIcon, StoreIcon, UsersIcon, BookIcon, HomeIcon, LogoutIcon, EditIcon, CatSilhouetteIcon, AdminIcon } from './Icons';
+import { LOGO_URL } from '../constants';
 
 type Page = 'home' | 'album' | 'shop' | 'games' | 'phrases' | 'community' | 'admin';
 
@@ -36,7 +37,7 @@ const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile,
         {/* Left Side: Logo & Nav */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <CatSilhouetteIcon className="w-10 h-10 text-primary" />
+            <img src={LOGO_URL} alt="PictoCat Logo" className="w-12 h-12" />
             <span className="text-2xl font-black text-ink hidden sm:block">PictoCat</span>
           </div>
           <nav className="hidden lg:flex items-center gap-2">

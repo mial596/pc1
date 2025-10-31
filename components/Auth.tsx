@@ -10,7 +10,7 @@ const Auth: React.FC = () => {
       <div className="w-full max-w-sm mx-auto card-themed p-8">
         <div className="flex flex-col items-center mb-6">
           <img src={LOGO_URL} alt="PictoCat Logo" className="w-24 h-24 mb-4" />
-          <h1 className="text-4xl font-black text-ink">PictoCat</h1>
+          <h1 className="text-4xl font-black text-ink font-spooky">PictoCat</h1>
         </div>
         
         <p className="text-center text-ink/70 mb-8">

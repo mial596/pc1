@@ -24,7 +24,7 @@ const PhraseEditorPage: React.FC<PhraseEditorPageProps> = ({
   return (
     <div className="container mx-auto p-4 sm:p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl sm:text-4xl font-black text-ink">Mis Frases</h1>
+        <h1 className="text-3xl sm:text-4xl font-black text-ink font-spooky">Mis Frases</h1>
         <button onClick={() => onSetPhraseToEdit(null)} className="btn-themed btn-themed-primary flex items-center gap-2">
           <PlusIcon className="w-5 h-5" />
           <span className="hidden sm:inline">Nueva Frase</span>

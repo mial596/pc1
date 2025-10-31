@@ -89,7 +89,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser }) => {
 
     return (
         <div className="max-w-2xl mx-auto p-4 sm:p-6">
-            <h1 className="text-3xl font-black text-ink mb-2 text-center">Comunidad PictoCat</h1>
+            <h1 className="text-3xl font-black text-ink mb-2 text-center font-spooky">Comunidad PictoCat</h1>
             <p className="text-ink/70 text-center mb-6">Busca a otros usuarios y mira sus perfiles públicos.</p>
 
             <div className="relative mb-6">

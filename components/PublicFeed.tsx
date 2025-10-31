@@ -71,32 +71,41 @@ const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }
     }
 
     return (
-        <div className="max-w-xl mx-auto space-y-8">
-            <h1 className="text-3xl font-black text-ink text-center">Community Feed</h1>
-            {feed.map((phrase) => (
-                <div key={phrase.publicPhraseId} className="card-themed p-4">
-                    <header className="flex items-center gap-3 mb-3">
-                        <button onClick={() => onProfileClick(phrase.username!)} className="font-bold text-lg text-ink hover:underline">
-                            @{phrase.username}
-                        </button>
-                        {phrase.isUserVerified && <VerifiedIcon className="w-5 h-5 text-blue-500" title="Verified User" />}
-                    </header>
-                    <div className="aspect-square bg-surface-darker rounded-lg overflow-hidden border-2 border-ink/20 mb-3">
-                        <img src={phrase.imageUrl} alt={phrase.text} className="w-full h-full object-cover"/>
-                    </div>
-                    <p className="font-bold text-xl mb-3">{phrase.text}</p>
-                    <div className="flex items-center gap-3 mt-2">
-                         <button
-                            onClick={() => handleLike(phrase.publicPhraseId)}
-                            className="btn-themed !p-2 bg-surface hover:bg-rose-900/50 active:bg-rose-800/50"
-                            aria-label="Like phrase"
-                         >
-                            <HeartIcon className={`w-6 h-6 ${phrase.isLikedByMe ? 'text-rose-500' : 'text-ink/50'}`} solid={phrase.isLikedByMe} />
-                         </button>
-                         <span className="font-black text-lg text-ink/90">{phrase.likeCount}</span>
-                    </div>
+        <div className="max-w-4xl mx-auto">
+            <h1 className="text-3xl font-black text-ink text-center mb-6 font-spooky">Community Feed</h1>
+            {feed.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {feed.map((phrase) => (
+                        <div key={phrase.publicPhraseId} className="card-themed p-3">
+                            <header className="flex items-center gap-2 mb-2">
+                                <button onClick={() => onProfileClick(phrase.username!)} className="font-bold text-base text-ink hover:underline">
+                                    @{phrase.username}
+                                </button>
+                                {phrase.isUserVerified && <VerifiedIcon className="w-4 h-4 text-blue-500" title="Verified User" />}
+                            </header>
+                            <div className="aspect-square bg-surface-darker rounded-md overflow-hidden border-2 border-ink/20 mb-2">
+                                <img src={phrase.imageUrl} alt={phrase.text} className="w-full h-full object-cover"/>
+                            </div>
+                            <p className="font-bold text-lg mb-2">{phrase.text}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                                <button
+                                    onClick={() => handleLike(phrase.publicPhraseId)}
+                                    className="btn-themed !p-2 bg-surface hover:bg-rose-900/50 active:bg-rose-800/50"
+                                    aria-label="Like phrase"
+                                >
+                                    <HeartIcon className={`w-5 h-5 ${phrase.isLikedByMe ? 'text-rose-500' : 'text-ink/50'}`} solid={phrase.isLikedByMe} />
+                                </button>
+                                <span className="font-black text-base text-ink/90">{phrase.likeCount}</span>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            ))}
+            ) : (
+                <div className="text-center py-20 bg-surface rounded-lg">
+                    <p className="font-bold text-xl">The feed is quiet...</p>
+                    <p className="text-ink/70">Be the first to share a public phrase!</p>
+                </div>
+            )}
         </div>
     );
 };

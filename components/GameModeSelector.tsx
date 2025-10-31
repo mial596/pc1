@@ -98,7 +98,7 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ unlockedImages, upg
 
         return (
             <div>
-                 <h1 className="text-3xl sm:text-4xl font-black text-ink mb-2 text-center">Jugar Juegos</h1>
+                 <h1 className="text-3xl sm:text-4xl font-black text-ink mb-2 text-center font-spooky">Jugar Juegos</h1>
                  <p className="text-ink/70 text-center mb-8">¡Gana monedas y XP para ampliar tu colección de gatos!</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Object.entries(GAMES_DATA).map(([id, game]) => (
@@ -106,7 +106,7 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({ unlockedImages, upg
                             <div className="text-primary mx-auto mb-4">
                                 {gameIcons[id] || <CatSilhouetteIcon className="w-16 h-16"/>}
                             </div>
-                            <h2 className="text-2xl font-bold">{game.name}</h2>
+                            <h2 className="text-2xl font-bold font-spooky">{game.name}</h2>
                             <p className="text-ink/70">{game.description}</p>
                         </button>
                     ))}

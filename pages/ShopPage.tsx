@@ -15,9 +15,9 @@ const FeaturedItem: React.FC<{ envelope: Envelope; onOpenShop: () => void; }> = 
             </div>
             <div>
                 <p className="font-bold uppercase tracking-wider text-primary">¡Oferta Destacada!</p>
-                <h2 className="text-3xl font-black text-white drop-shadow-md">{envelope.name}</h2>
+                <h2 className="text-3xl font-black text-white drop-shadow-md font-spooky">{envelope.name}</h2>
                 <p className="mt-1 text-ink/90">{envelope.description}</p>
-                 <button className="btn-themed bg-white text-paper mt-4 font-bold">
+                 <button className="btn-themed btn-themed-primary mt-4 font-bold">
                     ¡Ir a la tienda!
                 </button>
             </div>
@@ -38,7 +38,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ shopData, onOpenShop }) => {
             ) : (
                 <>
                     {featuredEnvelope && <FeaturedItem envelope={featuredEnvelope} onOpenShop={onOpenShop} />}
-                    <h1 className="text-3xl sm:text-4xl font-black text-ink mb-4">¡Bienvenido a la Tienda!</h1>
+                    <h1 className="text-3xl sm:text-4xl font-black text-ink mb-4 font-spooky">¡Bienvenido a la Tienda!</h1>
                     <p className="text-lg text-ink/80 mb-8">
                         Aquí puedes gastar las monedas que tanto te costó ganar en nuevos sobres de gatos para ampliar tu colección o en mejoras permanentes que te ayudarán en los juegos.
                     </p>

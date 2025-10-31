@@ -40,7 +40,7 @@ const AdminPanel: React.FC = () => {
 
     return (
         <div className="container mx-auto p-4 sm:p-6">
-            <h1 className="text-3xl sm:text-4xl font-black text-ink mb-6">Admin Panel</h1>
+            <h1 className="text-3xl sm:text-4xl font-black text-ink mb-6 font-spooky">Admin Panel</h1>
             <div className="flex border-b-2 border-ink/20 mb-4 overflow-x-auto">
                 <TabButton tabId="users">Users</TabButton>
                 <TabButton tabId="phrases">Phrases</TabButton>

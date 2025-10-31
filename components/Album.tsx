@@ -28,7 +28,7 @@ const Album: React.FC<AlbumProps> = ({ allImages, unlockedImageIds }) => {
   return (
     <div className="container mx-auto p-4 sm:p-6">
       <header className="mb-8 text-center">
-        <h1 className="text-3xl sm:text-4xl font-black text-ink">Álbum de Gatos</h1>
+        <h1 className="text-3xl sm:text-4xl font-black text-ink font-spooky">Álbum de Gatos</h1>
         <p className="text-lg text-ink/70 mt-2">¡Aquí está tu colección de amigos felinos!</p>
         <div className="max-w-md mx-auto mt-4">
           <div className="flex justify-between font-bold text-sm text-ink mb-1">
