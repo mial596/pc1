@@ -50,7 +50,7 @@ const ShopModal: React.FC<ShopModalProps> = ({
                             <section>
                                 <h3 className="text-xl font-bold text-ink mb-4">Sobres de Gatos</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {shopData.envelopes.map((envelope) => {
+                                    {shopData.envelopes.map((envelope: Envelope) => {
                                         const cost = calculateEnvelopeCost(envelope, playerStats.level);
                                         const canAfford = userCoins >= cost;
                                         return (
@@ -78,7 +78,7 @@ const ShopModal: React.FC<ShopModalProps> = ({
                             <section className="mt-8">
                                 <h3 className="text-xl font-bold text-ink mb-4">Mejoras de Juego</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {shopData.upgrades.map((upgrade) => {
+                                    {shopData.upgrades.map((upgrade: GameUpgrade) => {
                                         const isPurchased = purchasedUpgrades.includes(upgrade.id);
                                         const canAfford = userCoins >= upgrade.cost;
                                         const levelMet = playerStats.level >= upgrade.levelRequired;
