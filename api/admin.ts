@@ -4,6 +4,7 @@ import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
 import { ObjectId } from 'mongodb';
 import { MASTER_IMAGE_CATALOG_DATA } from './_shared/catalog-data.js';
+import { CatImage, Envelope, TradeOffer } from '../../types.js';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     try {
@@ -70,6 +71,8 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: any) {
     }
     
     if (resource === 'cats') {
+        // Migration: ensure all cats have isShiny field
+        await db.collection('cat_images').updateMany({ isShiny: { $exists: false } }, { $set: { isShiny: false } });
         const cats = await db.collection('cat_images').find({}).sort({ id: 1 }).toArray();
         return res.status(200).json(cats);
     }
@@ -82,6 +85,20 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: any) {
     if (resource === 'themes') {
         const themes = await db.collection('cat_images').distinct('theme');
         return res.status(200).json(themes);
+    }
+    
+    if (resource === 'trades') {
+        const trades = await db.collection('trades').find({}).sort({ createdAt: -1 }).toArray();
+        return res.status(200).json(trades);
+    }
+    
+    if (resource === 'settings') {
+        let settings = await db.collection('game_settings').findOne({ _id: 'main' });
+        if (!settings) {
+            settings = { _id: 'main', rarityValues: { common: 10, rare: 50, epic: 200 } };
+            await db.collection('game_settings').insertOne(settings);
+        }
+        return res.status(200).json(settings);
     }
 
     return res.status(400).send('Invalid resource requested.');
@@ -116,7 +133,7 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: any) {
     }
 
     if (action === 'addCat') {
-        const { url, theme, rarity } = req.body;
+        const { url, theme, rarity, isShiny } = req.body;
         if (!url || !theme || !rarity) {
             return res.status(400).json({ message: "URL, theme, and rarity are required." });
         }
@@ -124,21 +141,37 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: any) {
         const lastCat = await cats.find().sort({ id: -1 }).limit(1).toArray();
         const nextId = lastCat.length > 0 ? lastCat[0].id + 1 : 1;
 
-        const newCat = { id: nextId, url, theme, rarity };
+        const newCat: Omit<CatImage, 'id'> & {id: number} = { id: nextId, url, theme, rarity, isShiny: !!isShiny };
         await cats.insertOne(newCat);
         return res.status(201).json({ success: true });
     }
 
-    if (action === 'addEnvelope') {
-        const envelopeData = req.body;
-        delete envelopeData.action; // Remove action field before inserting
+    if (action === 'editCat') {
+        const { id, url, theme, rarity, isShiny } = req.body;
+        if (!id || !url || !theme || !rarity) {
+            return res.status(400).json({ message: "ID, URL, theme, and rarity are required." });
+        }
+        await db.collection('cat_images').updateOne({ id: Number(id) }, { $set: { url, theme, rarity, isShiny: !!isShiny } });
+        return res.status(200).json({ success: true });
+    }
 
-        if (!envelopeData.id || !envelopeData.name || !envelopeData.baseCost) {
+    if (action === 'addEnvelope' || action === 'editEnvelope') {
+        const envelopeData: Envelope = req.body;
+        const { id, name, baseCost } = envelopeData;
+        if (!id || !name || baseCost === undefined) {
             return res.status(400).json({ message: "ID, name, and baseCost are required." });
         }
-
-        await db.collection('envelopes').insertOne(envelopeData);
-        return res.status(201).json({ success: true });
+        await db.collection('envelopes').updateOne({ id: id }, { $set: envelopeData }, { upsert: true });
+        return res.status(200).json({ success: true });
+    }
+    
+    if (action === 'deleteEnvelope') {
+        const { envelopeId } = req.body;
+        if (!envelopeId) {
+            return res.status(400).json({ message: "envelopeId is required." });
+        }
+        await db.collection('envelopes').deleteOne({ id: envelopeId });
+        return res.status(200).json({ success: true });
     }
 
     if (action === 'importCatCatalog') {
@@ -159,6 +192,7 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: any) {
                     url: catSeed.url,
                     theme: catSeed.theme,
                     rarity: catSeed.rarity,
+                    isShiny: false,
                 });
                 nextId++;
             }
@@ -169,6 +203,25 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: any) {
         }
 
         return res.status(200).json({ success: true, message: `Imported ${newCatsToInsert.length} new cats.` });
+    }
+
+    if (action === 'cancelTrade') {
+        const { tradeId } = req.body;
+        if (!tradeId) return res.status(400).json({ message: "tradeId is required." });
+
+        const result = await db.collection('trades').updateOne(
+            { _id: new ObjectId(tradeId), status: 'pending' },
+            { $set: { status: 'cancelled', reason: 'Cancelled by moderator.' } }
+        );
+        if (result.matchedCount === 0) return res.status(404).json({ message: "Pending trade not found." });
+        return res.status(200).json({ success: true });
+    }
+
+    if (action === 'saveSettings') {
+        const { settings } = req.body;
+        if (!settings) return res.status(400).json({ message: "Settings object is required." });
+        await db.collection('game_settings').updateOne({ _id: 'main' }, { $set: settings }, { upsert: true });
+        return res.status(200).json({ success: true });
     }
 
 

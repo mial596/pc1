@@ -2,9 +2,11 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
-import { FriendData, Friendship } from '../types.js';
+import { FriendData, Friendship, UserProfile } from '../../types.js';
 import { ALL_MISSIONS } from '../../gameData/missions.js';
 import { ObjectId, Db } from 'mongodb';
+import { updateDailyMissionProgress } from './_utils/missions.js';
+
 
 const MAX_FRIENDSHIP_LEVEL = 10;
 const XP_PER_LEVEL = 200;
@@ -44,14 +46,20 @@ async function handleGet(res: VercelResponse, db: Db, userId: string) {
     
     const currentUserData = currentUser.data || {};
 
+    // Get friends from the new 'friendships' collection
     const friendDocs = await friendships.find({ $or: [{ user1Id: userId }, { user2Id: userId }] }).toArray();
-    const friendIds = friendDocs.map(f => f.user1Id === userId ? f.user2Id : f.user1Id);
-    
-    const friendsData = friendIds.length > 0
-      ? await users.find({ _id: { $in: friendIds } }).project({ username: 1, isVerified: 1, role: 1 }).toArray()
-      : [];
+    const friendIdsFromCollection = friendDocs.map(f => f.user1Id === userId ? f.user2Id : f.user1Id);
 
-    // FIX: Ensure friendRequestsReceived is treated as an array to prevent crashes with malformed data.
+    // Get friends from the old 'data.friends' array for backward compatibility
+    const friendIdsFromArray = (currentUserData.friends && Array.isArray(currentUserData.friends)) ? currentUserData.friends : [];
+
+    // Combine and get unique IDs
+    const allFriendIds = [...new Set([...friendIdsFromCollection, ...friendIdsFromArray])];
+    
+    const friendsData = allFriendIds.length > 0
+      ? await users.find({ _id: { $in: allFriendIds } }).project({ username: 1, isVerified: 1, role: 1 }).toArray()
+      : [];
+    
     const requestIds = Array.isArray(currentUserData.friendRequestsReceived) ? currentUserData.friendRequestsReceived : [];
     const requestsData = requestIds.length > 0
       ? await users.find({ _id: { $in: requestIds } }).project({ username: 1 }).toArray()
@@ -60,13 +68,27 @@ async function handleGet(res: VercelResponse, db: Db, userId: string) {
     const response: FriendData = {
         friends: friendsData.map((u: any) => {
             const friendshipDoc = friendDocs.find(f => (f.user1Id === userId && f.user2Id === u._id) || (f.user1Id === u._id && f.user2Id === userId));
-            const friendship: Friendship | null = friendshipDoc ? {
-                _id: friendshipDoc._id.toHexString(),
-                userId: u._id,
-                level: friendshipDoc.level,
-                xp: friendshipDoc.xp,
-                activeMission: friendshipDoc.activeMission,
-            } : null;
+            let friendship: Friendship | null = null;
+            
+            if (friendshipDoc) {
+                friendship = {
+                    _id: friendshipDoc._id.toHexString(),
+                    userId: u._id,
+                    level: friendshipDoc.level,
+                    xp: friendshipDoc.xp,
+                    activeMission: friendshipDoc.activeMission,
+                };
+            } else if (friendIdsFromArray.includes(u._id)) {
+                // For friends from the old system without a friendship doc, create a default object.
+                // The migration in /api/profile will create the real document eventually.
+                friendship = {
+                    _id: new ObjectId().toHexString(), // Dummy ID, won't be saved
+                    userId: u._id,
+                    level: 1,
+                    xp: 0,
+                    activeMission: null,
+                };
+            }
 
             return { userId: u._id, username: u.username, isVerified: u.isVerified, role: u.role, friendship };
         }),
@@ -74,6 +96,7 @@ async function handleGet(res: VercelResponse, db: Db, userId: string) {
     };
     return res.status(200).json(response);
 }
+
 
 async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userId: string) {
     const { action, targetUserId, publicPhraseId, authorId, friendshipId, missionId } = req.body;
@@ -88,26 +111,35 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
         const isLiked = phrase.likes?.includes(userId);
         const updateOperation = isLiked ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
         await phrases.updateOne({ _id: new ObjectId(publicPhraseId) }, updateOperation);
+
         if(!isLiked) {
              await updateMissionProgress(friendships, userId, authorId, 'LIKE_PHRASES', 1);
+             // Also update daily mission progress
+             await updateDailyMissionProgress(db, userId, 'LIKE_PUBLIC_PHRASE', 1);
         }
-        return res.status(200).json({ success: true, liked: !isLiked });
+        
+        const updatedProfile = await users.findOne({ _id: userId });
+        return res.status(200).json({ success: true, liked: !isLiked, updatedProfile });
     }
 
     if (action === 'add') {
         if (!targetUserId || userId === targetUserId) return res.status(400).json({ message: "Invalid target user." });
-        const targetUser = await users.findOne({ _id: targetUserId });
-        if (!targetUser) return res.status(404).json({ message: "Target user not found." });
+        const fromUser = await users.findOne({ _id: userId as any });
+        const targetUser = await users.findOne({ _id: targetUserId as any });
+        if (!targetUser || !fromUser) return res.status(404).json({ message: "User not found." });
         
         const targetUserData = targetUser.data || {};
 
+        // Check new system
         const existingFriendship = await friendships.findOne({ $or: [{ user1Id: userId, user2Id: targetUserId }, { user1Id: targetUserId, user2Id: userId }] });
         
-        // FIX: Ensure friendRequestsReceived is treated as an array before calling .includes().
+        // Check old system for backward compatibility
+        const areFriendsInOldSystem = (fromUser.data?.friends?.includes(targetUserId)) || (targetUserData.friends?.includes(userId));
+        
         const targetUserRequests = Array.isArray(targetUserData.friendRequestsReceived) ? targetUserData.friendRequestsReceived : [];
         const hasSentRequest = targetUserRequests.includes(userId);
         
-        if(existingFriendship || hasSentRequest) return res.status(409).json({message: "Already friends or request sent."});
+        if(existingFriendship || areFriendsInOldSystem || hasSentRequest) return res.status(409).json({message: "Already friends or request sent."});
 
         await users.updateOne({ _id: userId as any }, { $addToSet: { "data.friendRequestsSent": targetUserId } });
         await users.updateOne({ _id: targetUserId as any }, { $addToSet: { "data.friendRequestsReceived": userId } });
@@ -181,6 +213,7 @@ async function handleDelete(req: VercelRequest, res: VercelResponse, db: Db, use
 }
 
 export async function updateMissionProgress(friendships: any, user1Id: string, user2Id: string, missionType: string, progressAmount: number) {
+    if (user1Id === user2Id) return; // Don't give progress for liking your own phrases
     const friendship = await friendships.findOne({
         $or: [{ user1Id, user2Id }, { user1Id: user2Id, user2Id: user1Id }],
         'activeMission.missionId': { $in: ALL_MISSIONS.filter(m => m.type === missionType).map(m => m.id) },

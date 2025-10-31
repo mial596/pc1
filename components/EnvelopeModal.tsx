@@ -42,7 +42,7 @@ const EnvelopeModal: React.FC<EnvelopeModalProps> = ({ isOpen, onClose, newImage
                 {newImages.map((image, index) => (
                   <div 
                     key={image.id} 
-                    className={`rarity-card-container rarity-${image.rarity} animate-popIn`}
+                    className={`rarity-card-container rarity-${image.rarity} animate-popIn ${image.isShiny ? 'shiny-effect' : ''}`}
                     style={{ animationDelay: `${index * 150}ms` }}
                   >
                     <RarityShine rarity={image.rarity} />
@@ -52,6 +52,7 @@ const EnvelopeModal: React.FC<EnvelopeModalProps> = ({ isOpen, onClose, newImage
                         <img src={image.url} alt={image.theme} className="w-full h-full object-cover rounded-md" />
                     </div>
                     <div className="rarity-label">
+                        {image.isShiny && '✨ '}
                         {image.rarity}
                     </div>
                   </div>

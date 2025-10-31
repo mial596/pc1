@@ -55,7 +55,7 @@ const Album: React.FC<AlbumProps> = ({ allImages, unlockedImageIds }) => {
                   return (
                     <div
                       key={image.id}
-                      className={`aspect-square rounded-xl overflow-hidden transition-all duration-300 ${isUnlocked ? 'bg-paper shadow-lg border-4 border-ink/80' : 'bg-surface'}`}
+                      className={`aspect-square rounded-xl overflow-hidden transition-all duration-300 relative ${isUnlocked ? `bg-paper shadow-lg border-4 border-ink/80 ${image.isShiny ? 'shiny-effect' : ''}` : 'bg-surface'}`}
                     >
                       {isUnlocked ? (
                         <img src={image.url} alt={image.theme} className="w-full h-full object-cover" />

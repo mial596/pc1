@@ -5,6 +5,7 @@ export interface CatImage {
   url: string;
   theme: string;
   rarity: 'common' | 'rare' | 'epic';
+  isShiny?: boolean;
 }
 
 export interface Phrase {
@@ -77,6 +78,19 @@ export interface Friendship {
     activeMission: Mission | null;
 }
 
+export type DailyMissionType = 'PLAY_ANY_GAME' | 'OPEN_ENVELOPE' | 'LIKE_PUBLIC_PHRASE' | 'CHAT_WITH_PICTO';
+
+export interface DailyMission {
+    id: string;
+    description: string;
+    type: DailyMissionType;
+    goal: number;
+    progress: number;
+    rewardCoins: number;
+    rewardXp: number;
+    isClaimed: boolean;
+}
+
 export interface UserData {
     coins: number;
     phrases: Phrase[];
@@ -88,6 +102,8 @@ export interface UserData {
     friendRequestsSent: string[]; // array of user IDs
     friendRequestsReceived: string[]; // array of user IDs
     tradeNotifications: number;
+    dailyMissions: DailyMission[];
+    lastMissionReset: string; // ISO Date String
     friends?: string[]; // Old structure, for migration purpose
 }
 
@@ -221,4 +237,9 @@ export interface FriendData {
 export interface FullDisplayData {
   phrase: Phrase;
   image: CatImage | null;
+}
+// For Picto Chat
+export interface ChatMessage {
+    role: 'user' | 'model';
+    text: string;
 }

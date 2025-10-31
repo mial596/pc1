@@ -1,5 +1,6 @@
 
 
+
 import React from 'react';
 import { CatImage, Phrase } from '../types';
 import { CloseIcon } from '../hooks/Icons';
@@ -40,7 +41,7 @@ const ImageSelector: React.FC<ImageSelectorProps> = ({ isOpen, onClose, onSelect
                 <button
                   key={image.id}
                   onClick={() => onSelectImage(phrase.id, image.id)}
-                  className={`aspect-square rounded-lg overflow-hidden border-[6px] transition-all duration-200 ease-in-out ${phrase.selectedImageId === image.id ? 'border-primary ring-4 ring-offset-2 ring-primary scale-105 shadow-lg' : 'border-transparent hover:border-primary'}`}
+                  className={`aspect-square rounded-lg overflow-hidden border-[6px] transition-all duration-200 ease-in-out relative ${phrase.selectedImageId === image.id ? 'border-primary ring-4 ring-offset-2 ring-primary scale-105 shadow-lg' : 'border-transparent hover:border-primary'} ${image.isShiny ? 'shiny-effect' : ''}`}
                 >
                   <img src={image.url} alt={image.theme} className="w-full h-full object-cover" />
                 </button>

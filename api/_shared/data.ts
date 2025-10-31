@@ -20,10 +20,11 @@ export const getInitialUserData = (): Omit<UserData, 'phrases' | 'unlockedImageI
     playerStats: { level: 1, xp: 0, xpToNextLevel: 100 },
     purchasedUpgrades: [],
     bio: "¡Hola! Soy nuevo en PictoCat.",
-    // FIX: Add missing 'friendships' property to satisfy the UserData type.
     friendships: [],
     friends: [],
     friendRequestsSent: [],
     friendRequestsReceived: [],
     tradeNotifications: 0,
+    dailyMissions: [],
+    lastMissionReset: new Date(0).toISOString(), // A very old date to trigger initial reset
 });

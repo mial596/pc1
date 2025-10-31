@@ -3,6 +3,8 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
 import { CatImage, Envelope, EnvelopeTypeId } from '../../types.js';
+import { updateDailyMissionProgress } from './_utils/missions.js';
+
 
 const calculateEnvelopeCost = (envelope: Envelope, playerLevel: number): number => {
   return envelope.baseCost + ((playerLevel - 1) * envelope.costIncreasePerLevel);
@@ -32,7 +34,7 @@ async function handler(req: VercelRequest, res: VercelResponse) {
         const users = db.collection('users');
         const catalog = db.collection('cat_images');
 
-        const currentUser = await users.findOne({ _id: userId as any });
+        let currentUser = await users.findOne({ _id: userId as any });
         if (!currentUser) {
             return res.status(404).json({ message: "User not found." });
         }
@@ -85,8 +87,14 @@ async function handler(req: VercelRequest, res: VercelResponse) {
                         $addToSet: { 'data.unlockedImageIds': { $each: newImageIds } }
                     }
                 );
+                
+                // Update mission progress after purchase
+                await updateDailyMissionProgress(db, userId, 'OPEN_ENVELOPE', 1);
 
-                return res.status(200).json({ newCoins, newImages });
+                // Re-fetch user profile to return the most up-to-date state including mission progress
+                const updatedProfile = await users.findOne({ _id: userId as any });
+
+                return res.status(200).json({ updatedProfile, newImages });
             }
         }
         

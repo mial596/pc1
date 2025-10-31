@@ -1,31 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
-// FIX: Imports for hooks, services, and types used in sub-components
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
-import { AdminUserView, PublicPhrase } from '../types';
+import { AdminUserView, PublicPhrase, TradeOffer } from '../types';
 import { SpinnerIcon, TrashIcon } from '../hooks/Icons';
 
-// FIX: Removed imports for ManageUsers and ManagePhrases as they are defined in this file.
 import ManageCats from './ManageCats';
 import ManageEnvelopes from './ManageEnvelopes';
 
-type Tab = 'users' | 'phrases' | 'cats' | 'envelopes';
+type Tab = 'users' | 'phrases' | 'cats' | 'envelopes' | 'trades' | 'settings';
 
 const AdminPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('users');
 
     const renderContent = () => {
         switch(activeTab) {
-            case 'users':
-                return <ManageUsers />;
-            case 'phrases':
-                return <ManagePhrases />;
-            case 'cats':
-                return <ManageCats />;
-            case 'envelopes':
-                return <ManageEnvelopes />;
-            default:
-                return null;
+            case 'users': return <ManageUsers />;
+            case 'phrases': return <ManagePhrases />;
+            case 'cats': return <ManageCats />;
+            case 'envelopes': return <ManageEnvelopes />;
+            case 'trades': return <ManageTrades />;
+            case 'settings': return <ManageSettings />;
+            default: return null;
         }
     };
 
@@ -46,17 +41,17 @@ const AdminPanel: React.FC = () => {
                 <TabButton tabId="phrases">Phrases</TabButton>
                 <TabButton tabId="cats">Cats</TabButton>
                 <TabButton tabId="envelopes">Envelopes</TabButton>
+                <TabButton tabId="trades">Trades</TabButton>
+                <TabButton tabId="settings">Settings</TabButton>
             </div>
             {renderContent()}
         </div>
     );
 };
 
-// Sub-components for managing different sections
+// --- Sub-components for managing different sections ---
+
 const ManageUsers: React.FC = () => {
-    // FIX: Removed require calls and local React destructuring
-    
-    // FIX: Corrected state typing from `typeof AdminUserView[]` to `AdminUserView[]`
     const [users, setUsers] = useState<AdminUserView[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { getAccessTokenSilently } = useAuth0();
@@ -85,7 +80,6 @@ const ManageUsers: React.FC = () => {
     if (isLoading) return <div className="flex justify-center p-8"><SpinnerIcon className="w-8 h-8 animate-spin" /></div>;
     return (
         <div className="space-y-2">
-            {/* FIX: Corrected type for mapped `user` object */}
             {users.map((user: AdminUserView) => (
                 <div key={user.id} className="card-themed p-3 flex justify-between items-center">
                     <div>
@@ -102,9 +96,6 @@ const ManageUsers: React.FC = () => {
 };
 
 const ManagePhrases: React.FC = () => {
-    // FIX: Removed require calls and local React destructuring
-
-    // FIX: Corrected state typing from `typeof PublicPhrase[]` to `PublicPhrase[]`
     const [phrases, setPhrases] = useState<PublicPhrase[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { getAccessTokenSilently } = useAuth0();
@@ -134,7 +125,6 @@ const ManagePhrases: React.FC = () => {
     if (isLoading) return <div className="flex justify-center p-8"><SpinnerIcon className="w-8 h-8 animate-spin" /></div>;
     return (
         <div className="space-y-4">
-            {/* FIX: Corrected type for mapped `phrase` object */}
             {phrases.map((phrase: PublicPhrase) => (
                 <div key={phrase.publicPhraseId} className="card-themed p-3 flex justify-between items-center gap-4">
                     <img src={phrase.imageUrl} alt="" className="w-16 h-16 rounded-md object-cover border-2 border-ink/20" />
@@ -150,5 +140,136 @@ const ManagePhrases: React.FC = () => {
         </div>
     );
 };
+
+const ManageTrades: React.FC = () => {
+    const [trades, setTrades] = useState<TradeOffer[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { getAccessTokenSilently } = useAuth0();
+
+    const fetchTrades = useCallback(async () => {
+        setIsLoading(true);
+        const token = await getAccessTokenSilently();
+        const data = await apiService.adminGetTrades(token);
+        setTrades(data);
+        setIsLoading(false);
+    }, [getAccessTokenSilently]);
+
+    useEffect(() => {
+        fetchTrades();
+    }, [fetchTrades]);
+
+    const handleCancelTrade = async (tradeId: string) => {
+        if (!window.confirm("Are you sure you want to cancel this trade?")) return;
+        try {
+            const token = await getAccessTokenSilently();
+            await apiService.adminCancelTrade(token, tradeId);
+            fetchTrades(); // Refresh list
+        } catch (err) {
+            alert("Failed to cancel trade.");
+        }
+    };
+
+    const groupedTrades = trades.reduce((acc, trade) => {
+        (acc[trade.status] = acc[trade.status] || []).push(trade);
+        return acc;
+    }, {} as Record<string, TradeOffer[]>);
+
+    if (isLoading) return <div className="flex justify-center p-8"><SpinnerIcon className="w-8 h-8 animate-spin" /></div>;
+
+    return (
+        <div>
+            {['pending', 'accepted', 'rejected', 'cancelled'].map(status => (
+                <div key={status} className="mb-6">
+                    <h3 className="text-xl font-bold mb-2 capitalize">{status} Trades</h3>
+                    {groupedTrades[status]?.length > 0 ? (
+                        <div className="space-y-3">
+                            {groupedTrades[status].map(trade => (
+                                <div key={trade._id} className="card-themed p-3">
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-sm font-bold">
+                                            {trade.fromUsername} ↔️ {trade.toUsername}
+                                        </p>
+                                        {trade.status === 'pending' && (
+                                            <button onClick={() => handleCancelTrade(trade._id)} className="btn-themed btn-themed-danger !py-1 !px-2">Cancel</button>
+                                        )}
+                                    </div>
+                                    {/* Further details can be added here */}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-ink/60">No {status} trades found.</p>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const ManageSettings: React.FC = () => {
+    const [settings, setSettings] = useState({ rarityValues: { common: 0, rare: 0, epic: 0 } });
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const { getAccessTokenSilently } = useAuth0();
+
+    const fetchSettings = useCallback(async () => {
+        setIsLoading(true);
+        const token = await getAccessTokenSilently();
+        const data = await apiService.adminGetSettings(token);
+        if (data) setSettings(data);
+        setIsLoading(false);
+    }, [getAccessTokenSilently]);
+
+    useEffect(() => {
+        fetchSettings();
+    }, [fetchSettings]);
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const token = await getAccessTokenSilently();
+            await apiService.adminSaveSettings(token, settings);
+            alert("Settings saved!");
+        } catch (err) {
+            alert("Failed to save settings.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setSettings(prev => ({
+            ...prev,
+            rarityValues: { ...prev.rarityValues, [name]: Number(value) }
+        }));
+    };
+
+    if (isLoading) return <div className="flex justify-center p-8"><SpinnerIcon className="w-8 h-8 animate-spin" /></div>;
+
+    return (
+        <div className="card-themed p-4 max-w-lg">
+            <h3 className="text-xl font-bold mb-4">Game Economy</h3>
+            <div className="space-y-3">
+                <div>
+                    <label className="font-bold text-sm">Common Value (coins)</label>
+                    <input type="number" name="common" value={settings.rarityValues.common} onChange={handleChange} className="input-themed mt-1" />
+                </div>
+                <div>
+                    <label className="font-bold text-sm">Rare Value (coins)</label>
+                    <input type="number" name="rare" value={settings.rarityValues.rare} onChange={handleChange} className="input-themed mt-1" />
+                </div>
+                <div>
+                    <label className="font-bold text-sm">Epic Value (coins)</label>
+                    <input type="number" name="epic" value={settings.rarityValues.epic} onChange={handleChange} className="input-themed mt-1" />
+                </div>
+            </div>
+            <button onClick={handleSave} disabled={isSaving} className="btn-themed btn-themed-primary mt-4">
+                {isSaving ? <SpinnerIcon className="w-5 h-5 animate-spin" /> : "Save Settings"}
+            </button>
+        </div>
+    );
+};
+
 
 export default AdminPanel;

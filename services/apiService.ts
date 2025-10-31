@@ -12,6 +12,7 @@ import {
     FriendData,
     Envelope,
     GameUpgrade,
+    ChatMessage,
 } from '../types';
 
 // Helper function to handle API requests
@@ -64,7 +65,7 @@ export const getShopData = (): Promise<{ envelopes: Envelope[], upgrades: GameUp
     return apiRequest('/api/shop?resource=data', 'GET', '');
 };
 
-export const purchaseEnvelope = (token: string, envelopeId: EnvelopeTypeId): Promise<{ newCoins: number; newImages: CatImage[] }> => {
+export const purchaseEnvelope = (token: string, envelopeId: EnvelopeTypeId): Promise<{ updatedProfile: UserProfile; newImages: CatImage[] }> => {
     return apiRequest('/api/shop', 'POST', token, { action: 'purchaseEnvelope', envelopeId });
 };
 
@@ -81,7 +82,7 @@ export const getPublicFeed = (token: string): Promise<PublicProfilePhrase[]> => 
     return apiRequest('/api/community?resource=feed', 'GET', token);
 }
 
-export const likePublicPhrase = (token: string, publicPhraseId: string, authorId: string): Promise<{ success: boolean; liked: boolean }> => {
+export const likePublicPhrase = (token: string, publicPhraseId: string, authorId: string): Promise<{ success: boolean; liked: boolean; updatedProfile: UserProfile }> => {
     return apiRequest('/api/friends', 'POST', token, { action: 'like', publicPhraseId, authorId });
 };
 
@@ -112,9 +113,18 @@ export const claimFriendMissionReward = (token: string, friendshipId: string): P
 };
 
 // --- Game ---
-export const saveGameResults = (token: string, results: { coinsEarned: number; xpEarned: number }): Promise<{ success: boolean }> => {
+export const saveGameResults = (token: string, results: { coinsEarned: number; xpEarned: number }): Promise<UserProfile> => {
     return apiRequest('/api/game', 'POST', token, { action: 'saveResults', results });
 };
+
+// --- Daily Missions & AI Chat ---
+export const claimDailyMissionReward = (token: string, missionId: string): Promise<UserProfile> => {
+    return apiRequest('/api/missions', 'POST', token, { action: 'claimReward', missionId });
+};
+
+export const chatWithPicto = (token: string, history: ChatMessage[]): Promise<{ reply: string }> => {
+    return apiRequest('/api/missions', 'POST', token, { action: 'chat', history });
+}
 
 // --- Trading ---
 export const getTrades = (token: string): Promise<TradeOffer[]> => {
@@ -163,14 +173,42 @@ export const adminGetThemes = (token: string): Promise<string[]> => {
     return apiRequest('/api/admin?resource=themes', 'GET', token);
 };
 
-export const adminAddCat = (token: string, catData: { url: string; theme: string; rarity: 'common' | 'rare' | 'epic' }): Promise<{ success: boolean }> => {
+export const adminAddCat = (token: string, catData: Omit<CatImage, 'id'>): Promise<{ success: boolean }> => {
     return apiRequest('/api/admin', 'POST', token, { action: 'addCat', ...catData });
+};
+
+export const adminEditCat = (token: string, catData: CatImage): Promise<{ success: boolean }> => {
+    return apiRequest('/api/admin', 'POST', token, { action: 'editCat', ...catData });
 };
 
 export const adminAddEnvelope = (token: string, envelopeData: Omit<Envelope, 'isFeatured'> & {isFeatured: boolean}): Promise<{ success: boolean }> => {
     return apiRequest('/api/admin', 'POST', token, { action: 'addEnvelope', ...envelopeData });
 };
 
+export const adminEditEnvelope = (token: string, envelopeData: Envelope): Promise<{ success: boolean }> => {
+    return apiRequest('/api/admin', 'POST', token, { action: 'editEnvelope', ...envelopeData });
+};
+
+export const adminDeleteEnvelope = (token: string, envelopeId: EnvelopeTypeId): Promise<{ success: boolean }> => {
+    return apiRequest('/api/admin', 'POST', token, { action: 'deleteEnvelope', envelopeId });
+};
+
 export const adminImportCatCatalog = (token: string): Promise<{ success: boolean; message: string }> => {
     return apiRequest('/api/admin', 'POST', token, { action: 'importCatCatalog' });
+};
+
+export const adminGetTrades = (token: string): Promise<TradeOffer[]> => {
+    return apiRequest('/api/admin?resource=trades', 'GET', token);
+};
+
+export const adminCancelTrade = (token: string, tradeId: string): Promise<{ success: boolean }> => {
+    return apiRequest('/api/admin', 'POST', token, { action: 'cancelTrade', tradeId });
+};
+
+export const adminGetSettings = (token: string): Promise<any> => {
+    return apiRequest('/api/admin?resource=settings', 'GET', token);
+};
+
+export const adminSaveSettings = (token: string, settings: any): Promise<{ success: boolean }> => {
+    return apiRequest('/api/admin', 'POST', token, { action: 'saveSettings', settings });
 };

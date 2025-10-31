@@ -19,7 +19,7 @@ const RARITY_CLASSES: Record<string, string> = {
 const TradeItem: React.FC<{ image: CatImage, onClick?: () => void, isSelected?: boolean }> = ({ image, onClick, isSelected }) => (
     <div 
         onClick={onClick} 
-        className={`aspect-square rounded-lg overflow-hidden border-4 transition-all duration-200 cursor-pointer ${RARITY_CLASSES[image.rarity]} ${isSelected ? 'ring-4 ring-offset-2 ring-primary scale-105' : 'hover:scale-105'}`}
+        className={`aspect-square rounded-lg overflow-hidden border-4 transition-all duration-200 cursor-pointer relative ${RARITY_CLASSES[image.rarity]} ${isSelected ? 'ring-4 ring-offset-2 ring-primary scale-105' : 'hover:scale-105'} ${image.isShiny ? 'shiny-effect' : ''}`}
     >
         <img src={image.url} className="w-full h-full object-cover" alt={image.theme} />
     </div>

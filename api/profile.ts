@@ -3,8 +3,15 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken, DecodedToken } from './_utils/auth.js';
 import { getInitialUserData } from './_shared/data.js';
-import { UserProfile, Phrase, Friendship } from '../../types.js';
+import { UserProfile, Phrase, Friendship, DailyMission } from '../../types.js';
 import { Db, ObjectId } from 'mongodb';
+import { ALL_DAILY_MISSIONS } from './_shared/missions-data.js';
+
+function isSameDay(date1: Date, date2: Date) {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+}
 
 async function handler(req: VercelRequest, res: VercelResponse) {
     try {
@@ -72,8 +79,26 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
             phrases: Array.isArray(existingData.phrases) ? existingData.phrases : initialData.phrases,
             unlockedImageIds: Array.isArray(existingData.unlockedImageIds) ? existingData.unlockedImageIds : initialData.unlockedImageIds,
             purchasedUpgrades: Array.isArray(existingData.purchasedUpgrades) ? existingData.purchasedUpgrades : initialData.purchasedUpgrades,
+            friendRequestsSent: Array.isArray(existingData.friendRequestsSent) ? existingData.friendRequestsSent : initialData.friendRequestsSent,
+            friendRequestsReceived: Array.isArray(existingData.friendRequestsReceived) ? existingData.friendRequestsReceived : initialData.friendRequestsReceived,
+            dailyMissions: Array.isArray(existingData.dailyMissions) ? existingData.dailyMissions : initialData.dailyMissions,
+            lastMissionReset: existingData.lastMissionReset || initialData.lastMissionReset,
         };
         
+        // --- Daily Mission Reset Logic ---
+        const now = new Date();
+        const lastReset = new Date(repairedData.lastMissionReset);
+        if (!isSameDay(now, lastReset)) {
+            const shuffledMissions = [...ALL_DAILY_MISSIONS].sort(() => 0.5 - Math.random());
+            const newMissions: DailyMission[] = shuffledMissions.slice(0, 3).map(m => ({
+                ...m,
+                progress: 0,
+                isClaimed: false,
+            }));
+            repairedData.dailyMissions = newMissions;
+            repairedData.lastMissionReset = now.toISOString();
+        }
+
         // Data Migration: old friends array to new friendships collection
         if (repairedData.friends && Array.isArray(repairedData.friends) && repairedData.friends.length > 0) {
             const friendshipsCollection = db.collection('friendships');
