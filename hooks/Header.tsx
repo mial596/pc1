@@ -31,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile,
   const { coins } = userProfile.data;
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-surface/90 backdrop-blur-sm border-b-2 border-primary z-40">
+    <header className="fixed top-0 left-0 right-0 bg-surface border-b-4 border-ink z-40">
       <div className="container mx-auto px-4 h-20 flex justify-between items-center">
         {/* Left Side: Logo & Nav */}
         <div className="flex items-center gap-4">

@@ -16,9 +16,9 @@ const GameResultScreen: React.FC<{
     onExit: () => void;
 }> = ({ score, coins, xp, onPlayAgain, onExit }) => (
     <div className="flex flex-col items-center justify-center p-8 bg-surface rounded-lg shadow-lg">
-        <h2 className="text-3xl font-black text-primary font-spooky">¡Juego Terminado!</h2>
+        <h2 className="text-3xl font-black text-primary font-cartoon">¡Juego Terminado!</h2>
         <p className="text-xl my-4 text-ink/80">
-            Tu puntuación fue: <span className="font-bold text-white">{score}</span>
+            Tu puntuación fue: <span className="font-bold text-ink">{score}</span>
         </p>
         <div className="flex justify-center items-center gap-6 my-4 bg-surface-darker p-3 rounded-xl border-2 border-ink/20">
             <p className="font-bold text-lg text-yellow-400">+{coins} Monedas</p>
@@ -88,16 +88,17 @@ const JuegosPage: React.FC<JuegosPageProps> = ({ unlockedImages, onGameEnd }) =>
     return (
         <div className="container mx-auto p-4 sm:p-6">
             <header className="text-center mb-10">
-                <h1 className="text-4xl font-black text-ink font-spooky">Sala de Juegos</h1>
+                <h1 className="text-4xl font-black text-ink font-cartoon">Sala de Juegos</h1>
                 <p className="text-lg text-ink/70 mt-2">¡Gana monedas y XP para ampliar tu colección de gatos!</p>
             </header>
             
             <div className="space-y-12">
-                {Object.entries(groupedGames).map(([category, games]) => (
+                {/* FIX: Use Object.keys() to iterate over groupedGames to avoid potential typing issues with Object.entries() in some environments. */}
+                {Object.keys(groupedGames).map((category) => (
                     <section key={category}>
                         <h2 className="text-2xl font-bold text-primary mb-4 border-b-2 border-primary/20 pb-2">{category}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {games.map(game => {
+                            {groupedGames[category].map(game => {
                                 const isLocked = game.minImagesRequired && unlockedImages.length < game.minImagesRequired;
                                 return (
                                     <button 
@@ -107,7 +108,7 @@ const JuegosPage: React.FC<JuegosPageProps> = ({ unlockedImages, onGameEnd }) =>
                                         className="game-select-card card-themed p-6 text-center disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed disabled:hover:border-ink/20 disabled:hover:shadow-none"
                                     >
                                         <div className="text-primary mx-auto mb-4">{game.icon}</div>
-                                        <h3 className="text-2xl font-bold font-spooky">{game.name}</h3>
+                                        <h3 className="text-2xl font-bold font-cartoon">{game.name}</h3>
                                         <p className="text-ink/70">{game.description}</p>
                                         {isLocked && (
                                             <div className="flex items-center justify-center gap-2 mt-3 text-accent font-semibold text-sm bg-accent/20 p-2 rounded-md">
