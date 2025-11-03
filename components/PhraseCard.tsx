@@ -25,8 +25,9 @@ const PhraseCard: React.FC<PhraseCardProps> = ({ phrase, image, onCardClick, onS
   return (
     <div
       onClick={onCardClick}
-      className="card-themed has-tape aspect-square flex flex-col justify-between p-2"
+      className="card-themed aspect-square flex flex-col justify-between p-2 cursor-pointer"
     >
+      <div className="tape"></div>
       <div className={`flex-grow flex items-center justify-center rounded-md overflow-hidden mb-2 border-2 border-ink/30 bg-surface-darker ${image?.isShiny ? 'shiny-effect' : ''}`}>
         <img
           src={image?.url || DEFAULT_PIC_URL}

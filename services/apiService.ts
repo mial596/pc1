@@ -12,6 +12,9 @@ import {
     FriendData,
     Envelope,
     GameUpgrade,
+    Report,
+    Comment,
+    Transaction,
 } from '../types';
 
 // Helper function to handle API requests
@@ -85,6 +88,13 @@ export const likePublicPhrase = (token: string, publicPhraseId: string, authorId
     return apiRequest('/api/friends', 'POST', token, { action: 'like', publicPhraseId, authorId });
 };
 
+export const addComment = (token: string, publicPhraseId: string, text: string): Promise<Comment> => {
+    return apiRequest('/api/community', 'POST', token, { action: 'addComment', publicPhraseId, text });
+};
+
+export const reportContent = (token: string, type: 'phrase' | 'comment', contentId: string, reason: string): Promise<{ success: boolean }> => {
+    return apiRequest('/api/community', 'POST', token, { action: 'report', type, contentId, reason });
+};
 
 // --- Friends & Missions ---
 export const getFriends = (token: string): Promise<FriendData> => {
@@ -131,6 +141,11 @@ export const respondToTrade = (token: string, tradeId: string, action: 'accept' 
 
 export const cancelTrade = (token: string, tradeId: string): Promise<{ success: boolean }> => {
     return apiRequest(`/api/trades`, 'DELETE', token, { tradeId });
+};
+
+// --- Transactions ---
+export const getTransactions = (token: string): Promise<Transaction[]> => {
+    return apiRequest('/api/transactions', 'GET', token);
 };
 
 
@@ -201,4 +216,16 @@ export const adminGetSettings = (token: string): Promise<any> => {
 
 export const adminSaveSettings = (token: string, settings: any): Promise<{ success: boolean }> => {
     return apiRequest('/api/admin', 'POST', token, { action: 'saveSettings', settings });
+};
+
+export const adminGetReports = (token: string): Promise<Report[]> => {
+    return apiRequest('/api/admin?resource=reports', 'GET', token);
+};
+
+export const adminResolveReport = (token: string, reportId: string): Promise<{ success: boolean }> => {
+    return apiRequest('/api/admin', 'POST', token, { action: 'resolveReport', reportId });
+};
+
+export const adminDeleteComment = (token: string, commentId: string): Promise<{ success: boolean }> => {
+    return apiRequest('/api/admin', 'POST', token, { action: 'deleteComment', commentId });
 };

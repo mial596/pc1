@@ -35,7 +35,15 @@ async function saveGameResults(res: VercelResponse, db: Db, userId: string, resu
 
     const users = db.collection('users');
     const friendships = db.collection('friendships');
+    const transactions = db.collection('transactions');
     
+    // Fetch player profile to get username for transaction descriptions
+    const playerProfile = await users.findOne({ _id: userId as any });
+    if (!playerProfile) {
+        return res.status(404).json({ message: "Player not found." });
+    }
+    const playerUsername = playerProfile.username;
+
     // Update player's own stats
     await users.updateOne({ _id: userId as any }, {
         $inc: {
@@ -43,6 +51,17 @@ async function saveGameResults(res: VercelResponse, db: Db, userId: string, resu
             "data.playerStats.xp": results.xpEarned
         }
     });
+    
+    // Log player's earnings transaction
+    if (results.coinsEarned > 0) {
+        await transactions.insertOne({
+            userId: userId,
+            date: new Date().toISOString(),
+            description: `Ganado en Juego`,
+            amount: results.coinsEarned,
+        });
+    }
+
 
     // Get all friendships for the current user
     const userFriendships = await friendships.find({ $or: [{ user1Id: userId }, { user2Id: userId }] }).toArray();
@@ -55,6 +74,13 @@ async function saveGameResults(res: VercelResponse, db: Db, userId: string, resu
         const bonusCoins = Math.floor(results.coinsEarned * bonusPercentage);
         if (bonusCoins > 0) {
             await users.updateOne({ _id: friendId as any }, { $inc: { "data.coins": bonusCoins } });
+            // Log friend's bonus transaction
+            await transactions.insertOne({
+                userId: friendId,
+                date: new Date().toISOString(),
+                description: `Bonificación de amigo: @${playerUsername}`,
+                amount: bonusCoins,
+            });
         }
         
         // 2. Update 'PLAY_GAMES' mission progress

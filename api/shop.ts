@@ -78,6 +78,15 @@ async function handler(req: VercelRequest, res: VercelResponse) {
                 const newImageIds = newImages.map(img => img.id);
 
                 const newCoins = currentUser.data.coins - proratedCost;
+
+                // Create transaction record
+                const transactions = db.collection('transactions');
+                await transactions.insertOne({
+                    userId: userId,
+                    date: new Date().toISOString(),
+                    description: `Compra: ${envelope.name}`,
+                    amount: -proratedCost
+                });
                 
                 await users.updateOne(
                     { _id: userId as any },
@@ -88,7 +97,11 @@ async function handler(req: VercelRequest, res: VercelResponse) {
                 );
                 
                 // Re-fetch user profile to return the most up-to-date state
-                const updatedProfile = await users.findOne({ _id: userId as any });
+                const updatedProfileDoc = await users.findOne({ _id: userId as any });
+                
+                // This is a simplified profile update for the response, full profile fetch is complex
+                const updatedProfile = { ...currentUser, data: updatedProfileDoc.data };
+
 
                 return res.status(200).json({ updatedProfile, newImages });
             }

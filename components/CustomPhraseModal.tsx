@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { CatImage, Phrase } from '../types';
-import { CloseIcon, TrashIcon, GlobeIcon } from '../hooks/Icons';
+import { CloseIcon, TrashIcon, GlobeIcon, UsersIcon, LockIcon } from '../hooks/Icons';
 
 interface CustomPhraseModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: { text: string; selectedImageId: number | null; isPublic: boolean }) => void;
+    onSave: (data: { text: string; selectedImageId: number | null; visibility: 'public' | 'friends' | 'private' }) => void;
     onDelete: (phraseId: string) => void;
     phraseToEdit: Phrase | null;
     unlockedImages: CatImage[];
@@ -21,34 +21,40 @@ const CustomPhraseModal: React.FC<CustomPhraseModalProps> = ({
 }) => {
     const [text, setText] = useState('');
     const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
-    const [isPublic, setIsPublic] = useState(false);
+    const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>('private');
 
     useEffect(() => {
         if (phraseToEdit) {
             setText(phraseToEdit.text);
             setSelectedImageId(phraseToEdit.selectedImageId);
-            setIsPublic(phraseToEdit.isPublic || false);
+            setVisibility(phraseToEdit.visibility || 'private');
         } else {
             // Reset for new phrase
             setText('');
             setSelectedImageId(null);
-            setIsPublic(false);
+            setVisibility('private');
         }
     }, [phraseToEdit, isOpen]);
 
     if (!isOpen) return null;
 
     const handleSave = () => {
-        onSave({ text, selectedImageId, isPublic });
+        onSave({ text, selectedImageId, visibility });
     };
 
     const handleDelete = () => {
-        if (phraseToEdit) {
+        if (phraseToEdit && window.confirm("¿Estás seguro de que quieres eliminar esta frase permanentemente?")) {
             onDelete(phraseToEdit.id);
         }
     };
     
     const canSave = text.trim().length > 0 && selectedImageId !== null;
+    
+    const visibilityOptions = [
+      { id: 'private', label: 'Privado', icon: <LockIcon className="w-5 h-5"/>, description: 'Solo tú puedes ver esta frase.' },
+      { id: 'friends', label: 'Amigos', icon: <UsersIcon className="w-5 h-5"/>, description: 'Solo tus amigos pueden ver esta frase.' },
+      { id: 'public', label: 'Público', icon: <GlobeIcon className="w-5 h-5"/>, description: 'Cualquiera en la comunidad puede verla.' },
+    ];
 
     return (
         <div className="modal-themed-overlay">
@@ -93,25 +99,22 @@ const CustomPhraseModal: React.FC<CustomPhraseModalProps> = ({
                             )}
                         </div>
                     </div>
-
-                    <div>
-                        <label htmlFor="isPublicToggle" className="flex items-center cursor-pointer group">
-                             <div className="relative">
-                                <input type="checkbox" id="isPublicToggle" className="sr-only" checked={isPublic} onChange={() => setIsPublic(!isPublic)} />
-                                <div className={`block w-14 h-8 rounded-full transition-colors ${isPublic ? 'bg-primary' : 'bg-disabled'}`}></div>
-                                <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${isPublic ? 'translate-x-6' : ''}`}></div>
-                            </div>
-                            <div className="ml-3 font-semibold flex items-center gap-2 text-ink group-hover:text-primary transition-colors">
-                               <GlobeIcon className="w-5 h-5" /> Hacerla pública en la comunidad
-                            </div>
-                        </label>
-                         <p className="text-sm text-ink/60 mt-1 ml-16">Otros podrán ver tu frase si activas esta opción.</p>
+                     <div>
+                        <label className="font-bold text-ink text-lg mb-2">Visibilidad</label>
+                        <div className="grid sm:grid-cols-3 gap-2">
+                            {visibilityOptions.map(opt => (
+                                <button key={opt.id} onClick={() => setVisibility(opt.id as any)} className={`p-3 rounded-lg border-4 text-left transition-all ${visibility === opt.id ? 'border-primary bg-primary/10' : 'border-ink/20 hover:border-ink/40'}`}>
+                                    <div className="flex items-center gap-2 font-bold">{opt.icon} {opt.label}</div>
+                                    <p className="text-xs text-ink/70 mt-1">{opt.description}</p>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </main>
                 
                 <footer className="p-4 sm:p-6 mt-2 bg-surface-darker border-t-2 border-ink/20 flex justify-between items-center">
                     <div>
-                        {phraseToEdit && (
+                        {phraseToEdit && phraseToEdit.isCustom && (
                             <button
                                 onClick={handleDelete}
                                 className="btn-themed btn-themed-danger flex items-center gap-2"

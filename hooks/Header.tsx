@@ -10,6 +10,7 @@ interface HeaderProps {
   userProfile: UserProfile;
   onNavigate: (page: Page) => void;
   onOpenProfile: () => void;
+  onOpenTransactions: () => void;
   activePage: Page;
 }
 
@@ -20,26 +21,27 @@ const NavLink: React.FC<{
 }> = ({ onClick, isActive, children }) => (
   <button
     onClick={onClick}
-    className={`px-4 py-2 rounded-md font-bold transition-colors ${isActive ? 'bg-primary text-white' : 'hover:bg-ink/10'}`}
+    className={`px-4 py-2 rounded-lg font-bold transition-all duration-200 relative ${isActive ? 'text-primary' : 'text-ink/60 hover:text-ink'}`}
   >
     {children}
+    {isActive && <div className="absolute bottom-0 left-2 right-2 h-1 bg-primary rounded-full animate-popIn"></div>}
   </button>
 );
 
-const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile, activePage }) => {
+const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile, onOpenTransactions, activePage }) => {
   const { logout } = useAuth0();
   const { coins } = userProfile.data;
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-surface border-b-4 border-ink z-40">
+    <header className="fixed top-0 left-0 right-0 bg-surface border-b-4 border-ink z-40 shadow-lg">
       <div className="container mx-auto px-4 h-20 flex justify-between items-center">
         {/* Left Side: Logo & Nav */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+          <button onClick={() => onNavigate('home')} className="flex items-center gap-2 flex-shrink-0">
             <img src={LOGO_URL} alt="PictoCat Logo" className="w-12 h-12" />
-            <span className="text-2xl font-black text-ink hidden sm:block">PictoCat</span>
-          </div>
-          <nav className="hidden lg:flex items-center gap-2">
+            <span className="text-2xl font-black text-ink hidden sm:block font-cartoon">PictoCat</span>
+          </button>
+          <nav className="hidden lg:flex items-center gap-2 bg-surface-darker/70 p-1 rounded-full">
             <NavLink onClick={() => onNavigate('home')} isActive={activePage === 'home'}>Home</NavLink>
             <NavLink onClick={() => onNavigate('album')} isActive={activePage === 'album'}>Álbum</NavLink>
             <NavLink onClick={() => onNavigate('phrases')} isActive={activePage === 'phrases'}>Frases</NavLink>
@@ -57,12 +59,10 @@ const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile,
             <StoreIcon className="w-5 h-5" /> Tienda
           </button>
           
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 font-bold bg-surface-darker px-3 py-1.5 rounded-full border-2 border-ink/20">
-              <CoinIcon className="w-6 h-6 text-yellow-500" />
-              <span>{coins}</span>
-            </div>
-          </div>
+          <button onClick={onOpenTransactions} className="flex items-center gap-2 font-bold bg-surface-darker px-3 py-1.5 rounded-full border-2 border-ink/20 hover:bg-ink/10 transition-colors">
+            <CoinIcon className="w-6 h-6 text-yellow-500" />
+            <span className="text-lg">{coins}</span>
+          </button>
 
           <div className="flex items-center gap-2">
              <button onClick={onOpenProfile} className="flex items-center gap-2 font-bold hover:text-primary transition-colors p-1 rounded-full hover:bg-ink/10">
@@ -77,7 +77,7 @@ const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile,
             </button>
             <button
               onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-              className="p-2 rounded-full hover:bg-ink/10"
+              className="p-2 rounded-full hover:bg-ink/10 text-ink/70 hover:text-ink transition-colors"
               title="Logout"
             >
               <LogoutIcon className="w-6 h-6" />

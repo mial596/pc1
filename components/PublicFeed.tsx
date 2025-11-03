@@ -1,15 +1,81 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
-import { PublicProfilePhrase } from '../types';
+import { PublicProfilePhrase, Comment } from '../types';
 import { SpinnerIcon, HeartIcon, VerifiedIcon, CatSilhouetteIcon } from '../hooks/Icons';
+
+interface CommentSectionProps {
+    phraseId: string;
+    initialComments: Comment[];
+    commentCount: number;
+    currentUserId: string;
+    onReport: (data: {type: 'comment', contentId: string}) => void;
+}
+
+const CommentSection: React.FC<CommentSectionProps> = ({ phraseId, initialComments, commentCount, currentUserId, onReport }) => {
+    const [comments, setComments] = useState(initialComments);
+    const [newComment, setNewComment] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { getAccessTokenSilently } = useAuth0();
+
+    const handleAddComment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newComment.trim() === '') return;
+        setIsSubmitting(true);
+        try {
+            const token = await getAccessTokenSilently();
+            const addedComment = await apiService.addComment(token, phraseId, newComment);
+            setComments(prev => [...prev, addedComment]);
+            setNewComment("");
+        } catch (err) {
+            console.error("Failed to add comment", err);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+    
+    return (
+        <div className="comment-section pt-3 mt-3">
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                {comments.map(comment => (
+                    <div key={comment._id} className="comment">
+                        <img src={comment.profilePictureUrl || undefined} alt={comment.username} className="comment-avatar object-cover"/>
+                        <div className="comment-content">
+                            <div className="flex justify-between items-center">
+                                <span className="font-bold text-sm">{comment.username}</span>
+                                {comment.userId !== currentUserId && 
+                                    <button onClick={() => onReport({type: 'comment', contentId: comment._id})} className="font-bold text-xs text-ink/40 hover:text-accent">...</button>
+                                }
+                            </div>
+                            <p className="text-sm">{comment.text}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <form onSubmit={handleAddComment} className="comment-form">
+                <input 
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Añade un comentario..."
+                    className="input-themed !py-2 !text-sm flex-grow"
+                />
+                <button type="submit" disabled={isSubmitting} className="btn-themed btn-themed-primary !px-4 !py-2">
+                    {isSubmitting ? <SpinnerIcon className="w-5 h-5 animate-spin" /> : 'Ok'}
+                </button>
+            </form>
+        </div>
+    );
+};
+
 
 interface PublicFeedProps {
     currentUserId: string;
     onProfileClick: (username: string) => void;
+    onReport: (data: {type: 'phrase' | 'comment', contentId: string}) => void;
 }
 
-const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }) => {
+const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick, onReport }) => {
     const [feed, setFeed] = useState<PublicProfilePhrase[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -83,7 +149,7 @@ const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {feed.map((phrase) => (
                         <div key={phrase.publicPhraseId} className="card-themed p-3">
-                            <header className="flex items-center gap-3 mb-2">
+                            <header className="flex items-center justify-between gap-3 mb-2">
                                 <button onClick={() => onProfileClick(phrase.username!)} className="flex items-center gap-2">
                                     <div className="w-10 h-10 rounded-full bg-surface-darker border-2 border-primary flex items-center justify-center">
                                         {phrase.profilePictureUrl ? (
@@ -96,6 +162,9 @@ const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }
                                        <span className="font-bold text-base text-ink hover:underline">@{phrase.username}</span>
                                        {phrase.isUserVerified && <VerifiedIcon className="w-4 h-4 text-blue-500" title="Verified User" />}
                                     </div>
+                                </button>
+                                <button onClick={() => onReport({ type: 'phrase', contentId: phrase.publicPhraseId })} className="font-bold text-xs text-ink/40 hover:text-accent">
+                                    ...
                                 </button>
                             </header>
                             <div className="aspect-square bg-surface-darker rounded-md overflow-hidden border-2 border-ink/20 mb-2">
@@ -112,6 +181,13 @@ const PublicFeed: React.FC<PublicFeedProps> = ({ currentUserId, onProfileClick }
                                 </button>
                                 <span className="font-black text-base text-ink/90">{phrase.likeCount}</span>
                             </div>
+                            <CommentSection 
+                                phraseId={phrase.publicPhraseId}
+                                initialComments={phrase.comments}
+                                commentCount={phrase.commentCount}
+                                currentUserId={currentUserId}
+                                onReport={onReport}
+                            />
                         </div>
                     ))}
                 </div>

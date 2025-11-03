@@ -2,18 +2,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
 import { AdminUserView, PublicPhrase, TradeOffer } from '../types';
-import { SpinnerIcon, TrashIcon, CatSilhouetteIcon } from '../hooks/Icons';
+import { ShieldExclamationIcon, Cog6ToothIcon, TicketIcon, PhotoIcon } from '@heroicons/react/24/solid';
+import { SpinnerIcon, TrashIcon, CatSilhouetteIcon, UsersIcon, EnvelopeIcon } from '../hooks/Icons';
+
 
 import ManageCats from './ManageCats';
 import ManageEnvelopes from './ManageEnvelopes';
+import ManageReports from './ManageReports';
 
-type Tab = 'users' | 'phrases' | 'cats' | 'envelopes' | 'trades' | 'settings';
+type Tab = 'users' | 'phrases' | 'cats' | 'envelopes' | 'trades' | 'settings' | 'reports';
 
 const AdminPanel: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<Tab>('users');
+    const [activeTab, setActiveTab] = useState<Tab>('reports');
 
     const renderContent = () => {
         switch(activeTab) {
+            case 'reports': return <ManageReports />;
             case 'users': return <ManageUsers />;
             case 'phrases': return <ManagePhrases />;
             case 'cats': return <ManageCats />;
@@ -24,12 +28,12 @@ const AdminPanel: React.FC = () => {
         }
     };
 
-    const TabButton: React.FC<{ tabId: Tab, children: React.ReactNode }> = ({ tabId, children }) => (
+    const TabButton: React.FC<{ tabId: Tab, icon: React.ReactNode, children: React.ReactNode }> = ({ tabId, icon, children }) => (
         <button
             onClick={() => setActiveTab(tabId)}
             className={`tab-solid ${activeTab === tabId ? 'tab-solid-active' : 'text-ink/70'}`}
         >
-            {children}
+            {icon} {children}
         </button>
     );
 
@@ -37,14 +41,17 @@ const AdminPanel: React.FC = () => {
         <div className="container mx-auto p-4 sm:p-6">
             <h1 className="text-3xl sm:text-4xl font-black text-ink mb-6 font-cartoon">Admin Panel</h1>
             <div className="flex border-b-2 border-ink/20 mb-4 overflow-x-auto">
-                <TabButton tabId="users">Users</TabButton>
-                <TabButton tabId="phrases">Phrases</TabButton>
-                <TabButton tabId="cats">Cats</TabButton>
-                <TabButton tabId="envelopes">Envelopes</TabButton>
-                <TabButton tabId="trades">Trades</TabButton>
-                <TabButton tabId="settings">Settings</TabButton>
+                <TabButton tabId="reports" icon={<ShieldExclamationIcon className="w-5 h-5"/>}>Reports</TabButton>
+                <TabButton tabId="users" icon={<UsersIcon className="w-5 h-5"/>}>Users</TabButton>
+                <TabButton tabId="phrases" icon={<TicketIcon className="w-5 h-5"/>}>Phrases</TabButton>
+                <TabButton tabId="cats" icon={<PhotoIcon className="w-5 h-5"/>}>Cats</TabButton>
+                <TabButton tabId="envelopes" icon={<EnvelopeIcon className="w-5 h-5"/>}>Envelopes</TabButton>
+                <TabButton tabId="trades" icon={<TrashIcon className="w-5 h-5"/>}>Trades</TabButton>
+                <TabButton tabId="settings" icon={<Cog6ToothIcon className="w-5 h-5"/>}>Settings</TabButton>
             </div>
-            {renderContent()}
+            <div className="bg-surface p-4 rounded-b-lg rounded-r-lg border-2 border-t-0 border-ink/20">
+                {renderContent()}
+            </div>
         </div>
     );
 };
@@ -79,9 +86,9 @@ const ManageUsers: React.FC = () => {
 
     if (isLoading) return <div className="flex justify-center p-8"><SpinnerIcon className="w-8 h-8 animate-spin" /></div>;
     return (
-        <div className="space-y-2">
+        <div className="admin-grid">
             {users.map((user: AdminUserView) => (
-                <div key={user.id} className="card-themed p-3 flex justify-between items-center">
+                <div key={user.id} className="admin-card flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-surface-darker border-2 border-primary flex items-center justify-center flex-shrink-0">
                             {user.profilePictureUrl ? (
@@ -95,7 +102,7 @@ const ManageUsers: React.FC = () => {
                            <p className="text-xs text-ink/70">{user.id}</p>
                         </div>
                     </div>
-                    <button onClick={() => handleSetVerified(user.id, !user.isVerified)} className={`btn-themed ${user.isVerified ? 'btn-themed-danger' : 'btn-themed-primary'}`}>
+                    <button onClick={() => handleSetVerified(user.id, !user.isVerified)} className={`btn-themed !py-1 !px-3 text-sm ${user.isVerified ? 'btn-themed-danger' : 'btn-themed-primary'}`}>
                         {user.isVerified ? 'Un-verify' : 'Verify'}
                     </button>
                 </div>
@@ -135,11 +142,11 @@ const ManagePhrases: React.FC = () => {
     return (
         <div className="space-y-4">
             {phrases.map((phrase: PublicPhrase) => (
-                <div key={phrase.publicPhraseId} className="card-themed p-3 flex justify-between items-center gap-4">
+                <div key={phrase.publicPhraseId} className="admin-card flex justify-between items-center gap-4">
                     <img src={phrase.imageUrl} alt="" className="w-16 h-16 rounded-md object-cover border-2 border-ink/20" />
                     <div className="flex-grow">
                         <p className="font-bold text-lg">"{phrase.text}"</p>
-                        <p className="text-sm text-ink/70">by {phrase.email}</p>
+                        <p className="text-sm text-ink/70">by {phrase.username}</p>
                     </div>
                     <button onClick={() => handleCensorPhrase(phrase.publicPhraseId)} className="btn-themed btn-themed-danger !p-3">
                         <TrashIcon className="w-5 h-5" />
@@ -193,7 +200,7 @@ const ManageTrades: React.FC = () => {
                     {groupedTrades[status]?.length > 0 ? (
                         <div className="space-y-3">
                             {groupedTrades[status].map(trade => (
-                                <div key={trade._id} className="card-themed p-3">
+                                <div key={trade._id} className="admin-card">
                                     <div className="flex justify-between items-center">
                                         <p className="text-sm font-bold">
                                             {trade.fromUsername} ↔️ {trade.toUsername}
@@ -257,7 +264,7 @@ const ManageSettings: React.FC = () => {
     if (isLoading) return <div className="flex justify-center p-8"><SpinnerIcon className="w-8 h-8 animate-spin" /></div>;
 
     return (
-        <div className="card-themed p-4 max-w-lg">
+        <div className="max-w-lg admin-card">
             <h3 className="text-xl font-bold mb-4">Game Economy</h3>
             <div className="space-y-3">
                 <div>

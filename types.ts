@@ -15,7 +15,9 @@ export interface Phrase {
   text: string;
   selectedImageId: number | null;
   isCustom: boolean;
-  isPublic: boolean;
+  visibility: 'public' | 'friends' | 'private';
+  isArchived: boolean;
+  isPublic?: boolean; // For backward compatibility
 }
 
 export interface PlayerStats {
@@ -128,18 +130,45 @@ export interface Game {
 export interface AdminUserView {
     id: string;
     username: string;
+    email?: string;
     role: 'admin' | 'mod' | 'user';
     isVerified: boolean;
     profilePictureUrl?: string;
 }
 
+export interface Comment {
+    _id: string;
+    publicPhraseId: string;
+    userId: string;
+    username: string;
+    profilePictureUrl?: string;
+    text: string;
+    createdAt: string;
+}
+
+export interface Report {
+    _id: string;
+    reporterUserId: string;
+    reporterUsername: string;
+    type: 'phrase' | 'comment';
+    contentId: string; // publicPhraseId or commentId
+    contentText: string; // snapshot of the content
+    contentAuthorId: string;
+    contentAuthorUsername: string;
+    reason: string;
+    status: 'pending' | 'resolved';
+    createdAt: string;
+}
+
 export interface PublicPhrase {
     publicPhraseId: string;
     userId: string;
-    email: string; // Username of creator
+    username: string;
     text: string;
     imageUrl: string;
     imageTheme: string;
+    comments: Comment[];
+    commentCount: number;
 }
 
 // --- Community/Public Profile Types ---
@@ -162,6 +191,8 @@ export interface PublicProfilePhrase {
     username?: string;
     isUserVerified?: boolean;
     profilePictureUrl?: string;
+    comments: Comment[];
+    commentCount: number;
 }
 
 export interface PublicProfileData {
@@ -193,6 +224,14 @@ export interface FriendRequest {
 export interface FriendData {
     friends: Friend[];
     requests: FriendRequest[];
+}
+
+export interface Transaction {
+    _id: string;
+    userId: string;
+    date: string; // ISO String
+    description: string;
+    amount: number; // can be positive or negative
 }
 
 export interface FullDisplayData {

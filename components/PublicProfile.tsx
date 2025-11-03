@@ -1,41 +1,43 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
-import { PublicProfileData, UserProfile } from '../types';
-import { SpinnerIcon, VerifiedIcon, ModIcon, AdminIcon, HeartIcon, TradeIcon, PlusIcon, UsersIcon, CatSilhouetteIcon } from '../hooks/Icons';
+import { PublicProfileData, UserProfile, Comment } from '../types';
+import { SpinnerIcon, VerifiedIcon, ModIcon, AdminIcon, HeartIcon, TradeIcon, PlusIcon, CatSilhouetteIcon } from '../hooks/Icons';
 
 interface PublicProfileProps {
     username: string;
     currentUserProfile: UserProfile;
     onStartTrade: (username: string) => void;
-    onFriendAction: () => void; // Callback to refresh parent's friend data
+    onFriendAction: () => void;
+    onReport: (data: {type: 'phrase' | 'comment', contentId: string}) => void;
 }
 
-const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProfile, onStartTrade, onFriendAction }) => {
+const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProfile, onStartTrade, onFriendAction, onReport }) => {
     const [profile, setProfile] = useState<PublicProfileData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isActionLoading, setIsActionLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { getAccessTokenSilently } = useAuth0();
 
-    useEffect(() => {
-        const fetchProfile = async () => {
-            if (!username) return;
-            setIsLoading(true);
-            setError(null);
-            try {
-                const token = await getAccessTokenSilently();
-                const data = await apiService.getPublicProfile(token, username);
-                setProfile(data);
-            } catch (err) {
-                setError('Could not load profile. This user may not exist.');
-                console.error(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchProfile();
+    const fetchProfile = useCallback(async () => {
+        if (!username) return;
+        setIsLoading(true);
+        setError(null);
+        try {
+            const token = await getAccessTokenSilently();
+            const data = await apiService.getPublicProfile(token, username);
+            setProfile(data);
+        } catch (err) {
+            setError('Could not load profile. This user may not exist.');
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
     }, [username, getAccessTokenSilently]);
+
+    useEffect(() => {
+        fetchProfile();
+    }, [fetchProfile]);
     
     const handleLike = async (publicPhraseId: string) => {
         if (!profile) return;
@@ -53,6 +55,26 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
             console.error("Failed to like phrase", err);
         }
     };
+    
+    const handleAddComment = async (publicPhraseId: string, text: string) => {
+        if (!profile || text.trim() === '') return;
+        try {
+            const token = await getAccessTokenSilently();
+            const newComment = await apiService.addComment(token, publicPhraseId, text);
+            
+            const updatedPhrases = profile.phrases.map(p => {
+                if (p.publicPhraseId === publicPhraseId) {
+                    return { ...p, comments: [...p.comments, newComment], commentCount: p.commentCount + 1 };
+                }
+                return p;
+            });
+            setProfile({ ...profile, phrases: updatedPhrases });
+
+        } catch (err) {
+            console.error("Failed to add comment", err);
+        }
+    };
+
 
     const handleFriendAction = async (action: 'add' | 'remove' | 'accept' | 'reject' | 'cancel') => {
         if (!profile) return;
@@ -72,7 +94,6 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
                     await apiService.respondToFriendRequest(token, targetUserId, action);
                     break;
                 case 'cancel':
-                    // This is the same as rejecting, but from the sender's side. API should handle it.
                     await apiService.respondToFriendRequest(token, targetUserId, 'reject');
                     break;
             }
@@ -157,11 +178,16 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
                                 <img src={phrase.imageUrl} alt={phrase.text} className="w-full h-full object-cover"/>
                             </div>
                             <p className="font-bold text-center flex-grow mb-2">{phrase.text}</p>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => handleLike(phrase.publicPhraseId)} className="p-1 rounded-full hover:bg-rose-900/50">
-                                   <HeartIcon className={`w-6 h-6 ${phrase.isLikedByMe ? 'text-rose-500' : 'text-ink/50'}`} solid={phrase.isLikedByMe} />
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => handleLike(phrase.publicPhraseId)} className="p-1 rounded-full hover:bg-rose-900/50">
+                                       <HeartIcon className={`w-6 h-6 ${phrase.isLikedByMe ? 'text-rose-500' : 'text-ink/50'}`} solid={phrase.isLikedByMe} />
+                                    </button>
+                                     <span className="font-bold text-sm text-ink/80">{phrase.likeCount}</span>
+                                </div>
+                                <button onClick={() => onReport({ type: 'phrase', contentId: phrase.publicPhraseId })} className="font-bold text-xs text-ink/40 hover:text-accent">
+                                    ...
                                 </button>
-                                 <span className="font-bold text-sm text-ink/80">{phrase.likeCount}</span>
                             </div>
                         </div>
                     ))}

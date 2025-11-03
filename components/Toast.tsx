@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useState } from 'react';
 
 interface ToastProps {
@@ -25,7 +22,7 @@ const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
 
   return (
     <div 
-      className={`fixed bottom-24 left-1/2 -translate-x-1/2 bg-[var(--c-text)] text-white font-bold py-3 px-6 text-base text-center max-w-[90vw] rounded-full shadow-lg ${isExiting ? 'toast-exit' : 'toast-enter'}`}
+      className={`fixed bottom-24 left-1/2 -translate-x-1/2 bg-ink text-white font-bold py-3 px-6 text-base text-center max-w-[90vw] rounded-full shadow-lg border-2 border-white/50 ${isExiting ? 'toast-exit' : 'toast-enter'}`}
       style={{ zIndex: 'var(--z-toast)' }}
     >
       {message}

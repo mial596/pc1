@@ -3,16 +3,13 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_utils/mongodb.js';
 import { verifyToken } from './_utils/auth.js';
 import { FriendData, Friendship } from '../../types.js';
-// FIX: Add Collection to mongodb import
 import { ObjectId, Db, Collection } from 'mongodb';
 import { resolveProfilePicturesForUsers } from './profile.js';
-// FIX: Add ALL_MISSIONS import
 import { ALL_MISSIONS } from '../gameData/missions.js';
 
 const MAX_FRIENDSHIP_LEVEL = 10;
 const XP_PER_LEVEL = 200;
 
-// FIX: Define and export updateMissionProgress function
 export async function updateMissionProgress(
     friendshipsCollection: Collection,
     user1Id: string,

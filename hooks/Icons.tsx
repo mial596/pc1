@@ -109,6 +109,18 @@ export const PlusIcon: React.FC<{ className?: string }> = ({ className }) => (
     <Icon className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></Icon>
 );
 
+export const ArchiveBoxIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4" /></Icon>
+);
+
+export const ArrowUturnUpIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M9 9l4.5-4.5M13.5 9V4.5M13.5 9H3.75A2.25 2.25 0 001.5 11.25v6.5A2.25 2.25 0 003.75 20h6.75a2.25 2.25 0 002.25-2.25V16.5" /></Icon>
+);
+
+export const CheckCircleIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></Icon>
+);
+
 export const HeartIcon: React.FC<{ className?: string, solid?: boolean }> = ({ className, solid }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill={solid ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />

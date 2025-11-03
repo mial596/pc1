@@ -8,9 +8,9 @@ interface ShopPageProps {
 }
 
 const FeaturedItem: React.FC<{ envelope: Envelope; onOpenShop: () => void; }> = ({ envelope, onOpenShop }) => (
-    <div className="featured-item-card relative overflow-hidden p-6 rounded-2xl mb-12 text-center md:text-left shadow-lg" onClick={onOpenShop}>
+    <div className="relative p-6 rounded-2xl mb-12 text-center md:text-left card-themed" onClick={onOpenShop}>
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
-            <div className="featured-item-icon flex-shrink-0 w-32 h-32 rounded-full flex items-center justify-center">
+            <div className="flex-shrink-0 w-32 h-32 rounded-full flex items-center justify-center bg-secondary animate-[float_3s_ease-in-out_infinite]">
                 <EnvelopeIcon className="w-16 h-16 text-white drop-shadow-lg"/>
             </div>
             <div>

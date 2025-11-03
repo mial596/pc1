@@ -3,11 +3,6 @@ import { Game, GameProps, CatImage } from '../types';
 import { GAMES } from '../gameData';
 import { ArrowLeftIcon, LockIcon } from '../hooks/Icons';
 
-interface JuegosPageProps {
-    unlockedImages: CatImage[];
-    onGameEnd: (results: { score: number; coinsEarned: number; xpEarned: number }) => void;
-}
-
 const GameResultScreen: React.FC<{
     score: number;
     coins: number;
@@ -15,14 +10,14 @@ const GameResultScreen: React.FC<{
     onPlayAgain: () => void;
     onExit: () => void;
 }> = ({ score, coins, xp, onPlayAgain, onExit }) => (
-    <div className="flex flex-col items-center justify-center p-8 bg-surface rounded-lg shadow-lg">
+    <div className="flex flex-col items-center justify-center p-8 card-themed text-center animate-popIn">
         <h2 className="text-3xl font-black text-primary font-cartoon">¡Juego Terminado!</h2>
         <p className="text-xl my-4 text-ink/80">
             Tu puntuación fue: <span className="font-bold text-ink">{score}</span>
         </p>
-        <div className="flex justify-center items-center gap-6 my-4 bg-surface-darker p-3 rounded-xl border-2 border-ink/20">
-            <p className="font-bold text-lg text-yellow-400">+{coins} Monedas</p>
-            <p className="font-bold text-lg text-sky-400">+{xp} XP</p>
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 my-4 bg-surface-darker p-4 rounded-xl border-2 border-ink/20">
+            <p className="font-bold text-lg text-secondary">✨ +{coins} Monedas</p>
+            <p className="font-bold text-lg text-primary">⭐ +{xp} XP</p>
         </div>
         <div className="flex gap-4 mt-4">
             <button onClick={onPlayAgain} className="btn-themed btn-themed-secondary">Jugar de Nuevo</button>
@@ -31,6 +26,8 @@ const GameResultScreen: React.FC<{
     </div>
 );
 
+
+interface JuegosPageProps extends GameProps {}
 
 const JuegosPage: React.FC<JuegosPageProps> = ({ unlockedImages, onGameEnd }) => {
     const [activeGame, setActiveGame] = useState<Game | null>(null);
@@ -93,7 +90,6 @@ const JuegosPage: React.FC<JuegosPageProps> = ({ unlockedImages, onGameEnd }) =>
             </header>
             
             <div className="space-y-12">
-                {/* FIX: Use Object.keys() to iterate over groupedGames to avoid potential typing issues with Object.entries() in some environments. */}
                 {Object.keys(groupedGames).map((category) => (
                     <section key={category}>
                         <h2 className="text-2xl font-bold text-primary mb-4 border-b-2 border-primary/20 pb-2">{category}</h2>
@@ -105,7 +101,7 @@ const JuegosPage: React.FC<JuegosPageProps> = ({ unlockedImages, onGameEnd }) =>
                                         key={game.id}
                                         onClick={() => setActiveGame(game)}
                                         disabled={isLocked}
-                                        className="game-select-card card-themed p-6 text-center disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed disabled:hover:border-ink/20 disabled:hover:shadow-none"
+                                        className="game-select-card card-themed p-6 text-center disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed disabled:hover:shadow-[6px_6px_0_var(--c-ink)] disabled:hover:rotate-0"
                                     >
                                         <div className="text-primary mx-auto mb-4">{game.icon}</div>
                                         <h3 className="text-2xl font-bold font-cartoon">{game.name}</h3>

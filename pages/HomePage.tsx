@@ -20,7 +20,7 @@ const HomePage: React.FC<HomePageProps> = ({
   onSpeak, 
   onAddNewPhrase
 }) => {
-  const { phrases } = userProfile.data;
+  const visiblePhrases = userProfile.data.phrases.filter(p => !p.isArchived);
 
   const getImageForPhrase = (phrase: Phrase): CatImage | null => {
     if (!phrase.selectedImageId) return null;
@@ -29,17 +29,21 @@ const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="container mx-auto p-4">
+       <header className="mb-8 text-center">
+        <h1 className="text-3xl sm:text-4xl font-black text-ink font-cartoon">Mi Tablero</h1>
+        <p className="text-lg text-ink/70 mt-2">Tus frases listas para comunicar. ¡Toca una para mostrarla!</p>
+      </header>
       
       <section>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          <div
+          <button
             onClick={onAddNewPhrase}
             className="card-themed add-phrase-card aspect-square flex flex-col items-center justify-center p-2 text-primary hover:bg-primary/10"
           >
             <PlusIcon className="w-12 h-12" />
             <span className="font-bold mt-2 text-center">Crear Nueva Frase</span>
-          </div>
-          {phrases.map(phrase => (
+          </button>
+          {visiblePhrases.map(phrase => (
             <PhraseCard
               key={phrase.id}
               phrase={phrase}

@@ -22,14 +22,11 @@ const AtrapaPictos: React.FC<GameProps> = ({ unlockedImages, onGameEnd }) => {
   const [gameState, setGameState] = useState<'ready' | 'playing' | 'finished'>('ready');
   
   const gameAreaRef = useRef<HTMLDivElement>(null);
-  // FIX: Initialize useRef with null to satisfy TypeScript's requirement for an initial value.
   const requestRef = useRef<number | null>(null);
-  // FIX: Initialize useRef with null to satisfy TypeScript's requirement for an initial value.
   const lastTimeRef = useRef<number | null>(null);
   const lastSpawnRef = useRef<number>(0);
 
   const gameLoop = useCallback((time: number) => {
-    // FIX: Check for null instead of undefined due to initialization change.
     if (lastTimeRef.current === null) {
       lastTimeRef.current = time;
       requestRef.current = requestAnimationFrame(gameLoop);

@@ -5,14 +5,15 @@ import PublicProfile from './PublicProfile';
 import PublicFeed from './PublicFeed';
 import TradingPost from './TradingPost';
 import FriendsManager from './FriendsManager';
-import { ArrowLeftIcon, TradeIcon, UsersIcon } from '../hooks/Icons';
+import { ArrowLeftIcon, TradeIcon, UsersIcon, SearchIcon } from '../hooks/Icons';
 
 interface CommunityViewProps {
   currentUserProfile: UserProfile;
   onProfileUpdate: () => void;
+  onReport: (data: {type: 'phrase' | 'comment', contentId: string}) => void;
 }
 
-const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile, onProfileUpdate }) => {
+const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile, onProfileUpdate, onReport }) => {
     type View = 'feed' | 'search' | 'profile' | 'trading' | 'friends';
     const [view, setView] = useState<View>('feed');
     const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
@@ -47,6 +48,7 @@ const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile, onPro
                                 currentUserProfile={currentUserProfile} 
                                 onStartTrade={handleStartTrade}
                                 onFriendAction={onProfileUpdate}
+                                onReport={onReport}
                             />
                         </div>
                     );
@@ -65,7 +67,7 @@ const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile, onPro
 
             case 'feed':
             default:
-                return <PublicFeed currentUserId={currentUserProfile.id} onProfileClick={handleSelectUser} />;
+                return <PublicFeed currentUserId={currentUserProfile.id} onProfileClick={handleSelectUser} onReport={onReport} />;
         }
     };
     
@@ -76,7 +78,7 @@ const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile, onPro
     }> = ({ label, targetView, children }) => (
          <button onClick={() => setView(targetView)} className={`tab-solid ${view === targetView ? 'tab-solid-active' : 'text-ink/70'}`}>
             {children}
-            <span className="hidden sm:inline ml-2">{label}</span>
+            <span className="hidden sm:inline">{label}</span>
         </button>
     );
 
@@ -87,7 +89,7 @@ const CommunityView: React.FC<CommunityViewProps> = ({ currentUserProfile, onPro
                     <span className="text-xl">📰</span>
                 </TabButton>
                 <TabButton label="Buscar" targetView="search">
-                     <span className="text-xl">🔍</span>
+                     <SearchIcon className="w-5 h-5" />
                 </TabButton>
                  <TabButton label="Amigos" targetView="friends">
                     <UsersIcon className="w-5 h-5"/>

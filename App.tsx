@@ -17,7 +17,10 @@ import CustomPhraseModal from './components/CustomPhraseModal';
 import FullDisplay from './components/FullDisplay';
 import EditProfileModal from './components/EditProfileModal';
 import Toast from './components/Toast';
+import ReportModal from './components/ReportModal';
+import TransactionHistoryModal from './components/TransactionHistoryModal';
 import { SpinnerIcon } from './hooks/Icons';
+import { LOGO_URL } from './constants';
 
 import * as apiService from './services/apiService';
 import { soundService, ttsService } from './services/audioService';
@@ -49,6 +52,8 @@ const App: React.FC = () => {
   const [isImageSelectorOpen, setImageSelectorOpen] = useState(false);
   const [isCustomPhraseModalOpen, setCustomPhraseModalOpen] = useState(false);
   const [isEditProfileModalOpen, setEditProfileModalOpen] = useState(false);
+  const [isTransactionHistoryOpen, setTransactionHistoryOpen] = useState(false);
+  const [reportModalData, setReportModalData] = useState<{type: 'phrase' | 'comment', contentId: string} | null>(null);
   
   const [fullDisplayData, setFullDisplayData] = useState<FullDisplayData | null>(null);
   const [newlyUnlockedImages, setNewlyUnlockedImages] = useState<CatImage[]>([]);
@@ -70,6 +75,14 @@ const App: React.FC = () => {
         apiService.getCatCatalog(),
         apiService.getShopData(),
       ]);
+
+      // Data migration for phrases
+      profile.data.phrases = profile.data.phrases.map(p => ({
+        ...p,
+        visibility: p.visibility || (p.isPublic ? 'public' : 'private'),
+        isArchived: p.isArchived || false
+      }));
+
       setUserProfile(profile);
       setAllImages(catalog);
       setShopData(dynamicShopData);
@@ -105,8 +118,6 @@ const App: React.FC = () => {
     const envelope = shopData.envelopes.find(e => e.id === envelopeId);
     if (!envelope) return;
 
-    // Cost calculation is now done on the backend, but we check here for UI purposes.
-    // A more robust solution would re-calculate or get cost from backend pre-purchase.
     const cost = envelope.baseCost + ((userProfile.data.playerStats.level - 1) * envelope.costIncreasePerLevel);
 
     if (userProfile.data.coins < cost) {
@@ -120,7 +131,6 @@ const App: React.FC = () => {
       
       soundService.play('reward');
       
-      // The backend now returns the full updated profile to reflect mission progress
       setUserProfile(result.updatedProfile);
 
       setNewlyUnlockedImages(result.newImages);
@@ -145,7 +155,7 @@ const App: React.FC = () => {
       setActivePhrase(null);
   };
 
-  const handleSavePhrase = async (data: { text: string; selectedImageId: number | null; isPublic: boolean }) => {
+  const handleSavePhrase = async (data: { text: string; selectedImageId: number | null; visibility: 'public' | 'friends' | 'private' }) => {
     if (!userProfile) return;
     let updatedPhrases: Phrase[];
     const phraseId = phraseToEdit ? phraseToEdit.id : `custom_${Date.now()}`;
@@ -153,7 +163,7 @@ const App: React.FC = () => {
     if (phraseToEdit) {
       updatedPhrases = userProfile.data.phrases.map(p => p.id === phraseId ? {...p, ...data} : p);
     } else {
-      const newPhrase: Phrase = { id: phraseId, ...data, isCustom: true };
+      const newPhrase: Phrase = { id: phraseId, ...data, isCustom: true, isArchived: false };
       updatedPhrases = [...userProfile.data.phrases, newPhrase];
     }
     setUserProfile({ ...userProfile, data: { ...userProfile.data, phrases: updatedPhrases }});
@@ -171,12 +181,18 @@ const App: React.FC = () => {
     setPhraseToEdit(null);
   }
 
+  const handleArchivePhrase = async (phraseId: string, isArchived: boolean) => {
+    if (!userProfile) return;
+    const updatedPhrases = userProfile.data.phrases.map(p => p.id === phraseId ? { ...p, isArchived } : p);
+    setUserProfile({ ...userProfile, data: { ...userProfile.data, phrases: updatedPhrases }});
+    await saveData({ phrases: updatedPhrases });
+  };
+
   const handleSaveProfile = async (profileData: { username: string; bio: string; profilePictureId: number | null }) => {
     if (!userProfile) return;
     const token = await getAccessTokenSilently();
     await apiService.updateProfile(token, profileData);
     
-    // Optimistically update UI
     const newProfilePictureUrl = allImages.find(img => img.id === profileData.profilePictureId)?.url;
     setUserProfile({
       ...userProfile,
@@ -202,10 +218,8 @@ const App: React.FC = () => {
     
     showToast(`+${results.coinsEarned} monedas!`);
     
-    // Send results to backend to process bonuses and missions
     try {
       const token = await getAccessTokenSilently();
-      // Backend returns the full updated profile with new stats and mission progress
       const updatedProfile = await apiService.saveGameResults(token, results);
       setUserProfile(updatedProfile);
     } catch (err) {
@@ -214,10 +228,27 @@ const App: React.FC = () => {
     }
   };
 
+  const handleReportSubmit = async (reason: string) => {
+    if (!reportModalData) return;
+    try {
+      const token = await getAccessTokenSilently();
+      await apiService.reportContent(token, reportModalData.type, reportModalData.contentId, reason);
+      showToast("Report submitted. Thank you for your feedback.");
+      setReportModalData(null);
+    } catch (error) {
+      console.error("Failed to submit report", error);
+      showToast("Could not submit report.");
+    }
+  };
+
   if (isAuthLoading || (isAuthenticated && isLoading)) {
     return (
-      <div className="w-screen h-screen flex justify-center items-center bg-paper">
-        <SpinnerIcon className="w-12 h-12 animate-spin text-ink" />
+      <div className="w-screen h-screen flex flex-col justify-center items-center bg-paper gap-4">
+        <img src={LOGO_URL} alt="PictoCat Logo" className="w-24 h-24 animate-bounce" />
+        <div className="flex items-center gap-3">
+            <SpinnerIcon className="w-6 h-6 animate-spin text-ink" />
+            <p className="font-bold text-lg text-ink/80">Cargando tus gatos...</p>
+        </div>
       </div>
     );
   }
@@ -258,9 +289,10 @@ const App: React.FC = () => {
           allImages={allImages}
           onSetPhraseToEdit={(phrase) => { setPhraseToEdit(phrase); setCustomPhraseModalOpen(true); }}
           onDeletePhrase={handleDeletePhrase}
+          onArchivePhrase={handleArchivePhrase}
         />;
       case 'community':
-        return <CommunityView currentUserProfile={userProfile} onProfileUpdate={loadInitialData} />;
+        return <CommunityView currentUserProfile={userProfile} onProfileUpdate={loadInitialData} onReport={setReportModalData} />;
       case 'admin':
         return userProfile.role === 'admin' ? <AdminPanel /> : <div>Access Denied</div>;
       default:
@@ -274,6 +306,7 @@ const App: React.FC = () => {
         userProfile={userProfile}
         onNavigate={setPage}
         onOpenProfile={() => setEditProfileModalOpen(true)}
+        onOpenTransactions={() => setTransactionHistoryOpen(true)}
         activePage={page}
       />
       <main className="pb-24 pt-20">
@@ -318,6 +351,16 @@ const App: React.FC = () => {
         currentUserProfile={userProfile}
         onSave={handleSaveProfile}
         unlockedImages={unlockedImages}
+       />
+       <ReportModal
+        isOpen={!!reportModalData}
+        onClose={() => setReportModalData(null)}
+        onSubmit={handleReportSubmit}
+        itemType={reportModalData?.type || 'phrase'}
+       />
+       <TransactionHistoryModal
+        isOpen={isTransactionHistoryOpen}
+        onClose={() => setTransactionHistoryOpen(false)}
        />
       {fullDisplayData && (
         <FullDisplay

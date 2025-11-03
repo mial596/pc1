@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CatImage } from '../types';
-import { CloseIcon } from '../hooks/Icons';
+import { CloseIcon, CatSilhouetteIcon } from '../hooks/Icons';
+import { generateShareableImage } from '../services/imageGenerator';
+import ShareableImage from './ShareableImage';
 
 const RarityShine: React.FC<{ rarity: 'common' | 'rare' | 'epic' }> = ({ rarity }) => {
     if (rarity === 'common') return null;
@@ -18,6 +20,55 @@ const RarityParticles: React.FC<{ rarity: 'common' | 'rare' | 'epic' }> = ({ rar
     );
 };
 
+const Confetti: React.FC = () => (
+    <div className="confetti-container">
+        {Array.from({ length: 50 }).map((_, i) => (
+            <div
+                key={i}
+                className="confetti-piece"
+                style={{
+                    left: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 5}s`,
+                    transform: `rotate(${Math.random() * 360}deg)`,
+                    backgroundColor: ['var(--c-primary)', 'var(--c-secondary)', 'var(--c-accent)'][Math.floor(Math.random() * 3)],
+                }}
+            />
+        ))}
+    </div>
+);
+
+interface SwipeCardProps {
+  image: CatImage;
+  isRevealed: boolean;
+  onReveal: () => void;
+}
+
+const SwipeCard: React.FC<SwipeCardProps> = ({ image, isRevealed, onReveal }) => (
+    <div 
+        className={`swipe-card-container ${isRevealed ? 'revealed' : ''}`}
+        onClick={onReveal}
+    >
+        <div className="swipe-card-inner">
+            <div className="swipe-card-front bg-secondary flex items-center justify-center p-4 border-4 border-ink/50">
+                <CatSilhouetteIcon className="w-full h-full text-white/80" />
+            </div>
+            <div className={`swipe-card-back rarity-card-container rarity-${image.rarity} ${image.isShiny ? 'shiny-effect' : ''}`}>
+                <RarityShine rarity={image.rarity} />
+                <RarityParticles rarity={image.rarity} />
+                <div className="rarity-border"></div>
+                <div className="rarity-content">
+                    <img src={image.url} alt={image.theme} className="w-full h-full object-cover rounded-md" />
+                </div>
+                <div className="rarity-label">
+                    {image.isShiny && '✨ '}
+                    {image.rarity}
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+
 interface EnvelopeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,45 +77,88 @@ interface EnvelopeModalProps {
 }
 
 const EnvelopeModal: React.FC<EnvelopeModalProps> = ({ isOpen, onClose, newImages, envelopeName }) => {
+  const [revealedIndices, setRevealedIndices] = useState<Set<number>>(new Set());
+  const [shareableImageSrc, setShareableImageSrc] = useState<string | null>(null);
+  const allRevealed = revealedIndices.size === newImages.length;
+
+  useEffect(() => {
+    if (isOpen) {
+      setRevealedIndices(new Set());
+      setShareableImageSrc(null);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const handleReveal = (index: number) => {
+    setRevealedIndices(prev => new Set(prev).add(index));
+  };
+
+  const handleRevealAll = () => {
+    setRevealedIndices(new Set(newImages.map((_, i) => i)));
+  };
+
+  const handleGenerateShareImage = async () => {
+      try {
+        const src = await generateShareableImage(newImages);
+        setShareableImageSrc(src);
+      } catch (error) {
+        console.error("Failed to generate shareable image:", error);
+        alert("Could not generate shareable image. Please try again.");
+      }
+  };
+
+  if (shareableImageSrc) {
+      return <ShareableImage src={shareableImageSrc} onClose={() => setShareableImageSrc(null)} />;
+  }
 
   return (
     <div className="modal-themed-overlay">
       <div className="modal-themed-content w-full max-w-3xl text-center relative overflow-hidden">
-        <div className="relative z-10 p-4 sm:p-6">
+        {allRevealed && <Confetti />}
+        <div className="relative z-10 p-4 sm:p-6 flex flex-col h-full">
             <button onClick={onClose} className="absolute top-2 right-2 text-ink/70 p-2 rounded-full hover:bg-ink/10 z-20 transition-colors">
               <CloseIcon className="w-6 h-6" />
             </button>
-            <h2 className="text-2xl sm:text-4xl font-black text-ink mb-2">¡Has abierto un {envelopeName}!</h2>
-            <p className="text-ink/70 mb-6 text-lg">¡Nuevos gatos se unen a tu colección!</p>
-            <div className="overflow-y-auto max-h-[60vh] bg-surface-darker p-2 rounded-lg border-2 border-ink/20">
+            <h2 className="text-2xl sm:text-4xl font-black text-ink mb-2 font-cartoon">¡Has abierto un {envelopeName}!</h2>
+            <p className="text-ink/70 mb-6 text-lg">{allRevealed ? "¡Nuevos gatos se unen a tu colección!" : "¡Toca las cartas para revelarlas!"}</p>
+            <div className="overflow-y-auto flex-grow max-h-[60vh] bg-surface-darker p-2 rounded-lg border-2 border-ink/20">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-2">
                 {newImages.map((image, index) => (
-                  <div 
-                    key={image.id} 
-                    className={`rarity-card-container rarity-${image.rarity} animate-popIn ${image.isShiny ? 'shiny-effect' : ''}`}
-                    style={{ animationDelay: `${index * 150}ms` }}
-                  >
-                    <RarityShine rarity={image.rarity} />
-                    <RarityParticles rarity={image.rarity} />
-                    <div className="rarity-border"></div>
-                    <div className="rarity-content">
-                        <img src={image.url} alt={image.theme} className="w-full h-full object-cover rounded-md" />
-                    </div>
-                    <div className="rarity-label">
-                        {image.isShiny && '✨ '}
-                        {image.rarity}
-                    </div>
-                  </div>
+                  <SwipeCard
+                    key={image.id}
+                    image={image}
+                    isRevealed={revealedIndices.has(index)}
+                    onReveal={() => handleReveal(index)}
+                  />
                 ))}
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="mt-6 btn-themed btn-themed-primary text-lg"
-            >
-              ¡Genial!
-            </button>
+            <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-4">
+              {!allRevealed ? (
+                <button
+                  onClick={handleRevealAll}
+                  className="btn-themed btn-themed-secondary text-lg"
+                >
+                  Revelar Todo
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleGenerateShareImage}
+                    className="btn-themed btn-themed-secondary text-lg"
+                  >
+                    Compartir
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="btn-themed btn-themed-primary text-lg"
+                  >
+                    ¡Genial!
+                  </button>
+                </>
+              )}
+            </div>
         </div>
       </div>
     </div>

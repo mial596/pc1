@@ -14,7 +14,6 @@ export const GAMES: Game[] = [
     description: 'Clásico juego de memoria visual con pictogramas de gatos.',
     component: MemoGatos,
     minImagesRequired: 8,
-    // FIX: Use React.createElement instead of JSX in a .ts file
     icon: React.createElement(BrainIcon, { className: "w-12 h-12" })
   },
   {
@@ -24,7 +23,6 @@ export const GAMES: Game[] = [
     description: 'Puzzles formados por trozos de un pictograma de gato.',
     component: Rompecatgramas,
     minImagesRequired: 1,
-    // FIX: Use React.createElement instead of JSX in a .ts file
     icon: React.createElement(PuzzleIcon, { className: "w-12 h-12" })
   },
   {
@@ -34,7 +32,6 @@ export const GAMES: Game[] = [
     description: 'Atrapa los gatos que caen y evita los ratones.',
     component: AtrapaPictos,
     minImagesRequired: 5,
-    // FIX: Use React.createElement instead of JSX in a .ts file
     icon: React.createElement(GamepadIcon, { className: "w-12 h-12" })
   },
 ];
