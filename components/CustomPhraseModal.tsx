@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { CatImage, Phrase } from '../types';
+import { CatImage, Phrase, Folder } from '../types';
 import { CloseIcon, TrashIcon, GlobeIcon, UsersIcon, LockIcon } from '../hooks/Icons';
 
 interface CustomPhraseModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: { text: string; selectedImageId: number | null; visibility: 'public' | 'friends' | 'private' }) => void;
+    onSave: (data: { text: string; selectedImageId: number | null; visibility: 'public' | 'friends' | 'private'; folderId: string | null; }) => void;
     onDelete: (phraseId: string) => void;
     phraseToEdit: Phrase | null;
     unlockedImages: CatImage[];
+    folders: Folder[];
 }
 
 const CustomPhraseModal: React.FC<CustomPhraseModalProps> = ({
@@ -17,29 +18,33 @@ const CustomPhraseModal: React.FC<CustomPhraseModalProps> = ({
     onSave,
     onDelete,
     phraseToEdit,
-    unlockedImages
+    unlockedImages,
+    folders
 }) => {
     const [text, setText] = useState('');
     const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
     const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>('private');
+    const [folderId, setFolderId] = useState<string | null>(null);
 
     useEffect(() => {
         if (phraseToEdit) {
             setText(phraseToEdit.text);
             setSelectedImageId(phraseToEdit.selectedImageId);
             setVisibility(phraseToEdit.visibility || 'private');
+            setFolderId(phraseToEdit.folderId || null);
         } else {
             // Reset for new phrase
             setText('');
             setSelectedImageId(null);
             setVisibility('private');
+            setFolderId(null);
         }
     }, [phraseToEdit, isOpen]);
 
     if (!isOpen) return null;
 
     const handleSave = () => {
-        onSave({ text, selectedImageId, visibility });
+        onSave({ text, selectedImageId, visibility, folderId });
     };
 
     const handleDelete = () => {
@@ -67,16 +72,32 @@ const CustomPhraseModal: React.FC<CustomPhraseModalProps> = ({
                 </header>
 
                 <main className="flex-grow overflow-y-auto space-y-6 p-4 sm:p-6 bg-surface">
-                    <div>
-                        <label htmlFor="phraseText" className="font-bold text-ink text-lg">Texto de la frase</label>
-                        <input
-                            id="phraseText"
-                            type="text"
-                            value={text}
-                            onChange={(e) => setText(e.target.value)}
-                            placeholder="Ej: Quiero jugar"
-                            className="input-themed mt-1 text-lg"
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="phraseText" className="font-bold text-ink text-lg">Texto de la frase</label>
+                            <input
+                                id="phraseText"
+                                type="text"
+                                value={text}
+                                onChange={(e) => setText(e.target.value)}
+                                placeholder="Ej: Quiero jugar"
+                                className="input-themed mt-1 text-lg"
+                            />
+                        </div>
+                         <div>
+                            <label htmlFor="folderId" className="font-bold text-ink text-lg">Carpeta</label>
+                            <select
+                                id="folderId"
+                                value={folderId || ''}
+                                onChange={(e) => setFolderId(e.target.value || null)}
+                                className="input-themed mt-1 text-lg"
+                            >
+                                <option value="">Sin carpeta</option>
+                                {folders.map(folder => (
+                                    <option key={folder.id} value={folder.id}>{folder.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
                     <div>

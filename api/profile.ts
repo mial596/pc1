@@ -84,18 +84,32 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
         // User exists, ensure their data is complete and valid.
         const initialData = getInitialUserData();
         const existingData = userProfile.data || {};
+        
+        let needsUpdate = false;
 
         const repairedData = {
             ...initialData,
             ...existingData,
             playerStats: { ...initialData.playerStats, ...(existingData.playerStats || {}), },
-            phrases: Array.isArray(existingData.phrases) ? existingData.phrases : initialData.phrases,
-            unlockedImageIds: Array.isArray(existingData.unlockedImageIds) ? existingData.unlockedImageIds : initialData.unlockedImageIds,
             purchasedUpgrades: Array.isArray(existingData.purchasedUpgrades) ? existingData.purchasedUpgrades : initialData.purchasedUpgrades,
             friendRequestsSent: Array.isArray(existingData.friendRequestsSent) ? existingData.friendRequestsSent : initialData.friendRequestsSent,
             friendRequestsReceived: Array.isArray(existingData.friendRequestsReceived) ? existingData.friendRequestsReceived : initialData.friendRequestsReceived,
+            folders: Array.isArray(existingData.folders) ? existingData.folders : initialData.folders,
         };
         
+        // Phrase migration logic
+        const phrases = Array.isArray(existingData.phrases) ? existingData.phrases : initialData.phrases;
+        repairedData.phrases = phrases.map((p: any) => {
+            const isPublic = p.isPublic; // Capture old property
+            delete p.isPublic; // Remove old property
+            return {
+                ...p,
+                visibility: p.visibility || (isPublic ? 'public' : 'private'),
+                isArchived: p.isArchived || false,
+            };
+        });
+
+        // Migrate old friends array to new friendships collection
         if (repairedData.friends && Array.isArray(repairedData.friends) && repairedData.friends.length > 0) {
             const friendshipsCollection = db.collection('friendships');
             for (const friendId of repairedData.friends) {
@@ -108,9 +122,14 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
             }
             await users.updateOne({ _id: userId }, { $unset: { "data.friends": "" } });
             delete repairedData.friends;
+            needsUpdate = true;
         }
 
         if (JSON.stringify(repairedData) !== JSON.stringify(existingData)) {
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
             userProfile.data = repairedData;
             await users.updateOne({ _id: userId }, { $set: { data: repairedData } });
         }
@@ -197,7 +216,7 @@ async function updatePublicPhrases(db: Db, userId: string, newPhrases: Phrase[])
     const user = await usersCollection.findOne({ _id: userId as any });
     if (!user) return;
 
-    const publicPhraseIntents = newPhrases.filter(p => p.isPublic && p.isCustom);
+    const publicPhraseIntents = newPhrases.filter(p => p.visibility === 'public' && p.isCustom);
     const publicPhraseIds = publicPhraseIntents.map(p => p.id);
     await publicPhrasesCollection.deleteMany({ userId: userId, phraseId: { $nin: publicPhraseIds } });
 
@@ -208,7 +227,7 @@ async function updatePublicPhrases(db: Db, userId: string, newPhrases: Phrase[])
 
         await publicPhrasesCollection.updateOne(
             { userId: userId, phraseId: phrase.id },
-            { $set: { text: phrase.text, imageUrl: image.url, imageTheme: image.theme, username: user.username, isUserVerified: user.isVerified || false }, $setOnInsert: { likes: [] } },
+            { $set: { text: phrase.text, imageUrl: image.url, imageTheme: image.theme, username: user.username, isUserVerified: user.isVerified || false }, $setOnInsert: { likes: [], comments: [] } },
             { upsert: true }
         );
     }

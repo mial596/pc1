@@ -6,15 +6,84 @@ import { ObjectId } from 'mongodb';
 import { resolveProfilePictureUrl, resolveProfilePicturesForUsers } from './profile.js';
 
 async function handler(req: VercelRequest, res: VercelResponse) {
+    const db = await getDb();
+    if (req.method === 'POST') {
+        try {
+            const decodedToken = await verifyToken(req.headers.authorization);
+            const userId = decodedToken.sub;
+            const { action, publicPhraseId, text, type, contentId, reason } = req.body;
+
+            if (action === 'addComment') {
+                if (!publicPhraseId || !text) return res.status(400).json({ message: "Missing parameters." });
+                const users = db.collection('users');
+                const user = await users.findOne({ _id: userId });
+                const profilePictureUrl = await resolveProfilePictureUrl(db, user);
+                const newComment = {
+                    _id: new ObjectId(),
+                    publicPhraseId: new ObjectId(publicPhraseId),
+                    userId,
+                    username: user.username,
+                    profilePictureUrl,
+                    text,
+                    createdAt: new Date().toISOString(),
+                };
+                await db.collection('public_phrases').updateOne({ _id: new ObjectId(publicPhraseId) }, { $push: { comments: newComment } });
+                return res.status(201).json(newComment);
+            }
+            
+            if (action === 'report') {
+                if (!type || !contentId || !reason) return res.status(400).json({ message: "Missing parameters for report." });
+                const users = db.collection('users');
+                const reporter = await users.findOne({ _id: userId });
+                
+                let content;
+                let contentAuthorId;
+                if (type === 'phrase') {
+                    content = await db.collection('public_phrases').findOne({ _id: new ObjectId(contentId) });
+                    contentAuthorId = content?.userId;
+                } else { // comment
+                    const phraseContainingComment = await db.collection('public_phrases').findOne({ "comments._id": new ObjectId(contentId) });
+                    content = phraseContainingComment?.comments.find((c: any) => c._id.toHexString() === contentId);
+                    contentAuthorId = content?.userId;
+                }
+                
+                if (!content || !contentAuthorId) return res.status(404).json({ message: "Content to report not found." });
+                
+                const author = await users.findOne({ _id: contentAuthorId });
+                
+                const newReport = {
+                    reporterUserId: userId,
+                    reporterUsername: reporter.username,
+                    type,
+                    contentId,
+                    contentText: content.text,
+                    contentAuthorId,
+                    contentAuthorUsername: author.username,
+                    reason,
+                    status: 'pending',
+                    createdAt: new Date().toISOString(),
+                };
+                
+                await db.collection('reports').insertOne(newReport);
+                return res.status(200).json({ success: true });
+            }
+
+
+        } catch (error) {
+             console.error('Community POST API error:', error);
+            return res.status(500).json({ message: 'Internal Server Error' });
+        }
+    }
+
+
     if (req.method !== 'GET') {
-        res.setHeader('Allow', ['GET']);
+        res.setHeader('Allow', ['GET', 'POST']);
         return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
     const { resource, username, query } = req.query;
 
     try {
-        const db = await getDb();
         
         if (resource === 'catalog') {
             const catalog = db.collection('cat_images');
@@ -40,7 +109,7 @@ async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ message: "Invalid resource requested." });
 
     } catch (error) {
-        console.error('Community API error:', error);
+        console.error('Community GET API error:', error);
         if (error instanceof Error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
@@ -82,6 +151,8 @@ async function getPublicProfile(res: VercelResponse, db: any, username: string, 
             likeCount: p.likes?.length || 0,
             isLikedByMe: p.likes?.includes(currentUserId) || false,
             userId: p.userId,
+            comments: p.comments || [],
+            commentCount: p.comments?.length || 0,
         })),
         unlockedImages: unlockedImages,
     };
@@ -126,9 +197,11 @@ async function getPublicFeed(res: VercelResponse, db: any, currentUserId: string
         likeCount: p.likes?.length || 0,
         isLikedByMe: p.likes?.includes(currentUserId) || false,
         username: p.username,
-        isUserVerified: p.isUserVerified,
+        isUserVerified: p.isUserVerified || false, // Default value for old data
         userId: p.userId,
         profilePictureUrl: userPicMap.get(p.userId),
+        comments: p.comments || [],
+        commentCount: p.comments?.length || 0,
     }));
     return res.status(200).json(response);
 }

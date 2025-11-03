@@ -10,6 +10,11 @@ export interface CatImage {
   isShiny?: boolean;
 }
 
+export interface Folder {
+  id: string;
+  name: string;
+}
+
 export interface Phrase {
   id: string;
   text: string;
@@ -17,7 +22,7 @@ export interface Phrase {
   isCustom: boolean;
   visibility: 'public' | 'friends' | 'private';
   isArchived: boolean;
-  isPublic?: boolean; // For backward compatibility
+  folderId?: string | null;
 }
 
 export interface PlayerStats {
@@ -87,6 +92,7 @@ export interface Friendship {
 export interface UserData {
     coins: number;
     phrases: Phrase[];
+    folders: Folder[];
     unlockedImageIds: number[];
     playerStats: PlayerStats;
     purchasedUpgrades: UpgradeId[];

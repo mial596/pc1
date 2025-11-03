@@ -20,6 +20,12 @@ class SoundService {
         this.load('simon2', '/sounds/simon2.mp3');
         this.load('simon3', '/sounds/simon3.mp3');
         this.load('simon4', '/sounds/simon4.mp3');
+        // New UI sounds
+        this.load('openModal', '/sounds/openModal.wav');
+        this.load('closeModal', '/sounds/closeModal.wav');
+        this.load('save', '/sounds/save.wav');
+        this.load('delete', '/sounds/delete.wav');
+        this.load('error', '/sounds/error.wav');
     }
 
     private load(name: string, src: string) {

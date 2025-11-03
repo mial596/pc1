@@ -14,9 +14,11 @@ const INITIAL_PHRASES: Phrase[] = [
 const INITIAL_UNLOCKED_IMAGE_IDS: number[] = [];
 
 // Backend function to generate initial user data
+// FIX: Add missing 'folders' property to conform to the UserData type.
 export const getInitialUserData = (): Omit<UserData, 'phrases' | 'unlockedImageIds'> & { phrases: Phrase[], unlockedImageIds: number[] } => ({
     phrases: INITIAL_PHRASES.map(p => ({ ...p })), // Ensure a fresh copy is returned
     coins: 500,
+    folders: [],
     unlockedImageIds: [...INITIAL_UNLOCKED_IMAGE_IDS],
     playerStats: { level: 1, xp: 0, xpToNextLevel: 100 },
     purchasedUpgrades: [],

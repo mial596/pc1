@@ -1,7 +1,43 @@
-import React from 'react';
-import { Phrase, CatImage, UserProfile } from '../types';
+import React, { useState } from 'react';
+import { Phrase, CatImage, UserProfile, Folder } from '../types';
 import PhraseCard from '../components/PhraseCard';
-import { PlusIcon } from '../hooks/Icons';
+// FIX: Import the missing SpeakerWaveIcon component.
+import { PlusIcon, EditIcon, ArchiveBoxIcon, ArrowUturnUpIcon, SpeakerWaveIcon } from '../hooks/Icons';
+
+interface PhraseItemProps {
+  phrase: Phrase;
+  image: CatImage | null;
+  onPhraseClick: () => void;
+  onSelectImageClick: () => void;
+  onSpeak: (text: string) => void;
+  onEdit: () => void;
+  onArchive: () => void;
+}
+
+const PhraseItem: React.FC<PhraseItemProps> = ({ phrase, image, onPhraseClick, onSelectImageClick, onSpeak, onEdit, onArchive }) => (
+    <div className="card-themed group flex flex-col justify-between p-2">
+      <div 
+        onClick={onPhraseClick} 
+        className="flex-grow flex items-center justify-center rounded-md overflow-hidden mb-2 border-2 border-ink/30 bg-surface-darker cursor-pointer"
+      >
+        <img
+          src={image?.url}
+          alt={phrase.text}
+          className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${image?.isShiny ? 'shiny-effect' : ''}`}
+        />
+      </div>
+      <p className="font-bold text-center flex-grow truncate px-1 text-sm sm:text-base mb-2">{phrase.text}</p>
+      <div className="flex items-center justify-center gap-1">
+          <button onClick={() => onSpeak(phrase.text)} className="btn-themed !p-2 bg-accent"><SpeakerWaveIcon className="w-4 h-4 text-white" /></button>
+          <button onClick={onSelectImageClick} className="btn-themed !p-2 bg-secondary"><span className="text-sm">🖼️</span></button>
+          <button onClick={onEdit} className="btn-themed !p-2 bg-primary/80"><EditIcon className="w-4 h-4 text-white" /></button>
+          <button onClick={onArchive} className="btn-themed !p-2 bg-ink/70" title={phrase.isArchived ? "Unarchive" : "Archive"}>
+             {phrase.isArchived ? <ArrowUturnUpIcon className="w-4 h-4 text-white" /> : <ArchiveBoxIcon className="w-4 h-4 text-white" />}
+          </button>
+      </div>
+    </div>
+);
+
 
 interface HomePageProps {
   userProfile: UserProfile;
@@ -9,51 +45,69 @@ interface HomePageProps {
   onPhraseClick: (phrase: Phrase, image: CatImage | null) => void;
   onSelectImageClick: (phrase: Phrase) => void;
   onSpeak: (text: string) => void;
-  onAddNewPhrase: () => void;
+  onSetPhraseToEdit: (phrase: Phrase | null) => void;
+  onArchivePhrase: (phraseId: string, isArchived: boolean) => void;
+  onOpenFolderManager: () => void;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ 
-  userProfile, 
-  allImages, 
-  onPhraseClick, 
-  onSelectImageClick, 
-  onSpeak, 
-  onAddNewPhrase
-}) => {
-  const visiblePhrases = userProfile.data.phrases.filter(p => !p.isArchived);
+const HomePage: React.FC<HomePageProps> = (props) => {
+  const { userProfile, allImages, onPhraseClick, onSelectImageClick, onSpeak, onSetPhraseToEdit, onArchivePhrase, onOpenFolderManager } = props;
+  const { phrases, folders } = userProfile.data;
+  const [activeTab, setActiveTab] = useState<'all' | 'archived' | string>('all');
 
   const getImageForPhrase = (phrase: Phrase): CatImage | null => {
     if (!phrase.selectedImageId) return null;
     return allImages.find(img => img.id === phrase.selectedImageId) || null;
   };
+  
+  const displayedPhrases = phrases.filter(p => {
+    if (activeTab === 'all') return !p.isArchived && !p.folderId;
+    if (activeTab === 'archived') return p.isArchived;
+    return p.folderId === activeTab && !p.isArchived;
+  });
+
+  const TabButton: React.FC<{id: string, name: string}> = ({ id, name }) => (
+    <button onClick={() => setActiveTab(id)} className={`tab-solid ${activeTab === id ? 'tab-solid-active' : 'text-ink/70'}`}>{name}</button>
+  );
 
   return (
     <div className="container mx-auto p-4">
-       <header className="mb-8 text-center">
+      <header className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
         <h1 className="text-3xl sm:text-4xl font-black text-ink font-cartoon">Mi Tablero</h1>
-        <p className="text-lg text-ink/70 mt-2">Tus frases listas para comunicar. ¡Toca una para mostrarla!</p>
+        <div className="flex gap-2">
+            <button onClick={onOpenFolderManager} className="btn-themed btn-themed-secondary">Gestionar Carpetas</button>
+            <button onClick={() => onSetPhraseToEdit(null)} className="btn-themed btn-themed-primary flex items-center gap-2">
+                <PlusIcon className="w-5 h-5" /> Nueva Frase
+            </button>
+        </div>
       </header>
       
+      <div className="flex border-b-2 border-ink/20 mb-6 overflow-x-auto">
+          <TabButton id="all" name="Principal" />
+          {folders.map(f => <TabButton key={f.id} id={f.id} name={f.name} />)}
+          <TabButton id="archived" name="Archivadas" />
+      </div>
+
       <section>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          <button
-            onClick={onAddNewPhrase}
-            className="card-themed add-phrase-card aspect-square flex flex-col items-center justify-center p-2 text-primary hover:bg-primary/10"
-          >
-            <PlusIcon className="w-12 h-12" />
-            <span className="font-bold mt-2 text-center">Crear Nueva Frase</span>
-          </button>
-          {visiblePhrases.map(phrase => (
-            <PhraseCard
+          {displayedPhrases.map(phrase => (
+            <PhraseItem
               key={phrase.id}
               phrase={phrase}
               image={getImageForPhrase(phrase)}
-              onCardClick={() => onPhraseClick(phrase, getImageForPhrase(phrase))}
+              onPhraseClick={() => onPhraseClick(phrase, getImageForPhrase(phrase))}
               onSelectImageClick={() => onSelectImageClick(phrase)}
               onSpeak={onSpeak}
+              onEdit={() => onSetPhraseToEdit(phrase)}
+              onArchive={() => onArchivePhrase(phrase.id, !phrase.isArchived)}
             />
           ))}
         </div>
+        {displayedPhrases.length === 0 && (
+             <div className="text-center py-20 col-span-full">
+                <p className="text-2xl font-bold text-ink/70">Esta carpeta está vacía.</p>
+             </div>
+        )}
       </section>
     </div>
   );

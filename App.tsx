@@ -7,7 +7,6 @@ import HomePage from './pages/HomePage';
 import AlbumPage from './pages/AlbumPage';
 import ShopPage from './pages/ShopPage';
 import JuegosPage from './pages/JuegosPage';
-import PhraseEditorPage from './pages/PhraseEditorPage';
 import CommunityView from './components/CommunityView';
 import AdminPanel from './components/AdminPanel';
 import ShopModal from './components/ShopModal';
@@ -19,6 +18,7 @@ import EditProfileModal from './components/EditProfileModal';
 import Toast from './components/Toast';
 import ReportModal from './components/ReportModal';
 import TransactionHistoryModal from './components/TransactionHistoryModal';
+import FolderManagerModal from './components/FolderManagerModal';
 import { SpinnerIcon } from './hooks/Icons';
 import { LOGO_URL } from './constants';
 
@@ -29,13 +29,13 @@ import {
   CatImage,
   Phrase,
   EnvelopeTypeId,
-  UpgradeId,
   FullDisplayData,
   Envelope,
   GameUpgrade,
+  Folder,
 } from './types';
 
-type Page = 'home' | 'album' | 'shop' | 'games' | 'phrases' | 'community' | 'admin';
+type Page = 'home' | 'album' | 'shop' | 'games' | 'community' | 'admin';
 
 const App: React.FC = () => {
   const { isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently, user } = useAuth0();
@@ -52,6 +52,7 @@ const App: React.FC = () => {
   const [isImageSelectorOpen, setImageSelectorOpen] = useState(false);
   const [isCustomPhraseModalOpen, setCustomPhraseModalOpen] = useState(false);
   const [isEditProfileModalOpen, setEditProfileModalOpen] = useState(false);
+  const [isFolderManagerOpen, setFolderManagerOpen] = useState(false);
   const [isTransactionHistoryOpen, setTransactionHistoryOpen] = useState(false);
   const [reportModalData, setReportModalData] = useState<{type: 'phrase' | 'comment', contentId: string} | null>(null);
   
@@ -75,14 +76,6 @@ const App: React.FC = () => {
         apiService.getCatCatalog(),
         apiService.getShopData(),
       ]);
-
-      // Data migration for phrases
-      profile.data.phrases = profile.data.phrases.map(p => ({
-        ...p,
-        visibility: p.visibility || (p.isPublic ? 'public' : 'private'),
-        isArchived: p.isArchived || false
-      }));
-
       setUserProfile(profile);
       setAllImages(catalog);
       setShopData(dynamicShopData);
@@ -108,6 +101,7 @@ const App: React.FC = () => {
     } catch (err) {
         console.error("Failed to save user data", err);
         showToast("Error saving progress.");
+        soundService.play('error');
     }
   }, [userProfile, getAccessTokenSilently]);
 
@@ -155,7 +149,7 @@ const App: React.FC = () => {
       setActivePhrase(null);
   };
 
-  const handleSavePhrase = async (data: { text: string; selectedImageId: number | null; visibility: 'public' | 'friends' | 'private' }) => {
+  const handleSavePhrase = async (data: { text: string; selectedImageId: number | null; visibility: 'public' | 'friends' | 'private'; folderId: string | null; }) => {
     if (!userProfile) return;
     let updatedPhrases: Phrase[];
     const phraseId = phraseToEdit ? phraseToEdit.id : `custom_${Date.now()}`;
@@ -166,6 +160,7 @@ const App: React.FC = () => {
       const newPhrase: Phrase = { id: phraseId, ...data, isCustom: true, isArchived: false };
       updatedPhrases = [...userProfile.data.phrases, newPhrase];
     }
+    soundService.play('save');
     setUserProfile({ ...userProfile, data: { ...userProfile.data, phrases: updatedPhrases }});
     await saveData({ phrases: updatedPhrases });
     setCustomPhraseModalOpen(false);
@@ -175,6 +170,7 @@ const App: React.FC = () => {
   const handleDeletePhrase = async (phraseId: string) => {
     if(!userProfile) return;
     const updatedPhrases = userProfile.data.phrases.filter(p => p.id !== phraseId);
+    soundService.play('delete');
     setUserProfile({ ...userProfile, data: { ...userProfile.data, phrases: updatedPhrases }});
     await saveData({ phrases: updatedPhrases });
     setCustomPhraseModalOpen(false);
@@ -187,6 +183,13 @@ const App: React.FC = () => {
     setUserProfile({ ...userProfile, data: { ...userProfile.data, phrases: updatedPhrases }});
     await saveData({ phrases: updatedPhrases });
   };
+  
+  const handleSaveFolder = async (folders: Folder[]) => {
+      if (!userProfile) return;
+      soundService.play('save');
+      setUserProfile({ ...userProfile, data: { ...userProfile.data, folders }});
+      await saveData({ folders });
+  }
 
   const handleSaveProfile = async (profileData: { username: string; bio: string; profilePictureId: number | null }) => {
     if (!userProfile) return;
@@ -244,10 +247,10 @@ const App: React.FC = () => {
   if (isAuthLoading || (isAuthenticated && isLoading)) {
     return (
       <div className="w-screen h-screen flex flex-col justify-center items-center bg-paper gap-4">
-        <img src={LOGO_URL} alt="PictoCat Logo" className="w-24 h-24 animate-bounce" />
+        <img src={LOGO_URL} alt="PictoCat Logo" className="w-32 h-32" />
         <div className="flex items-center gap-3">
-            <SpinnerIcon className="w-6 h-6 animate-spin text-ink" />
-            <p className="font-bold text-lg text-ink/80">Cargando tus gatos...</p>
+            <SpinnerIcon className="w-8 h-8 animate-spin text-ink" />
+            <p className="font-bold text-xl text-ink/80">Cargando tus gatos...</p>
         </div>
       </div>
     );
@@ -272,24 +275,18 @@ const App: React.FC = () => {
           onPhraseClick={(phrase, image) => setFullDisplayData({ phrase, image })}
           onSelectImageClick={(phrase) => { setActivePhrase(phrase); setImageSelectorOpen(true); }}
           onSpeak={handleSpeak}
-          onAddNewPhrase={() => { setPhraseToEdit(null); setCustomPhraseModalOpen(true); }}
+          onSetPhraseToEdit={(phrase) => { setPhraseToEdit(phrase); setCustomPhraseModalOpen(true); soundService.play('openModal'); }}
+          onArchivePhrase={handleArchivePhrase}
+          onOpenFolderManager={() => { setFolderManagerOpen(true); soundService.play('openModal'); }}
         />;
       case 'album':
         return <AlbumPage allImages={allImages} unlockedImageIds={userProfile.data.unlockedImageIds} />;
       case 'shop':
-        return <ShopPage shopData={shopData} onOpenShop={() => setShopModalOpen(true)} />;
+        return <ShopPage shopData={shopData} onOpenShop={() => {setShopModalOpen(true); soundService.play('openModal'); }} />;
       case 'games':
         return <JuegosPage 
           unlockedImages={unlockedImages}
           onGameEnd={handleGameEnd}
-        />;
-      case 'phrases':
-        return <PhraseEditorPage 
-          phrases={userProfile.data.phrases}
-          allImages={allImages}
-          onSetPhraseToEdit={(phrase) => { setPhraseToEdit(phrase); setCustomPhraseModalOpen(true); }}
-          onDeletePhrase={handleDeletePhrase}
-          onArchivePhrase={handleArchivePhrase}
         />;
       case 'community':
         return <CommunityView currentUserProfile={userProfile} onProfileUpdate={loadInitialData} onReport={setReportModalData} />;
@@ -317,7 +314,7 @@ const App: React.FC = () => {
       {/* Modals */}
       <ShopModal 
         isOpen={isShopModalOpen}
-        onClose={() => setShopModalOpen(false)}
+        onClose={() => {setShopModalOpen(false); soundService.play('closeModal');}}
         shopData={shopData}
         userProfile={userProfile}
         allImages={allImages}
@@ -339,11 +336,12 @@ const App: React.FC = () => {
       />
       <CustomPhraseModal
         isOpen={isCustomPhraseModalOpen}
-        onClose={() => setCustomPhraseModalOpen(false)}
+        onClose={() => {setCustomPhraseModalOpen(false); soundService.play('closeModal');}}
         onSave={handleSavePhrase}
         onDelete={handleDeletePhrase}
         phraseToEdit={phraseToEdit}
         unlockedImages={unlockedImages}
+        folders={userProfile.data.folders}
       />
        <EditProfileModal
         isOpen={isEditProfileModalOpen}
@@ -362,6 +360,12 @@ const App: React.FC = () => {
         isOpen={isTransactionHistoryOpen}
         onClose={() => setTransactionHistoryOpen(false)}
        />
+      <FolderManagerModal 
+        isOpen={isFolderManagerOpen}
+        onClose={() => {setFolderManagerOpen(false); soundService.play('closeModal');}}
+        folders={userProfile.data.folders}
+        onSave={handleSaveFolder}
+      />
       {fullDisplayData && (
         <FullDisplay
           phrase={fullDisplayData.phrase}

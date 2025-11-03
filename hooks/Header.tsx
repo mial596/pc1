@@ -4,7 +4,7 @@ import { UserProfile } from '../types';
 import { CoinIcon, StoreIcon, LogoutIcon, CatSilhouetteIcon } from './Icons';
 import { LOGO_URL } from '../constants';
 
-type Page = 'home' | 'album' | 'shop' | 'games' | 'phrases' | 'community' | 'admin';
+type Page = 'home' | 'album' | 'shop' | 'games' | 'community' | 'admin';
 
 interface HeaderProps {
   userProfile: UserProfile;
@@ -44,7 +44,6 @@ const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile,
           <nav className="hidden lg:flex items-center gap-2 bg-surface-darker/70 p-1 rounded-full">
             <NavLink onClick={() => onNavigate('home')} isActive={activePage === 'home'}>Home</NavLink>
             <NavLink onClick={() => onNavigate('album')} isActive={activePage === 'album'}>Álbum</NavLink>
-            <NavLink onClick={() => onNavigate('phrases')} isActive={activePage === 'phrases'}>Frases</NavLink>
             <NavLink onClick={() => onNavigate('games')} isActive={activePage === 'games'}>Juegos</NavLink>
             <NavLink onClick={() => onNavigate('community')} isActive={activePage === 'community'}>Comunidad</NavLink>
             {userProfile.role === 'admin' && (

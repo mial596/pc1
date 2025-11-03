@@ -2,7 +2,7 @@ import React from 'react';
 import { HomeIcon, CatSilhouetteIcon, StoreIcon, BrainIcon, BookIcon, UsersIcon, AdminIcon } from '../hooks/Icons';
 import { UserProfile } from '../types';
 
-type Page = 'home' | 'album' | 'shop' | 'games' | 'phrases' | 'community' | 'admin';
+type Page = 'home' | 'album' | 'shop' | 'games' | 'community' | 'admin';
 
 interface MobileMenuProps {
   activePage: Page;
