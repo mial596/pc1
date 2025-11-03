@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
 import { AdminUserView, PublicPhrase, TradeOffer } from '../types';
-import { ShieldExclamationIcon, Cog6ToothIcon, TicketIcon, PhotoIcon } from '@heroicons/react/24/solid';
-import { SpinnerIcon, TrashIcon, CatSilhouetteIcon, UsersIcon, EnvelopeIcon } from '../hooks/Icons';
+import { SpinnerIcon, CatSilhouetteIcon } from '../hooks/Icons';
 
 
 import ManageCats from './ManageCats';
@@ -33,7 +32,7 @@ const AdminPanel: React.FC = () => {
             onClick={() => setActiveTab(tabId)}
             className={`tab-solid ${activeTab === tabId ? 'tab-solid-active' : 'text-ink/70'}`}
         >
-            {icon} {children}
+            <span className="text-xl">{icon}</span> {children}
         </button>
     );
 
@@ -41,13 +40,13 @@ const AdminPanel: React.FC = () => {
         <div className="container mx-auto p-4 sm:p-6">
             <h1 className="text-3xl sm:text-4xl font-black text-ink mb-6 font-cartoon">Admin Panel</h1>
             <div className="flex border-b-2 border-ink/20 mb-4 overflow-x-auto">
-                <TabButton tabId="reports" icon={<ShieldExclamationIcon className="w-5 h-5"/>}>Reports</TabButton>
-                <TabButton tabId="users" icon={<UsersIcon className="w-5 h-5"/>}>Users</TabButton>
-                <TabButton tabId="phrases" icon={<TicketIcon className="w-5 h-5"/>}>Phrases</TabButton>
-                <TabButton tabId="cats" icon={<PhotoIcon className="w-5 h-5"/>}>Cats</TabButton>
-                <TabButton tabId="envelopes" icon={<EnvelopeIcon className="w-5 h-5"/>}>Envelopes</TabButton>
-                <TabButton tabId="trades" icon={<TrashIcon className="w-5 h-5"/>}>Trades</TabButton>
-                <TabButton tabId="settings" icon={<Cog6ToothIcon className="w-5 h-5"/>}>Settings</TabButton>
+                <TabButton tabId="reports" icon="🛡️">Reports</TabButton>
+                <TabButton tabId="users" icon="👥">Users</TabButton>
+                <TabButton tabId="phrases" icon="📝">Phrases</TabButton>
+                <TabButton tabId="cats" icon="🖼️">Cats</TabButton>
+                <TabButton tabId="envelopes" icon="✉️">Envelopes</TabButton>
+                <TabButton tabId="trades" icon="🤝">Trades</TabButton>
+                <TabButton tabId="settings" icon="⚙️">Settings</TabButton>
             </div>
             <div className="bg-surface p-4 rounded-b-lg rounded-r-lg border-2 border-t-0 border-ink/20">
                 {renderContent()}
@@ -149,7 +148,7 @@ const ManagePhrases: React.FC = () => {
                         <p className="text-sm text-ink/70">by {phrase.username}</p>
                     </div>
                     <button onClick={() => handleCensorPhrase(phrase.publicPhraseId)} className="btn-themed btn-themed-danger !p-3">
-                        <TrashIcon className="w-5 h-5" />
+                        <span className="text-xl">🗑️</span>
                     </button>
                 </div>
             ))}

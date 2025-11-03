@@ -1,6 +1,6 @@
 import React from 'react';
 import { Envelope, GameUpgrade, UpgradeId, EnvelopeTypeId, UserProfile, CatImage } from '../types';
-import { CloseIcon, CoinIcon, LockIcon, SpinnerIcon } from '../hooks/Icons';
+import { CloseIcon, SpinnerIcon } from '../hooks/Icons';
 
 interface ShopModalProps {
     isOpen: boolean;
@@ -89,7 +89,7 @@ const ShopModal: React.FC<ShopModalProps> = ({
                                                         disabled={!canAfford}
                                                         className="btn-themed btn-themed-primary w-full flex items-center justify-center gap-2 mt-2"
                                                     >
-                                                        <CoinIcon className="w-5 h-5" /> {proratedCost}
+                                                        <span className="text-xl">💰</span> {proratedCost}
                                                     </button>
                                                 )}
                                                 {!isCompleted && <p className="text-xs mt-2 text-ink/60">Quedan {remainingCount} por desbloquear</p>}
@@ -120,7 +120,7 @@ const ShopModal: React.FC<ShopModalProps> = ({
                                                     <>
                                                     {!levelMet && (
                                                         <div className="flex items-center justify-center gap-2 mt-2 text-red-400 font-semibold text-sm bg-red-900/50 p-1 rounded-md">
-                                                            <LockIcon className="w-4 h-4"/>
+                                                            <span>🔒</span>
                                                             <span>Requiere Nivel {upgrade.levelRequired}</span>
                                                         </div>
                                                     )}
@@ -129,7 +129,7 @@ const ShopModal: React.FC<ShopModalProps> = ({
                                                         disabled={!canPurchase}
                                                         className="btn-themed btn-themed-secondary w-full flex items-center justify-center gap-2 mt-2"
                                                     >
-                                                        <CoinIcon className="w-5 h-5" /> {upgrade.cost}
+                                                        <span className="text-xl">💰</span> {upgrade.cost}
                                                     </button>
                                                     </>
                                                 )}

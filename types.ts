@@ -147,6 +147,7 @@ export interface Comment {
     publicPhraseId: string;
     userId: string;
     username: string;
+    role: 'admin' | 'mod' | 'user';
     profilePictureUrl?: string;
     text: string;
     createdAt: string;
@@ -170,6 +171,7 @@ export interface PublicPhrase {
     publicPhraseId: string;
     userId: string;
     username: string;
+    role: 'admin' | 'mod' | 'user';
     text: string;
     imageUrl: string;
     imageTheme: string;
@@ -195,6 +197,7 @@ export interface PublicProfilePhrase {
     userId: string;
     // Optional fields for when phrase is part of a feed
     username?: string;
+    role?: 'admin' | 'mod' | 'user';
     isUserVerified?: boolean;
     profilePictureUrl?: string;
     comments: Comment[];

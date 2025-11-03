@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CatImage, Phrase, Folder } from '../types';
-import { CloseIcon, TrashIcon, GlobeIcon, UsersIcon, LockIcon } from '../hooks/Icons';
+import { CloseIcon } from '../hooks/Icons';
 
 interface CustomPhraseModalProps {
     isOpen: boolean;
@@ -56,9 +56,9 @@ const CustomPhraseModal: React.FC<CustomPhraseModalProps> = ({
     const canSave = text.trim().length > 0 && selectedImageId !== null;
     
     const visibilityOptions = [
-      { id: 'private', label: 'Privado', icon: <LockIcon className="w-5 h-5"/>, description: 'Solo tú puedes ver esta frase.' },
-      { id: 'friends', label: 'Amigos', icon: <UsersIcon className="w-5 h-5"/>, description: 'Solo tus amigos pueden ver esta frase.' },
-      { id: 'public', label: 'Público', icon: <GlobeIcon className="w-5 h-5"/>, description: 'Cualquiera en la comunidad puede verla.' },
+      { id: 'private', label: 'Privado', icon: '🔒', description: 'Solo tú puedes ver esta frase.' },
+      { id: 'friends', label: 'Amigos', icon: '👥', description: 'Solo tus amigos pueden ver esta frase.' },
+      { id: 'public', label: 'Público', icon: '🌍', description: 'Cualquiera en la comunidad puede verla.' },
     ];
 
     return (
@@ -125,7 +125,7 @@ const CustomPhraseModal: React.FC<CustomPhraseModalProps> = ({
                         <div className="grid sm:grid-cols-3 gap-2">
                             {visibilityOptions.map(opt => (
                                 <button key={opt.id} onClick={() => setVisibility(opt.id as any)} className={`p-3 rounded-lg border-4 text-left transition-all ${visibility === opt.id ? 'border-primary bg-primary/10' : 'border-ink/20 hover:border-ink/40'}`}>
-                                    <div className="flex items-center gap-2 font-bold">{opt.icon} {opt.label}</div>
+                                    <div className="flex items-center gap-2 font-bold"><span className="text-xl">{opt.icon}</span> {opt.label}</div>
                                     <p className="text-xs text-ink/70 mt-1">{opt.description}</p>
                                 </button>
                             ))}
@@ -140,7 +140,7 @@ const CustomPhraseModal: React.FC<CustomPhraseModalProps> = ({
                                 onClick={handleDelete}
                                 className="btn-themed btn-themed-danger flex items-center gap-2"
                             >
-                                <TrashIcon className="w-5 h-5"/>
+                                <span className="text-xl">🗑️</span>
                                 <span className="hidden sm:inline">Eliminar</span>
                             </button>
                         )}

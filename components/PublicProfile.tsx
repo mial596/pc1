@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
-import { PublicProfileData, UserProfile, Comment } from '../types';
-import { SpinnerIcon, VerifiedIcon, ModIcon, AdminIcon, HeartIcon, TradeIcon, PlusIcon, CatSilhouetteIcon } from '../hooks/Icons';
+import { PublicProfileData, UserProfile } from '../types';
+import { SpinnerIcon, CatSilhouetteIcon } from '../hooks/Icons';
+import UserBadges from './UserBadges';
 
 interface PublicProfileProps {
     username: string;
@@ -55,26 +56,6 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
             console.error("Failed to like phrase", err);
         }
     };
-    
-    const handleAddComment = async (publicPhraseId: string, text: string) => {
-        if (!profile || text.trim() === '') return;
-        try {
-            const token = await getAccessTokenSilently();
-            const newComment = await apiService.addComment(token, publicPhraseId, text);
-            
-            const updatedPhrases = profile.phrases.map(p => {
-                if (p.publicPhraseId === publicPhraseId) {
-                    return { ...p, comments: [...p.comments, newComment], commentCount: p.commentCount + 1 };
-                }
-                return p;
-            });
-            setProfile({ ...profile, phrases: updatedPhrases });
-
-        } catch (err) {
-            console.error("Failed to add comment", err);
-        }
-    };
-
 
     const handleFriendAction = async (action: 'add' | 'remove' | 'accept' | 'reject' | 'cancel') => {
         if (!profile) return;
@@ -118,29 +99,23 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
     const isRequestSent = friendRequestsSent.includes(profile.userId);
     const isRequestReceived = friendRequestsReceived.includes(profile.userId);
 
-    const roleIcons = {
-        admin: <AdminIcon className="w-5 h-5 text-red-500" title="Admin"/>,
-        mod: <ModIcon className="w-5 h-5 text-blue-400" title="Moderator" />,
-        user: null
-    };
-
     const renderFriendButton = () => {
         if (isSelf || isActionLoading) return null;
         if (isFriend) {
-            return <button onClick={() => handleFriendAction('remove')} className="btn-themed btn-themed-danger">Remove Friend</button>;
+            return <button onClick={() => handleFriendAction('remove')} className="btn-themed btn-themed-danger">Eliminar Amigo</button>;
         }
         if (isRequestSent) {
-            return <button onClick={() => handleFriendAction('cancel')} className="btn-themed bg-gray-500 text-white">Cancel Request</button>;
+            return <button onClick={() => handleFriendAction('cancel')} className="btn-themed bg-gray-500 text-white">Cancelar Solicitud</button>;
         }
         if (isRequestReceived) {
             return (
                 <div className="flex gap-2">
-                    <button onClick={() => handleFriendAction('accept')} className="btn-themed btn-themed-primary">Accept</button>
-                    <button onClick={() => handleFriendAction('reject')} className="btn-themed bg-gray-600 text-white">Decline</button>
+                    <button onClick={() => handleFriendAction('accept')} className="btn-themed btn-themed-primary">Aceptar</button>
+                    <button onClick={() => handleFriendAction('reject')} className="btn-themed bg-gray-600 text-white">Rechazar</button>
                 </div>
             );
         }
-        return <button onClick={() => handleFriendAction('add')} className="btn-themed btn-themed-secondary flex items-center gap-2"><PlusIcon className="w-5 h-5"/> Add Friend</button>;
+        return <button onClick={() => handleFriendAction('add')} className="btn-themed btn-themed-secondary flex items-center gap-2"><span className="text-xl">➕</span> Añadir Amigo</button>;
     };
 
     return (
@@ -155,15 +130,14 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
                 </div>
                 <div className="flex justify-center items-center gap-2">
                     <h1 className="text-4xl font-black text-ink">{profile.username}</h1>
-                    {profile.isVerified && <VerifiedIcon className="w-7 h-7 text-blue-400" title="Verified"/>}
-                    {roleIcons[profile.role]}
+                    <UserBadges role={profile.role} isVerified={profile.isVerified} />
                 </div>
                 <p className="text-ink/70 mt-2 max-w-xl mx-auto">{profile.bio}</p>
                 <div className="mt-4 flex justify-center items-center gap-4">
                     {renderFriendButton()}
                     {isFriend && (
                         <button onClick={() => onStartTrade(profile.username)} className="btn-themed btn-themed-primary flex items-center gap-2">
-                            <TradeIcon className="w-5 h-5"/> Propose Trade
+                            <span className="text-xl">🤝</span> Proponer Intercambio
                         </button>
                     )}
                 </div>
@@ -180,8 +154,8 @@ const PublicProfile: React.FC<PublicProfileProps> = ({ username, currentUserProf
                             <p className="font-bold text-center flex-grow mb-2">{phrase.text}</p>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <button onClick={() => handleLike(phrase.publicPhraseId)} className="p-1 rounded-full hover:bg-rose-900/50">
-                                       <HeartIcon className={`w-6 h-6 ${phrase.isLikedByMe ? 'text-rose-500' : 'text-ink/50'}`} solid={phrase.isLikedByMe} />
+                                    <button onClick={() => handleLike(phrase.publicPhraseId)} className={`p-1 rounded-full hover:bg-rose-900/50 text-2xl ${phrase.isLikedByMe ? 'text-rose-500' : 'text-ink/50'}`}>
+                                       ❤️
                                     </button>
                                      <span className="font-bold text-sm text-ink/80">{phrase.likeCount}</span>
                                 </div>

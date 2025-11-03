@@ -17,12 +17,15 @@ async function handler(req: VercelRequest, res: VercelResponse) {
                 if (!publicPhraseId || !text) return res.status(400).json({ message: "Missing parameters." });
                 const users = db.collection('users');
                 const user = await users.findOne({ _id: userId });
+                if (!user) return res.status(404).json({ message: "User not found." });
+                
                 const profilePictureUrl = await resolveProfilePictureUrl(db, user);
                 const newComment = {
                     _id: new ObjectId(),
                     publicPhraseId: new ObjectId(publicPhraseId),
                     userId,
                     username: user.username,
+                    role: user.role || 'user',
                     profilePictureUrl,
                     text,
                     createdAt: new Date().toISOString(),
@@ -185,9 +188,9 @@ async function getPublicFeed(res: VercelResponse, db: any, currentUserId: string
     const feedPhrases = await feedCursor.toArray();
 
     const userIds = [...new Set(feedPhrases.map(p => p.userId))];
-    const users = await db.collection('users').find({ _id: { $in: userIds } }).project({_id: 1, data: { profilePictureId: 1 }}).toArray();
+    const users = await db.collection('users').find({ _id: { $in: userIds } }).project({_id: 1, data: { profilePictureId: 1 }, role: 1 }).toArray();
     const usersWithPics = await resolveProfilePicturesForUsers(db, users);
-    const userPicMap = new Map(usersWithPics.map(u => [u._id, u.profilePictureUrl]));
+    const userMap = new Map(usersWithPics.map(u => [u._id, { pic: u.profilePictureUrl, role: u.role }]));
 
     const response = feedPhrases.map((p: any) => ({
         publicPhraseId: p._id.toHexString(),
@@ -197,9 +200,10 @@ async function getPublicFeed(res: VercelResponse, db: any, currentUserId: string
         likeCount: p.likes?.length || 0,
         isLikedByMe: p.likes?.includes(currentUserId) || false,
         username: p.username,
-        isUserVerified: p.isUserVerified || false, // Default value for old data
+        isUserVerified: p.isUserVerified || false,
+        role: userMap.get(p.userId)?.role || 'user',
         userId: p.userId,
-        profilePictureUrl: userPicMap.get(p.userId),
+        profilePictureUrl: userMap.get(p.userId)?.pic,
         comments: p.comments || [],
         commentCount: p.comments?.length || 0,
     }));

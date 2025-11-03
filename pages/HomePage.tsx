@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import { Phrase, CatImage, UserProfile, Folder } from '../types';
-import PhraseCard from '../components/PhraseCard';
-// FIX: Import the missing SpeakerWaveIcon component.
-import { PlusIcon, EditIcon, ArchiveBoxIcon, ArrowUturnUpIcon, SpeakerWaveIcon } from '../hooks/Icons';
 
 interface PhraseItemProps {
   phrase: Phrase;
@@ -28,11 +25,11 @@ const PhraseItem: React.FC<PhraseItemProps> = ({ phrase, image, onPhraseClick, o
       </div>
       <p className="font-bold text-center flex-grow truncate px-1 text-sm sm:text-base mb-2">{phrase.text}</p>
       <div className="flex items-center justify-center gap-1">
-          <button onClick={() => onSpeak(phrase.text)} className="btn-themed !p-2 bg-accent"><SpeakerWaveIcon className="w-4 h-4 text-white" /></button>
-          <button onClick={onSelectImageClick} className="btn-themed !p-2 bg-secondary"><span className="text-sm">🖼️</span></button>
-          <button onClick={onEdit} className="btn-themed !p-2 bg-primary/80"><EditIcon className="w-4 h-4 text-white" /></button>
+          <button onClick={() => onSpeak(phrase.text)} className="btn-themed !p-2 bg-accent"><span className="text-lg">🔊</span></button>
+          <button onClick={onSelectImageClick} className="btn-themed !p-2 bg-secondary"><span className="text-lg">🖼️</span></button>
+          <button onClick={onEdit} className="btn-themed !p-2 bg-primary/80"><span className="text-lg">✏️</span></button>
           <button onClick={onArchive} className="btn-themed !p-2 bg-ink/70" title={phrase.isArchived ? "Unarchive" : "Archive"}>
-             {phrase.isArchived ? <ArrowUturnUpIcon className="w-4 h-4 text-white" /> : <ArchiveBoxIcon className="w-4 h-4 text-white" />}
+             <span className="text-lg">{phrase.isArchived ? '↩️' : '📦'}</span>
           </button>
       </div>
     </div>
@@ -77,7 +74,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
         <div className="flex gap-2">
             <button onClick={onOpenFolderManager} className="btn-themed btn-themed-secondary">Gestionar Carpetas</button>
             <button onClick={() => onSetPhraseToEdit(null)} className="btn-themed btn-themed-primary flex items-center gap-2">
-                <PlusIcon className="w-5 h-5" /> Nueva Frase
+                <span className="text-xl">➕</span> Nueva Frase
             </button>
         </div>
       </header>

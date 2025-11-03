@@ -19,6 +19,7 @@ import Toast from './components/Toast';
 import ReportModal from './components/ReportModal';
 import TransactionHistoryModal from './components/TransactionHistoryModal';
 import FolderManagerModal from './components/FolderManagerModal';
+import CommentModal from './components/CommentModal';
 import { SpinnerIcon } from './hooks/Icons';
 import { LOGO_URL } from './constants';
 
@@ -33,6 +34,7 @@ import {
   Envelope,
   GameUpgrade,
   Folder,
+  PublicProfilePhrase,
 } from './types';
 
 type Page = 'home' | 'album' | 'shop' | 'games' | 'community' | 'admin';
@@ -55,7 +57,8 @@ const App: React.FC = () => {
   const [isFolderManagerOpen, setFolderManagerOpen] = useState(false);
   const [isTransactionHistoryOpen, setTransactionHistoryOpen] = useState(false);
   const [reportModalData, setReportModalData] = useState<{type: 'phrase' | 'comment', contentId: string} | null>(null);
-  
+  const [commentModalData, setCommentModalData] = useState<PublicProfilePhrase | null>(null);
+
   const [fullDisplayData, setFullDisplayData] = useState<FullDisplayData | null>(null);
   const [newlyUnlockedImages, setNewlyUnlockedImages] = useState<CatImage[]>([]);
   const [openedEnvelopeName, setOpenedEnvelopeName] = useState('');
@@ -289,7 +292,7 @@ const App: React.FC = () => {
           onGameEnd={handleGameEnd}
         />;
       case 'community':
-        return <CommunityView currentUserProfile={userProfile} onProfileUpdate={loadInitialData} onReport={setReportModalData} />;
+        return <CommunityView currentUserProfile={userProfile} onProfileUpdate={loadInitialData} onReport={setReportModalData} onOpenComments={setCommentModalData}/>;
       case 'admin':
         return userProfile.role === 'admin' ? <AdminPanel /> : <div>Access Denied</div>;
       default:
@@ -359,6 +362,13 @@ const App: React.FC = () => {
        <TransactionHistoryModal
         isOpen={isTransactionHistoryOpen}
         onClose={() => setTransactionHistoryOpen(false)}
+       />
+       <CommentModal
+        isOpen={!!commentModalData}
+        onClose={() => setCommentModalData(null)}
+        phraseData={commentModalData}
+        currentUserProfile={userProfile}
+        onReport={setReportModalData}
        />
       <FolderManagerModal 
         isOpen={isFolderManagerOpen}

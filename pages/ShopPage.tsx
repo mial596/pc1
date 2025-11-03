@@ -1,5 +1,5 @@
 import React from 'react';
-import { StoreIcon, SpinnerIcon, EnvelopeIcon } from '../hooks/Icons';
+import { SpinnerIcon } from '../hooks/Icons';
 import { Envelope, GameUpgrade } from '../types';
 
 interface ShopPageProps {
@@ -11,7 +11,7 @@ const FeaturedItem: React.FC<{ envelope: Envelope; onOpenShop: () => void; }> = 
     <div className="relative p-6 rounded-2xl mb-12 text-center md:text-left card-themed" onClick={onOpenShop}>
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
             <div className="flex-shrink-0 w-32 h-32 rounded-full flex items-center justify-center bg-secondary animate-[float_3s_ease-in-out_infinite]">
-                <EnvelopeIcon className="w-16 h-16 text-white drop-shadow-lg"/>
+                <span className="text-7xl drop-shadow-lg">💌</span>
             </div>
             <div>
                 <p className="font-bold uppercase tracking-wider text-primary">¡Oferta Destacada!</p>
@@ -43,7 +43,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ shopData, onOpenShop }) => {
                         Aquí puedes gastar las monedas que tanto te costó ganar en nuevos sobres de gatos para ampliar tu colección o en mejoras permanentes que te ayudarán en los juegos.
                     </p>
                     <button onClick={onOpenShop} className="btn-themed btn-themed-primary btn-lg flex items-center gap-3 mx-auto text-xl px-8 py-4">
-                        <StoreIcon className="w-7 h-7" />
+                        <span className="text-2xl">🛍️</span>
                         Abrir Tienda
                     </button>
                 </>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
 import { Report } from '../types';
-import { SpinnerIcon, TrashIcon, CheckCircleIcon } from '../hooks/Icons';
+import { SpinnerIcon } from '../hooks/Icons';
 
 const ManageReports: React.FC = () => {
     const [reports, setReports] = useState<Report[]>([]);
@@ -74,10 +74,10 @@ const ManageReports: React.FC = () => {
                             </div>
                             <div className="flex justify-end gap-2 mt-4 border-t border-ink/20 pt-3">
                                 <button onClick={() => handleResolve(report._id)} className="btn-themed bg-green-500 text-white !py-1 !px-3 flex items-center gap-1">
-                                    <CheckCircleIcon className="w-4 h-4" /> Dismiss
+                                    <span className="text-lg">✅</span> Dismiss
                                 </button>
                                 <button onClick={() => handleCensor(report)} className="btn-themed btn-themed-danger !py-1 !px-3 flex items-center gap-1">
-                                    <TrashIcon className="w-4 h-4" /> Delete Content
+                                    <span className="text-lg">🗑️</span> Delete Content
                                 </button>
                             </div>
                         </div>

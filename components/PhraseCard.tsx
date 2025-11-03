@@ -1,7 +1,6 @@
 import React from 'react';
 import { Phrase, CatImage } from '../types';
 import { DEFAULT_PIC_URL } from '../constants';
-import { SpeakerWaveIcon } from '../hooks/Icons';
 
 interface PhraseCardProps {
   phrase: Phrase;
@@ -43,7 +42,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({ phrase, image, onCardClick, onS
             className="btn-themed !p-2 bg-accent"
             aria-label={`Speak phrase: ${phrase.text}`}
            >
-            <SpeakerWaveIcon className="w-4 h-4 text-white" />
+            <span className="text-lg">🔊</span>
            </button>
            <button
             onClick={handleSelectImage}

@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Game, GameProps, CatImage } from '../types';
 import { GAMES } from '../gameData';
-import { ArrowLeftIcon, LockIcon } from '../hooks/Icons';
 
 const GameResultScreen: React.FC<{
     score: number;
@@ -70,7 +69,7 @@ const JuegosPage: React.FC<JuegosPageProps> = ({ unlockedImages, onGameEnd }) =>
         return (
             <div>
                 <button onClick={() => setActiveGame(null)} className="flex items-center gap-2 font-bold mb-4 text-ink/70 hover:text-primary container mx-auto px-4 sm:px-6">
-                    <ArrowLeftIcon className="w-5 h-5"/>
+                    <span>⬅️</span>
                     Volver a la Sala de Juegos
                 </button>
                 <GameComponent
@@ -108,7 +107,7 @@ const JuegosPage: React.FC<JuegosPageProps> = ({ unlockedImages, onGameEnd }) =>
                                         <p className="text-ink/70">{game.description}</p>
                                         {isLocked && (
                                             <div className="flex items-center justify-center gap-2 mt-3 text-accent font-semibold text-sm bg-accent/20 p-2 rounded-md">
-                                                <LockIcon className="w-4 h-4"/>
+                                                <span>🔒</span>
                                                 <span>Necesitas {game.minImagesRequired} gatos</span>
                                             </div>
                                         )}

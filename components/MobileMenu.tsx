@@ -1,5 +1,4 @@
 import React from 'react';
-import { HomeIcon, CatSilhouetteIcon, StoreIcon, BrainIcon, BookIcon, UsersIcon, AdminIcon } from '../hooks/Icons';
 import { UserProfile } from '../types';
 
 type Page = 'home' | 'album' | 'shop' | 'games' | 'community' | 'admin';
@@ -20,7 +19,7 @@ const NavItem: React.FC<{
     onClick={onClick}
     className={`flex flex-col items-center justify-center w-full h-16 transition-all duration-200 ease-in-out relative ${isActive ? 'text-primary' : 'text-ink/60 hover:text-primary'}`}
   >
-    <div className={`w-7 h-7 mb-1 transition-transform ${isActive ? 'transform scale-110' : ''}`}>{icon}</div>
+    <div className={`text-3xl mb-1 transition-transform ${isActive ? 'transform scale-110' : ''}`}>{icon}</div>
     <span className="text-xs font-bold">{label}</span>
     {isActive && <div className="absolute bottom-1 w-2 h-2 bg-primary rounded-full"></div>}
   </button>
@@ -32,7 +31,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ activePage, onNavigate, userPro
   
   const communityIcon = (
       <div className="relative">
-        <UsersIcon />
+        <span>👥</span>
         {(data.tradeNotifications > 0 || data.friendRequestsReceived.length > 0) && (
             <span className="absolute -top-1 -right-2 bg-accent text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-surface">
                 {data.tradeNotifications + data.friendRequestsReceived.length}
@@ -42,11 +41,11 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ activePage, onNavigate, userPro
   );
 
   const navItems = [
-    { page: 'home', label: 'Home', icon: <HomeIcon /> },
-    { page: 'album', label: 'Álbum', icon: <CatSilhouetteIcon /> },
-    { page: 'games', label: 'Juegos', icon: <BrainIcon /> },
+    { page: 'home', label: 'Home', icon: '🏠' },
+    { page: 'album', label: 'Álbum', icon: '🖼️' },
+    { page: 'games', label: 'Juegos', icon: '🎮' },
     { page: 'community', label: 'Comunidad', icon: communityIcon },
-    ...(isAdmin ? [{ page: 'admin' as Page, label: 'Admin', icon: <AdminIcon /> }] : [])
+    ...(isAdmin ? [{ page: 'admin' as Page, label: 'Admin', icon: '👑' }] : [])
   ];
 
   return (

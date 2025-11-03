@@ -3,7 +3,8 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { Friend } from '../types';
 import { ALL_MISSIONS, MissionData } from '../gameData/missions';
 import * as apiService from '../services/apiService';
-import { SpinnerIcon, UsersIcon, VerifiedIcon, StarIcon, CoinIcon } from '../hooks/Icons';
+import { SpinnerIcon } from '../hooks/Icons';
+import UserBadges from './UserBadges';
 
 interface FriendshipViewProps {
     friend: Friend;
@@ -68,7 +69,7 @@ const FriendshipView: React.FC<FriendshipViewProps> = ({ friend, onProfileClick,
             <header className="text-center bg-surface p-6 rounded-lg">
                 <div className="flex justify-center items-center gap-2">
                     <h1 className="text-4xl font-black text-ink">{friend.username}</h1>
-                    {friend.isVerified && <VerifiedIcon className="w-7 h-7 text-blue-400" title="Verified"/>}
+                    <UserBadges role={friend.role} isVerified={friend.isVerified} />
                 </div>
                 <div className="mt-4 space-y-2">
                     <div className="flex justify-between font-bold text-sm text-primary">
@@ -79,7 +80,7 @@ const FriendshipView: React.FC<FriendshipViewProps> = ({ friend, onProfileClick,
                         <div className="friendship-xp-bar-fill" style={{ width: `${xpPercentage}%` }}></div>
                     </div>
                      <p className="text-sm text-green-400 font-semibold flex items-center justify-center gap-1">
-                        <CoinIcon className="w-4 h-4"/> Bono de Monedas: {bonusPercentage}%
+                        <span className="text-lg">💰</span> Bono de Monedas: {bonusPercentage}%
                     </p>
                 </div>
                 <button onClick={() => onProfileClick(friend.username)} className="btn-themed btn-themed-secondary mt-4 !py-1 !px-4">Ver Perfil</button>
@@ -102,7 +103,7 @@ const FriendshipView: React.FC<FriendshipViewProps> = ({ friend, onProfileClick,
                          </div>
                          {friendship.activeMission?.isCompleted && (
                              <button disabled={isSubmitting} onClick={handleClaimReward} className="btn-themed btn-themed-primary w-full mt-4 flex items-center justify-center gap-2">
-                               {isSubmitting ? <SpinnerIcon className="w-5 h-5 animate-spin"/> : <><StarIcon className="w-5 h-5"/> Reclamar {activeMissionData.rewardXp} XP</>}
+                               {isSubmitting ? <SpinnerIcon className="w-5 h-5 animate-spin"/> : <><span className="text-xl">⭐</span> Reclamar {activeMissionData.rewardXp} XP</>}
                              </button>
                          )}
                      </div>
