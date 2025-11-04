@@ -9,7 +9,6 @@ import ShopPage from './pages/ShopPage';
 import JuegosPage from './pages/JuegosPage';
 import CommunityView from './components/CommunityView';
 import AdminPanel from './components/AdminPanel';
-import ShopModal from './components/ShopModal';
 import EnvelopeModal from './components/EnvelopeModal';
 import ImageSelector from './components/ImageSelector';
 import CustomPhraseModal from './components/CustomPhraseModal';
@@ -50,7 +49,6 @@ const App: React.FC = () => {
   const [page, setPage] = useState<Page>('home');
 
   // Modal States
-  const [isShopModalOpen, setShopModalOpen] = useState(false);
   const [isEnvelopeModalOpen, setEnvelopeModalOpen] = useState(false);
   const [isImageSelectorOpen, setImageSelectorOpen] = useState(false);
   const [isCustomPhraseModalOpen, setCustomPhraseModalOpen] = useState(false);
@@ -140,7 +138,6 @@ const App: React.FC = () => {
       setNewlyUnlockedImages(result.newImages);
       setOpenedEnvelopeName(envelope.name);
       setEnvelopeModalOpen(true);
-      setShopModalOpen(false);
 
     } catch (err) {
         console.error("Purchase failed", err);
@@ -288,7 +285,13 @@ const App: React.FC = () => {
       case 'album':
         return <AlbumPage allImages={allImages} unlockedImageIds={userProfile.data.unlockedImageIds} />;
       case 'shop':
-        return <ShopPage shopData={shopData} onOpenShop={() => {setShopModalOpen(true); soundService.play('openModal'); }} />;
+        return <ShopPage 
+          shopData={shopData} 
+          userProfile={userProfile}
+          allImages={allImages}
+          onPurchaseEnvelope={handlePurchaseEnvelope}
+          onPurchaseUpgrade={() => { /* Implement upgrade purchase */ }}
+        />;
       case 'games':
         return <JuegosPage 
           unlockedImages={unlockedImages}
@@ -319,15 +322,6 @@ const App: React.FC = () => {
 
       {/* Modals */}
       <WelcomeTutorialModal isOpen={isTutorialOpen} onClose={handleCloseTutorial} />
-      <ShopModal 
-        isOpen={isShopModalOpen}
-        onClose={() => {setShopModalOpen(false); soundService.play('closeModal');}}
-        shopData={shopData}
-        userProfile={userProfile}
-        allImages={allImages}
-        onPurchaseEnvelope={handlePurchaseEnvelope}
-        onPurchaseUpgrade={() => { /* Implement upgrade purchase */ }}
-      />
       <EnvelopeModal
         isOpen={isEnvelopeModalOpen}
         onClose={() => setEnvelopeModalOpen(false)}

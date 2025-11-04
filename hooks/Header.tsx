@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { UserProfile } from '../types';
-import { CatSilhouetteIcon } from './Icons';
+import { CatSilhouetteIcon, CoinIcon, StoreIcon, LogoutIcon } from './Icons';
 import { LOGO_URL } from '../constants';
 
 type Page = 'home' | 'album' | 'shop' | 'games' | 'community' | 'admin';
@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile,
             <img src={LOGO_URL} alt="PictoCat Logo" className="w-12 h-12" />
             <span className="text-2xl font-black text-ink hidden sm:block font-cartoon">PictoCat</span>
           </button>
-          <nav className="hidden lg:flex items-center gap-2 bg-surface-darker/70 p-1 rounded-full">
+          <nav className="hidden lg:flex items-center gap-2 bg-surface-darker p-1 rounded-full">
             <NavLink onClick={() => onNavigate('home')} isActive={activePage === 'home'}>Home</NavLink>
             <NavLink onClick={() => onNavigate('album')} isActive={activePage === 'album'}>Álbum</NavLink>
             <NavLink onClick={() => onNavigate('games')} isActive={activePage === 'games'}>Juegos</NavLink>
@@ -55,11 +55,11 @@ const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile,
         {/* Right Side: Stats & User */}
         <div className="flex items-center gap-4">
           <button onClick={() => onNavigate('shop')} className="btn-themed btn-themed-secondary hidden sm:flex items-center gap-2">
-            <span className="text-xl">🛍️</span> Tienda
+            <StoreIcon className="w-6 h-6" /> Tienda
           </button>
           
           <button onClick={onOpenTransactions} className="flex items-center gap-2 font-bold bg-surface-darker px-3 py-1.5 rounded-full border-2 border-ink/20 hover:bg-ink/10 transition-colors">
-            <span className="text-2xl">💰</span>
+            <CoinIcon className="w-7 h-7 text-yellow-500" />
             <span className="text-lg">{coins}</span>
           </button>
 
@@ -79,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({ userProfile, onNavigate, onOpenProfile,
               className="p-2 rounded-full hover:bg-ink/10 text-ink/70 hover:text-ink transition-colors"
               title="Logout"
             >
-              <span className="text-2xl">🚪</span>
+              <LogoutIcon className="w-7 h-7" />
             </button>
           </div>
         </div>

@@ -25,20 +25,31 @@ const FriendsManager: React.FC<FriendsManagerProps> = ({ currentUserProfile, onP
             const token = await getAccessTokenSilently();
             const friendData = await apiService.getFriends(token);
             setData(friendData);
+
+            // FIX: If a friend is selected, update its state with the new data to force re-render
+            if (selectedFriend) {
+                const updatedFriend = friendData.friends.find(f => f.userId === selectedFriend.userId);
+                if (updatedFriend) {
+                    setSelectedFriend(updatedFriend);
+                } else {
+                    // Friend might have been removed, go back to list
+                    setSelectedFriend(null);
+                }
+            }
         } catch (err) {
             console.error("Failed to fetch friends data", err);
             setError("Could not load your friends list.");
         } finally {
             setIsLoading(false);
         }
-    }, [getAccessTokenSilently]);
+    }, [getAccessTokenSilently, selectedFriend]);
 
     useEffect(() => {
         fetchData();
     }, [fetchData]);
     
     const handleFriendUpdate = () => {
-        fetchData(); // Refreshes the list
+        fetchData(); // Refreshes the list (and the selected friend state)
         onProfileUpdate(); // Refreshes the main user profile
     }
 
