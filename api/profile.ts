@@ -65,7 +65,8 @@ async function handler(req: VercelRequest, res: VercelResponse) {
 async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId: string, decodedToken: DecodedToken) {
     const adminUserId = 'google-oauth2|107222277373277873883';
     const users = db.collection('users');
-    let userProfile = await users.findOne({ _id: userId });
+    // FIX: Cast string userId to 'any' to match MongoDB driver's expected type for _id.
+    let userProfile = await users.findOne({ _id: userId as any });
 
     if (!userProfile) {
         // User does not exist, create a new profile
@@ -78,8 +79,10 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
             isVerified: false,
             data: initialData,
         };
-        await users.insertOne({ _id: userId, ...newUser });
-        userProfile = { _id: userId, ...newUser };
+        // FIX: Cast object with string _id to 'any' for insertion.
+        await users.insertOne({ _id: userId as any, ...newUser });
+        // FIX: Cast object with string _id to 'any' for assignment.
+        userProfile = { _id: userId as any, ...newUser };
     } else {
         // User exists, ensure their data is complete and valid.
         const initialData = getInitialUserData();
@@ -120,7 +123,8 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
                     await friendshipsCollection.insertOne({ user1Id: userId, user2Id: friendId, level: 1, xp: 0, activeMission: null });
                 }
             }
-            await users.updateOne({ _id: userId }, { $unset: { "data.friends": "" } });
+            // FIX: Cast string userId to 'any' to match MongoDB driver's expected type for _id.
+            await users.updateOne({ _id: userId as any }, { $unset: { "data.friends": "" } });
             delete repairedData.friends;
             needsUpdate = true;
         }
@@ -131,7 +135,8 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
 
         if (needsUpdate) {
             userProfile.data = repairedData;
-            await users.updateOne({ _id: userId }, { $set: { data: repairedData } });
+            // FIX: Cast string userId to 'any' to match MongoDB driver's expected type for _id.
+            await users.updateOne({ _id: userId as any }, { $set: { data: repairedData } });
         }
 
         if (!userProfile.username && userProfile.email) {
@@ -141,7 +146,8 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
 
         if (userId === adminUserId && userProfile.role !== 'admin') {
             userProfile.role = 'admin';
-            await users.updateOne({ _id: userId }, { $set: { role: 'admin' } });
+            // FIX: Cast string userId to 'any' to match MongoDB driver's expected type for _id.
+            await users.updateOne({ _id: userId as any }, { $set: { role: 'admin' } });
         }
     }
     
@@ -158,7 +164,8 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db, userId
     const profilePictureUrl = await resolveProfilePictureUrl(db, userProfile);
 
     const responsePayload: UserProfile = {
-        id: userProfile._id,
+        // FIX: Cast userProfile._id to string, as the native driver types it as ObjectId.
+        id: userProfile._id as string,
         username: userProfile.username || userProfile.email,
         role: userProfile.role,
         isVerified: userProfile.isVerified,

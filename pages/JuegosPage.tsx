@@ -2,6 +2,24 @@ import React, { useState, useMemo } from 'react';
 import { Game, GameProps, CatImage } from '../types';
 import { GAMES } from '../gameData';
 
+const Confetti: React.FC = () => (
+    <div className="confetti-container">
+        {Array.from({ length: 50 }).map((_, i) => (
+            <div
+                key={i}
+                className="confetti-piece"
+                style={{
+                    left: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 5}s`,
+                    transform: `rotate(${Math.random() * 360}deg)`,
+                    backgroundColor: ['var(--c-primary)', 'var(--c-secondary)', 'var(--c-accent)'][Math.floor(Math.random() * 3)],
+                }}
+            />
+        ))}
+    </div>
+);
+
+
 const GameResultScreen: React.FC<{
     score: number;
     coins: number;
@@ -9,18 +27,21 @@ const GameResultScreen: React.FC<{
     onPlayAgain: () => void;
     onExit: () => void;
 }> = ({ score, coins, xp, onPlayAgain, onExit }) => (
-    <div className="flex flex-col items-center justify-center p-8 card-themed text-center animate-popIn">
-        <h2 className="text-3xl font-black text-primary font-cartoon">¡Juego Terminado!</h2>
-        <p className="text-xl my-4 text-ink/80">
-            Tu puntuación fue: <span className="font-bold text-ink">{score}</span>
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 my-4 bg-surface-darker p-4 rounded-xl border-2 border-ink/20">
-            <p className="font-bold text-lg text-secondary">✨ +{coins} Monedas</p>
-            <p className="font-bold text-lg text-primary">⭐ +{xp} XP</p>
-        </div>
-        <div className="flex gap-4 mt-4">
-            <button onClick={onPlayAgain} className="btn-themed btn-themed-secondary">Jugar de Nuevo</button>
-            <button onClick={onExit} className="btn-themed btn-themed-primary">Salir</button>
+    <div className="flex flex-col items-center justify-center p-8 card-themed text-center animate-popIn relative overflow-hidden">
+        <Confetti />
+        <div className="relative z-10">
+            <h2 className="text-3xl font-black text-primary font-cartoon">¡Juego Terminado!</h2>
+            <p className="text-xl my-4 text-ink/80">
+                Tu puntuación fue: <span className="font-bold text-ink">{score}</span>
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 my-4 bg-surface-darker p-4 rounded-xl border-2 border-ink/20">
+                <p className="font-bold text-lg text-secondary">✨ +{coins} Monedas</p>
+                <p className="font-bold text-lg text-primary">⭐ +{xp} XP</p>
+            </div>
+            <div className="flex gap-4 mt-4">
+                <button onClick={onPlayAgain} className="btn-themed btn-themed-secondary">Jugar de Nuevo</button>
+                <button onClick={onExit} className="btn-themed btn-themed-primary">Salir</button>
+            </div>
         </div>
     </div>
 );

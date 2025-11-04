@@ -42,6 +42,14 @@ async function handler(req: VercelRequest, res: VercelResponse) {
 async function handleGet(req: VercelRequest, res: VercelResponse, db: Db) {
     const { resource } = req.query;
 
+    if (resource === 'stats') {
+        const userCount = await db.collection('users').countDocuments();
+        const pendingReports = await db.collection('reports').countDocuments({ status: 'pending' });
+        const totalTrades = await db.collection('trades').countDocuments();
+        const publicPhrases = await db.collection('public_phrases').countDocuments();
+        return res.status(200).json({ userCount, pendingReports, totalTrades, publicPhrases });
+    }
+
     if (resource === 'users') {
         const usersCursor = await db.collection('users').find({}, {
             projection: { _id: 1, username: 1, role: 1, isVerified: 1, data: { profilePictureId: 1 } },
@@ -102,6 +110,11 @@ async function handleGet(req: VercelRequest, res: VercelResponse, db: Db) {
         return res.status(200).json(settings);
     }
 
+    if (resource === 'reports') {
+        const reports = await db.collection('reports').find({ status: 'pending' }).sort({ createdAt: -1 }).toArray();
+        return res.status(200).json(reports);
+    }
+
     return res.status(400).send('Invalid resource requested.');
 }
 
@@ -122,11 +135,13 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: any) {
         if (!publicPhraseId) {
             return res.status(400).send('publicPhraseId is required.');
         }
-        const phraseToDelete = await db.collection('public_phrases').findOne({ _id: new ObjectId(publicPhraseId) });
+        // FIX: Cast filter object to 'any' to resolve incorrect type inference for _id.
+        const phraseToDelete = await db.collection('public_phrases').findOne({ _id: new ObjectId(publicPhraseId) as any });
         if (phraseToDelete) {
             await db.collection('public_phrases').deleteOne({ _id: new ObjectId(publicPhraseId) });
+            // FIX: Cast filter object to 'any' to resolve incorrect type inference for _id.
             await db.collection('users').updateOne(
-                { _id: phraseToDelete.userId as any, 'phrases.id': phraseToDelete.phraseId },
+                { _id: phraseToDelete.userId, 'phrases.id': phraseToDelete.phraseId } as any,
                 { $set: { 'phrases.$.isPublic': false } }
             );
         }
@@ -222,6 +237,23 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: any) {
         const { settings } = req.body;
         if (!settings) return res.status(400).json({ message: "Settings object is required." });
         await db.collection('game_settings').updateOne({ _id: 'main' }, { $set: settings }, { upsert: true });
+        return res.status(200).json({ success: true });
+    }
+
+    if (action === 'resolveReport') {
+        const { reportId } = req.body;
+        if (!reportId) return res.status(400).json({ message: "reportId is required." });
+        await db.collection('reports').updateOne({ _id: new ObjectId(reportId) }, { $set: { status: 'resolved' } });
+        return res.status(200).json({ success: true });
+    }
+    
+    if (action === 'deleteComment') {
+        const { commentId } = req.body;
+        if (!commentId) return res.status(400).json({ message: "commentId is required." });
+        await db.collection('public_phrases').updateMany(
+            { "comments._id": new ObjectId(commentId) },
+            { $pull: { comments: { _id: new ObjectId(commentId) } } }
+        );
         return res.status(200).json({ success: true });
     }
 

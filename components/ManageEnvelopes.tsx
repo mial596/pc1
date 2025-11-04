@@ -115,7 +115,7 @@ const ManageEnvelopes: React.FC = () => {
 
     return (
         <div>
-            <div className="card-themed p-4 mb-6 sticky top-24 z-10 bg-surface/95 backdrop-blur-sm">
+            <div className="card-themed p-4 mb-6 sticky top-24 z-10 bg-surface">
                 <h3 className="text-xl font-bold mb-4">{editingEnvelope ? `Editing "${editingEnvelope.name}"` : 'Add New Envelope'}</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

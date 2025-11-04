@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
-import { AdminUserView, PublicPhrase, TradeOffer } from '../types';
+import { AdminUserView, PublicPhrase, TradeOffer, Report } from '../types';
 import { SpinnerIcon, CatSilhouetteIcon } from '../hooks/Icons';
 
 
@@ -9,13 +9,14 @@ import ManageCats from './ManageCats';
 import ManageEnvelopes from './ManageEnvelopes';
 import ManageReports from './ManageReports';
 
-type Tab = 'users' | 'phrases' | 'cats' | 'envelopes' | 'trades' | 'settings' | 'reports';
+type Tab = 'dashboard' | 'users' | 'phrases' | 'cats' | 'envelopes' | 'trades' | 'settings' | 'reports';
 
 const AdminPanel: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<Tab>('reports');
+    const [activeTab, setActiveTab] = useState<Tab>('dashboard');
 
     const renderContent = () => {
         switch(activeTab) {
+            case 'dashboard': return <Dashboard onNavigate={setActiveTab} />;
             case 'reports': return <ManageReports />;
             case 'users': return <ManageUsers />;
             case 'phrases': return <ManagePhrases />;
@@ -40,6 +41,7 @@ const AdminPanel: React.FC = () => {
         <div className="container mx-auto p-4 sm:p-6">
             <h1 className="text-3xl sm:text-4xl font-black text-ink mb-6 font-cartoon">Admin Panel</h1>
             <div className="flex border-b-2 border-ink/20 mb-4 overflow-x-auto">
+                <TabButton tabId="dashboard" icon="📊">Dashboard</TabButton>
                 <TabButton tabId="reports" icon="🛡️">Reports</TabButton>
                 <TabButton tabId="users" icon="👥">Users</TabButton>
                 <TabButton tabId="phrases" icon="📝">Phrases</TabButton>
@@ -56,6 +58,71 @@ const AdminPanel: React.FC = () => {
 };
 
 // --- Sub-components for managing different sections ---
+
+const Dashboard: React.FC<{ onNavigate: (tab: Tab) => void }> = ({ onNavigate }) => {
+    const [stats, setStats] = useState<{userCount: number, pendingReports: number, totalTrades: number, publicPhrases: number} | null>(null);
+    const [reports, setReports] = useState<Report[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { getAccessTokenSilently } = useAuth0();
+
+    const fetchDashboardData = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const token = await getAccessTokenSilently();
+            const [statsData, reportsData] = await Promise.all([
+                apiService.adminGetStats(token),
+                apiService.adminGetReports(token)
+            ]);
+            setStats(statsData);
+            setReports(reportsData);
+        } catch (error) {
+            console.error("Failed to fetch dashboard data:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [getAccessTokenSilently]);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]);
+    
+    if (isLoading) return <div className="flex justify-center p-8"><SpinnerIcon className="w-8 h-8 animate-spin" /></div>;
+
+    const StatCard: React.FC<{title: string, value: number, icon: string}> = ({title, value, icon}) => (
+        <div className="admin-card text-center p-4">
+            <div className="text-4xl mb-2">{icon}</div>
+            <p className="text-3xl font-black">{value}</p>
+            <p className="text-sm text-ink/70 font-bold">{title}</p>
+        </div>
+    );
+
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <StatCard title="Total Users" value={stats?.userCount || 0} icon="👥" />
+                <StatCard title="Public Phrases" value={stats?.publicPhrases || 0} icon="📝" />
+                <StatCard title="Total Trades" value={stats?.totalTrades || 0} icon="🤝" />
+                <StatCard title="Pending Reports" value={stats?.pendingReports || 0} icon="🛡️" />
+            </div>
+            <div>
+                <h3 className="text-xl font-bold mb-2">Recent Reports</h3>
+                <div className="admin-card p-2 space-y-2">
+                    {reports.slice(0, 5).map(report => (
+                        <div key={report._id} className="p-2 bg-surface-darker rounded-md flex justify-between items-center">
+                            <div>
+                                <p className="font-bold text-sm">@{report.reporterUsername} reported @{report.contentAuthorUsername}'s {report.type}</p>
+                                <p className="text-xs text-ink/60 truncate max-w-xs sm:max-w-md">"{report.contentText}"</p>
+                            </div>
+                            {/* FIX: Pass tab 'reports' to onNavigate to navigate to the reports tab. */}
+                            <button onClick={() => onNavigate('reports')} className="btn-themed btn-themed-secondary !py-1 !px-2 text-xs">View</button>
+                        </div>
+                    ))}
+                    {reports.length === 0 && <p className="text-ink/70 p-4 text-center">No pending reports!</p>}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const ManageUsers: React.FC = () => {
     const [users, setUsers] = useState<AdminUserView[]>([]);

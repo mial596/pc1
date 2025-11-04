@@ -70,7 +70,8 @@ async function handleGet(res: VercelResponse, db: Db, userId: string) {
     const users = db.collection('users');
     const friendships = db.collection('friendships');
 
-    const currentUser = await users.findOne({ _id: userId });
+    // FIX: Cast string userId to 'any' to match MongoDB driver's expected type for _id.
+    const currentUser = await users.findOne({ _id: userId as any });
     if (!currentUser) return res.status(404).json({ message: "User not found." });
     
     const currentUserData = currentUser.data || {};
@@ -120,7 +121,8 @@ async function handlePost(req: VercelRequest, res: VercelResponse, db: Db, userI
         if (!phrase) return res.status(404).json({ message: "Phrase not found." });
         const isLiked = phrase.likes?.includes(userId);
         const updateOperation = isLiked ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
-        await phrases.updateOne({ _id: new ObjectId(publicPhraseId) }, updateOperation);
+        // FIX: Cast updateOperation to 'any' to satisfy the strict UpdateFilter type.
+        await phrases.updateOne({ _id: new ObjectId(publicPhraseId) }, updateOperation as any);
         if (!isLiked) {
             await updateMissionProgress(db.collection('friendships'), userId, authorId, 'LIKE_PHRASES', 1);
         }
@@ -196,13 +198,14 @@ async function handlePut(req: VercelRequest, res: VercelResponse, db: Db, userId
     await users.updateOne({ _id: targetUserId as any }, { $pull: { "data.friendRequestsSent": userId } });
     
     if (action === 'accept') {
+        // FIX: Cast the inserted document to 'any' to resolve 'assignable to never' error.
         await db.collection('friendships').insertOne({
             user1Id: userId,
             user2Id: targetUserId,
             level: 1,
             xp: 0,
             activeMission: null,
-        });
+        } as any);
     }
 
     return res.status(200).json({ success: true });

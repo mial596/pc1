@@ -150,6 +150,10 @@ export const getTransactions = (token: string): Promise<Transaction[]> => {
 
 
 // --- Admin ---
+export const adminGetStats = (token: string): Promise<{userCount: number, pendingReports: number, totalTrades: number, publicPhrases: number}> => {
+    return apiRequest('/api/admin?resource=stats', 'GET', token);
+};
+
 export const adminGetAllUsers = (token: string): Promise<AdminUserView[]> => {
     return apiRequest('/api/admin?resource=users', 'GET', token);
 };

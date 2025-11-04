@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import * as apiService from '../services/apiService';
 import { UserProfile, FriendData, Friend } from '../types';
@@ -15,8 +15,13 @@ const FriendsManager: React.FC<FriendsManagerProps> = ({ currentUserProfile, onP
     const [data, setData] = useState<FriendData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+    const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
     const { getAccessTokenSilently } = useAuth0();
+    
+    const selectedFriend = useMemo(() => {
+        if (!selectedFriendId || !data) return null;
+        return data.friends.find(f => f.userId === selectedFriendId);
+    }, [data, selectedFriendId]);
 
     const fetchData = useCallback(async () => {
         setIsLoading(true);
@@ -25,24 +30,13 @@ const FriendsManager: React.FC<FriendsManagerProps> = ({ currentUserProfile, onP
             const token = await getAccessTokenSilently();
             const friendData = await apiService.getFriends(token);
             setData(friendData);
-
-            // FIX: If a friend is selected, update its state with the new data to force re-render
-            if (selectedFriend) {
-                const updatedFriend = friendData.friends.find(f => f.userId === selectedFriend.userId);
-                if (updatedFriend) {
-                    setSelectedFriend(updatedFriend);
-                } else {
-                    // Friend might have been removed, go back to list
-                    setSelectedFriend(null);
-                }
-            }
         } catch (err) {
             console.error("Failed to fetch friends data", err);
             setError("Could not load your friends list.");
         } finally {
             setIsLoading(false);
         }
-    }, [getAccessTokenSilently, selectedFriend]);
+    }, [getAccessTokenSilently]);
 
     useEffect(() => {
         fetchData();
@@ -86,7 +80,7 @@ const FriendsManager: React.FC<FriendsManagerProps> = ({ currentUserProfile, onP
     if (selectedFriend) {
         return (
             <div>
-                 <button onClick={() => setSelectedFriend(null)} className="flex items-center gap-2 font-bold mb-4 text-ink/70 hover:text-ink">
+                 <button onClick={() => setSelectedFriendId(null)} className="flex items-center gap-2 font-bold mb-4 text-ink/70 hover:text-ink">
                     <ArrowLeftIcon className="w-5 h-5"/>
                     Volver a la lista de amigos
                 </button>
@@ -144,7 +138,7 @@ const FriendsManager: React.FC<FriendsManagerProps> = ({ currentUserProfile, onP
                                         )}
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <button onClick={() => setSelectedFriend(friend)} className="font-bold hover:underline">{friend.username}</button>
+                                        <button onClick={() => setSelectedFriendId(friend.userId)} className="font-bold hover:underline">{friend.username}</button>
                                         {friend.isVerified && <VerifiedIcon className="w-5 h-5 text-blue-400" />}
                                     </div>
                                 </div>

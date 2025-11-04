@@ -113,7 +113,7 @@ const ManageCats: React.FC = () => {
                 {importMessage && <p className="text-sm mt-2 font-bold">{importMessage}</p>}
             </div>
 
-            <div className="card-themed p-4 mb-6 sticky top-24 z-10 bg-surface/95 backdrop-blur-sm">
+            <div className="card-themed p-4 mb-6 sticky top-24 z-10 bg-surface">
                 <h3 className="text-xl font-bold mb-4">{editingCat ? `Editing Cat #${editingCat.id}` : 'Add New Cat'}</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

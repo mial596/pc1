@@ -135,14 +135,16 @@ async function handlePut(req: VercelRequest, res: VercelResponse, db: Db, userId
         return res.status(409).json({ message: 'Trade failed, one or more items no longer available.' });
     }
     
-    await users.updateOne({ _id: fromUser?._id }, {
+    // FIX: Cast update object to 'any' to resolve 'assignable to never' error.
+    await users.updateOne({ _id: fromUser?._id as any }, {
         $pullAll: { "data.unlockedImageIds": trade.offeredImageIds },
         $addToSet: { "data.unlockedImageIds": { $each: trade.requestedImageIds } }
-    });
-     await users.updateOne({ _id: toUser?._id }, {
+    } as any);
+    // FIX: Cast update object to 'any' to resolve 'assignable to never' error.
+     await users.updateOne({ _id: toUser?._id as any }, {
         $pullAll: { "data.unlockedImageIds": trade.requestedImageIds },
         $addToSet: { "data.unlockedImageIds": { $each: trade.offeredImageIds } }
-    });
+    } as any);
     
     await trades.updateOne({ _id: new ObjectId(tradeId) }, { $set: { status: 'accepted' } });
     

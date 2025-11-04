@@ -16,7 +16,8 @@ async function handler(req: VercelRequest, res: VercelResponse) {
             if (action === 'addComment') {
                 if (!publicPhraseId || !text) return res.status(400).json({ message: "Missing parameters." });
                 const users = db.collection('users');
-                const user = await users.findOne({ _id: userId });
+                // FIX: Cast string userId to 'any' to match MongoDB driver's expected type for _id.
+                const user = await users.findOne({ _id: userId as any });
                 if (!user) return res.status(404).json({ message: "User not found." });
                 
                 const profilePictureUrl = await resolveProfilePictureUrl(db, user);
@@ -30,14 +31,16 @@ async function handler(req: VercelRequest, res: VercelResponse) {
                     text,
                     createdAt: new Date().toISOString(),
                 };
-                await db.collection('public_phrases').updateOne({ _id: new ObjectId(publicPhraseId) }, { $push: { comments: newComment } });
+                // FIX: Cast the pushed comment object to 'any' to resolve 'assignable to never' error.
+                await db.collection('public_phrases').updateOne({ _id: new ObjectId(publicPhraseId) }, { $push: { comments: newComment as any } });
                 return res.status(201).json(newComment);
             }
             
             if (action === 'report') {
                 if (!type || !contentId || !reason) return res.status(400).json({ message: "Missing parameters for report." });
                 const users = db.collection('users');
-                const reporter = await users.findOne({ _id: userId });
+                // FIX: Cast string userId to 'any' to match MongoDB driver's expected type for _id.
+                const reporter = await users.findOne({ _id: userId as any });
                 
                 let content;
                 let contentAuthorId;

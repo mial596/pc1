@@ -10,9 +10,18 @@ interface FallingItem {
   content: string; // url or emoji
 }
 
+interface Feedback {
+    id: number;
+    x: number;
+    y: number;
+    text: string;
+    color: string;
+}
+
 const GAME_DURATION = 30; // seconds
 const CATCHER_WIDTH = 100; // pixels
 const ITEM_SPAWN_RATE = 500; // ms
+const FALL_SPEED = 0.25; // pixels per ms
 
 const AtrapaPictos: React.FC<GameProps> = ({ unlockedImages, onGameEnd }) => {
   const [items, setItems] = useState<FallingItem[]>([]);
@@ -20,11 +29,20 @@ const AtrapaPictos: React.FC<GameProps> = ({ unlockedImages, onGameEnd }) => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [gameState, setGameState] = useState<'ready' | 'playing' | 'finished'>('ready');
+  const [feedback, setFeedback] = useState<Feedback[]>([]);
   
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
   const lastSpawnRef = useRef<number>(0);
+
+  const showFeedback = (text: string, x: number, y: number, color: string) => {
+    const newFeedback = { id: Date.now(), text, x, y, color };
+    setFeedback(prev => [...prev, newFeedback]);
+    setTimeout(() => {
+        setFeedback(prev => prev.filter(f => f.id !== newFeedback.id));
+    }, 1000);
+  };
 
   const gameLoop = useCallback((time: number) => {
     if (lastTimeRef.current === null) {
@@ -57,7 +75,7 @@ const AtrapaPictos: React.FC<GameProps> = ({ unlockedImages, onGameEnd }) => {
     const catcherPixelX = (catcherX / 100) * (gameAreaRef.current?.clientWidth || 0);
 
     // Move and check items
-    setItems(prevItems => prevItems.map(item => ({...item, y: item.y + (deltaTime * 0.2)}))
+    setItems(prevItems => prevItems.map(item => ({...item, y: item.y + (deltaTime * FALL_SPEED)}))
       .filter(item => {
         // Check for catch
         if (item.y > gameAreaHeight - 60 && item.y < gameAreaHeight - 20) {
@@ -66,9 +84,11 @@ const AtrapaPictos: React.FC<GameProps> = ({ unlockedImages, onGameEnd }) => {
                 if(item.type === 'cat') {
                     setScore(s => s + 10);
                     soundService.play('catMeow');
+                    showFeedback('+10', item.x, gameAreaHeight - 60, 'text-green-500');
                 } else {
                     setScore(s => Math.max(0, s - 20));
                     soundService.play('mouseSqueak');
+                    showFeedback('-20', item.x, gameAreaHeight - 60, 'text-red-500');
                 }
                 return false; // remove item
             }
@@ -135,20 +155,24 @@ const AtrapaPictos: React.FC<GameProps> = ({ unlockedImages, onGameEnd }) => {
         <div className="text-2xl">Puntuación: {score}</div>
         <div className="text-2xl">Tiempo: {timeLeft}s</div>
       </div>
-      <div ref={gameAreaRef} className="catcher-game-area w-full h-[600px] relative overflow-hidden rounded-md border-2 border-ink/20">
+      <div ref={gameAreaRef} className="catcher-game-area w-full h-[600px] relative overflow-hidden rounded-md border-2 border-ink/20 cursor-none">
         {items.map(item => (
           <div key={item.id} className="falling-item" style={{ left: `${item.x}%`, top: `${item.y}px` }}>
             {item.type === 'cat' 
-                ? <img src={item.content} alt="cat" className="w-12 h-12 object-cover rounded-md" /> 
-                : <span>{item.content}</span>
+                ? <img src={item.content} alt="cat" className="w-12 h-12 object-cover rounded-full border-2 border-paper" /> 
+                : <span className="text-3xl">{item.content}</span>
             }
           </div>
         ))}
+         {feedback.map(f => (
+            <div key={f.id} className={`absolute text-2xl font-black transition-all duration-1000 ease-out ${f.color}`} style={{ left: `${f.x}%`, top: `${f.y - 30}px`, opacity: 0, transform: `translate(-50%, -50%) scale(1.5)` }}>
+                {f.text}
+            </div>
+        ))}
         <div
-          className="absolute bottom-5 w-[100px] h-[50px] bg-secondary rounded-lg text-4xl flex items-center justify-center"
+          className="absolute bottom-5 w-[100px] h-[50px] bg-secondary rounded-t-full border-4 border-ink text-4xl flex items-center justify-center"
           style={{ left: `${catcherX}%`, transform: 'translateX(-50%)' }}
         >
-          🧺
         </div>
       </div>
     </div>

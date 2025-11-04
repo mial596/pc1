@@ -214,7 +214,7 @@ const App: React.FC = () => {
     ttsService.speak(text);
   };
   
-  const handleGameEnd = async (results: { coinsEarned: number; xpEarned: number }) => {
+  const handleGameEnd = useCallback(async (results: { coinsEarned: number; xpEarned: number }) => {
     if (!userProfile) return;
     
     showToast(`+${results.coinsEarned} monedas!`);
@@ -227,7 +227,7 @@ const App: React.FC = () => {
       console.error("Failed to save game results", err);
       showToast("Error saving game results.");
     }
-  };
+  }, [userProfile, getAccessTokenSilently]);
 
   const handleReportSubmit = async (reason: string) => {
     if (!reportModalData) return;

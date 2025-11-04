@@ -109,9 +109,9 @@ const MemoGatos: React.FC<GameProps> = ({ unlockedImages, onGameEnd }) => {
         <div className="grid gap-2 md:gap-4" style={{ gridTemplateColumns }}>
             {cards.map((card, index) => (
                 <div key={card.id} className="aspect-square perspective cursor-pointer" onClick={() => handleCardClick(index)}>
-                    <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${card.isFlipped || card.isMatched ? 'rotate-y-180' : ''}`}>
+                    <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${card.isFlipped || card.isMatched ? 'rotate-y-180' : ''} ${card.isMatched ? 'animate-popIn' : ''}`}>
                         {/* Card Back */}
-                        <div className="absolute w-full h-full backface-hidden bg-secondary rounded-lg flex items-center justify-center shadow-md border-2 border-ink/30 p-2">
+                        <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-secondary to-yellow-300 rounded-lg flex items-center justify-center shadow-md border-2 border-ink/30 p-2">
                             <CatSilhouetteIcon className="w-full h-full text-paper/70" />
                         </div>
                         {/* Card Front */}
