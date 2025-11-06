@@ -1,0 +1,60 @@
+import React from 'react';
+import { Phrase, CatImage } from '../types';
+import { DEFAULT_PIC_URL } from '../constants';
+
+interface PhraseCardProps {
+  phrase: Phrase;
+  image: CatImage | null;
+  onCardClick: () => void;
+  onSelectImageClick: () => void;
+  onSpeak: (text: string) => void;
+}
+
+const PhraseCard: React.FC<PhraseCardProps> = ({ phrase, image, onCardClick, onSelectImageClick, onSpeak }) => {
+  const handleSelectImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelectImageClick();
+  };
+
+  const handleSpeak = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSpeak(phrase.text);
+  };
+
+  return (
+    <div
+      onClick={onCardClick}
+      className="card-themed aspect-square flex flex-col justify-between p-2 cursor-pointer"
+    >
+      <div className="tape"></div>
+      <div className={`flex-grow flex items-center justify-center rounded-md overflow-hidden mb-2 border-2 border-ink/30 bg-surface-darker ${image?.isShiny ? 'shiny-effect' : ''}`}>
+        <img
+          src={image?.url || DEFAULT_PIC_URL}
+          alt={phrase.text}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="flex items-center justify-between gap-1">
+        <p className="font-bold text-center flex-grow truncate px-1 text-sm sm:text-base">{phrase.text}</p>
+        <div className="flex-shrink-0 flex gap-1">
+           <button
+            onClick={handleSpeak}
+            className="btn-themed !p-2 bg-accent"
+            aria-label={`Speak phrase: ${phrase.text}`}
+           >
+            <span className="text-lg">🔊</span>
+           </button>
+           <button
+            onClick={handleSelectImage}
+            className="btn-themed !p-2 bg-secondary"
+            aria-label={`Change image for ${phrase.text}`}
+           >
+            <span className="text-sm">🖼️</span>
+           </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PhraseCard;
