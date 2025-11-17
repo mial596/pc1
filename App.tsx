@@ -47,15 +47,15 @@ import { useLanguage } from './contexts/LanguageContext';
 type Page = 'home' | 'album' | 'shop' | 'games' | 'community' | 'admin';
 
 const pageVariants = {
-    initial: { opacity: 0, y: 20 },
-    in: { opacity: 1, y: 0 },
-    out: { opacity: 0, y: -20 },
+    initial: { opacity: 0, scale: 0.99 },
+    in: { opacity: 1, scale: 1 },
+    out: { opacity: 0, scale: 0.99 },
 };
 
 const pageTransition = {
     type: "tween",
     ease: "anticipate",
-    duration: 0.4
+    duration: 0.3
 };
 
 
@@ -452,7 +452,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`bg-background min-h-screen font-body text-ink page-${page}`}>
+    <div className={`bg-background min-h-screen font-body text-ink`}>
       <Header userProfile={userProfile} onOpenMissions={() => setMissionsModalOpen(true)} coinMultiplier={coinMultiplier}/>
       <main className="pt-28 pb-28">
          <AnimatePresence mode="wait">

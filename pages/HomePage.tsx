@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Phrase, CatImage, UserProfile, Folder } from '../types';
 import { DEFAULT_PIC_URL } from '../constants';
 import { SpeakerWaveIcon, PhotoIcon, EditIcon, ArchiveBoxIcon, ArrowUturnUpIcon, PlusIcon } from '../hooks/Icons';
@@ -55,6 +56,25 @@ interface HomePageProps {
   onOpenFolderManager: () => void;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+  },
+};
+
+
 const HomePage: React.FC<HomePageProps> = (props) => {
   const { userProfile, allImages, onPhraseClick, onSelectImageClick, onSpeak, onSetPhraseToEdit, onArchivePhrase, onOpenFolderManager } = props;
   const { t } = useLanguage();
@@ -100,9 +120,19 @@ const HomePage: React.FC<HomePageProps> = (props) => {
       </div>
 
       <section>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <motion.div
+          key={activeTab}
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {displayedPhrases.map((phrase, index) => (
-            <div key={phrase.id} style={{transform: `rotate(${((index % 5) - 2) * 1.5}deg)` }}>
+            <motion.div 
+              key={phrase.id} 
+              variants={itemVariants}
+              style={{transform: `rotate(${((index % 5) - 2) * 1.5}deg)` }}
+            >
               <PhraseCard
                 phrase={phrase}
                 image={getImageForPhrase(phrase)}
@@ -110,9 +140,9 @@ const HomePage: React.FC<HomePageProps> = (props) => {
                 onSelectImageClick={() => onSelectImageClick(phrase)}
                 onSpeak={onSpeak}
               />
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
         {displayedPhrases.length === 0 && (
              <div className="text-center py-20 col-span-full">
                 <p className="text-2xl font-bold text-ink/70 font-hand">{t('emptyFolder')}</p>

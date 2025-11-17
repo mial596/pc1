@@ -4,7 +4,7 @@ export const INITIAL_COINS = 500;
 export const ENVELOPE_COST = 100;
 export const IMAGES_PER_ENVELOPE = 3;
 
-export const LOGO_URL = "https://i.postimg.cc/N0GhZgVV/Gemini-Generated-Image-vrmc6jvrmc6jvrmc.png";
+export const LOGO_URL = "https://i.postimg.cc/qR08yvB1/pictocat-logo-v2.png";
 // A friendly cat face for when no image is selected
 export const DEFAULT_PIC_URL = "https://i.postimg.cc/RVKENgL2/default-cat.png";
 
