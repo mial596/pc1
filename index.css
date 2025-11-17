@@ -1,0 +1,414 @@
+/* index.css */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Luckiest+Guy&family=Kalam:wght@400;700&display=swap');
+
+:root {
+  /* Enhanced Scrapbook Theme */
+  --c-background: #f8f5ed; /* Creamy paper color */
+  --c-surface: #ffffff;
+  --c-surface-darker: #f3f0e6;
+  --c-ink: #4a3f35;
+  --c-ink-light: #a39b90;
+  --c-primary: #58a4b0;   /* Muted Teal */
+  --c-secondary: #f0a273; /* Soft Orange */
+  --c-accent: #e57373;    /* Coral Red */
+  --c-danger: #e57373;
+  --c-disabled: #e0dcd1;
+  --c-disabled-text: #b0a69a;
+  --c-text-light: #ffffff;
+
+  /* Typography */
+  --font-body: 'Nunito', sans-serif;
+  --font-display: 'Luckiest Guy', cursive;
+  --font-hand: 'Kalam', cursive;
+
+  /* Z-Indexes */
+  --z-header: 40;
+  --z-mobile-menu: 40;
+  --z-modal: 50;
+  --z-full-display: 60;
+  --z-toast: 70;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--c-background);
+  color: var(--c-ink);
+}
+
+.page-home {
+  background-image: 
+    url('https://www.transparenttextures.com/patterns/notebook-dark.png'),
+    url('https://i.imgur.com/s24q2oo.png'),
+    url('https://www.transparenttextures.com/patterns/lined-paper-2.png');
+  background-repeat: repeat, no-repeat, repeat;
+  background-position: top left, center center, top left;
+  background-attachment: fixed, fixed, fixed;
+  background-size: auto, 100% 100%, auto;
+}
+
+.page-album {
+  background-image: 
+    url('https://i.imgur.com/Qy2E2zW.png'), /* Paw prints */
+    url('https://i.imgur.com/s24q2oo.png'),
+    url('https://www.transparenttextures.com/patterns/lined-paper-2.png');
+  background-repeat: repeat, no-repeat, repeat;
+  background-position: top left, center center, top left;
+  background-attachment: fixed, fixed, fixed;
+  background-size: 300px, 100% 100%, auto;
+}
+
+.page-shop {
+   background-image: 
+    url('https://i.imgur.com/iR3G1g7.png'), /* coins */
+    url('https://i.imgur.com/s24q2oo.png'),
+    url('https://www.transparenttextures.com/patterns/lined-paper-2.png');
+  background-repeat: repeat, no-repeat, repeat;
+  background-position: top left, center center, top left;
+  background-attachment: fixed, fixed, fixed;
+  background-size: 250px, 100% 100%, auto;
+}
+
+.page-games {
+  background-image: 
+    url('https://www.transparenttextures.com/patterns/pixel-heart.png'),
+    url('https://i.imgur.com/s24q2oo.png'),
+    url('https://www.transparenttextures.com/patterns/lined-paper-2.png');
+  background-repeat: repeat, no-repeat, repeat;
+  background-position: top left, center center, top left;
+  background-attachment: fixed, fixed, fixed;
+  background-size: auto, 100% 100%, auto;
+  background-blend-mode: multiply;
+}
+
+.page-community, .page-admin {
+  background-image: 
+    url('https://www.transparenttextures.com/patterns/subtle-dots.png'),
+    url('https://i.imgur.com/s24q2oo.png'),
+    url('https://www.transparenttextures.com/patterns/lined-paper-2.png');
+  background-repeat: repeat, no-repeat, repeat;
+  background-position: top left, center center, top left;
+  background-attachment: fixed, fixed, fixed;
+  background-size: auto, 100% 100%, auto;
+}
+
+
+/* --- Font Utility --- */
+.font-cartoon { font-family: var(--font-display); letter-spacing: 1px; color: var(--c-ink); text-shadow: 2px 2px 0px rgba(255,255,255,0.5); }
+.font-hand { font-family: var(--font-hand); }
+
+/* --- Base Themed Components --- */
+.card-themed {
+  position: relative;
+  background-color: var(--c-surface);
+  border: 3px solid var(--c-ink);
+  border-radius: 12px;
+  box-shadow: 6px 6px 0 0 rgba(0,0,0,0.1);
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.card-themed:hover {
+  transform: translateY(-5px) scale(1.03) rotate(1deg);
+  box-shadow: 10px 10px 15px 0 rgba(0,0,0,0.15);
+}
+
+.tape {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%) rotate(2deg);
+  width: 100px;
+  height: 30px;
+  background-color: var(--c-secondary);
+  background-image: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
+  background-size: 25px 25px;
+  opacity: 0.6;
+  border-left: 2px dashed rgba(255,255,255,0.5);
+  border-right: 2px dashed rgba(255,255,255,0.5);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-themed {
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-display);
+  letter-spacing: 1px;
+  border-radius: 12px;
+  border: 3px solid var(--c-ink);
+  transition: all 0.1s ease-out;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 0 var(--c-ink);
+  text-shadow: 1px 1px 0px rgba(255,255,255,0.3);
+}
+.btn-themed:hover:not(:disabled) {
+  transform: translate(2px, 2px) scale(1.02);
+  box-shadow: 2px 2px 0 0 var(--c-ink);
+}
+.btn-themed:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 var(--c-ink);
+}
+.btn-themed:disabled {
+  background-color: var(--c-disabled) !important;
+  border-color: var(--c-disabled-text) !important;
+  color: var(--c-disabled-text) !important;
+  box-shadow: 4px 4px 0 0 var(--c-disabled-text) !important;
+  cursor: not-allowed;
+  text-shadow: none;
+}
+.btn-themed-primary { color: var(--c-text-light); background-color: var(--c-primary); }
+.btn-themed-secondary { color: var(--c-ink); background-color: var(--c-secondary); }
+.btn-themed-danger { color: var(--c-text-light); background-color: var(--c-danger); }
+
+
+.input-themed {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--c-surface);
+  border: 3px solid var(--c-ink);
+  border-radius: 0.75rem;
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--c-ink);
+  transition: all 0.2s;
+  box-shadow: inset 3px 3px 0px rgba(0,0,0,0.06);
+}
+.input-themed:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--c-primary), inset 3px 3px 0px rgba(0,0,0,0.06);
+  border-color: var(--c-primary);
+}
+
+/* --- Modals --- */
+.modal-themed-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(61, 53, 46, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: var(--z-modal);
+}
+.modal-themed-content {
+  background-color: var(--c-surface);
+  border-radius: 1.5rem;
+  border: 4px solid var(--c-ink);
+  box-shadow: 10px 10px 0 0 var(--c-ink-light);
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform-origin: center center;
+}
+
+/* --- Misc & Effects --- */
+.text-stroke { color: var(--c-text-light); text-shadow: 3px 3px 0 var(--c-ink), -3px -3px 0 var(--c-ink), 3px -3px 0 var(--c-ink), -3px 3px 0 var(--c-ink), 3px 3px 8px rgba(0,0,0,0.5); }
+
+.rarity-common { color: var(--c-ink); }
+.rarity-rare { color: var(--c-primary); }
+.rarity-epic { color: #9b59b6; }
+
+.shiny-effect { position: relative; overflow: hidden; }
+.shiny-effect::before {
+    content: "";
+    position: absolute;
+    top: -10%; left: -10%;
+    width: 120%; height: 120%;
+    background-image: conic-gradient(from 180deg at 50% 50%, #ffc700, #ffdd55, #ffffff, #ffdd55, #ffc700, #ffc700, #ffc700);
+    opacity: 0.4;
+    filter: blur(5px);
+    animation: shiny-spin 4s linear infinite;
+}
+.shiny-effect::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -150%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient( to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0) 100% );
+    transform: rotate(25deg);
+    animation: shiny-sweep 2.5s ease-in-out infinite;
+}
+
+.special-ability-glow {
+  box-shadow: 0 0 20px 5px gold, inset 0 0 15px 2px gold;
+}
+.special-ability-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 2rem;
+    z-index: 10;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+}
+
+
+/* --- Envelope Modal Card Flip --- */
+.swipe-card-container { perspective: 1200px; }
+.swipe-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); transform-style: preserve-3d; }
+.swipe-card-container.revealed .swipe-card-inner { transform: rotateY(180deg) scale(1.05); }
+.swipe-card-front, .swipe-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 0.75rem; overflow: hidden; }
+.swipe-card-back { transform: rotateY(180deg); }
+
+
+/* Notebook styles */
+.tab-solid {
+    padding: 0.75rem 1.25rem;
+    font-family: var(--font-display);
+    border: 3px solid var(--c-ink);
+    border-bottom: none;
+    background-color: var(--c-surface-darker);
+    border-radius: 12px 12px 0 0;
+    margin-bottom: -3px;
+    transform: translateY(3px);
+    transition: all 0.2s ease-in-out;
+}
+.tab-solid-active {
+    background-color: var(--c-background);
+    color: var(--c-primary);
+    transform: translateY(0);
+    border-bottom: 3px solid var(--c-background);
+}
+
+/* Missions Modal */
+.mission-card-daily {
+    background-color: var(--c-surface);
+    border: 2px solid var(--c-ink-light);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Cat Pass View */
+.cat-pass-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.cat-pass-header {
+    background-color: var(--c-surface);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    border: 2px solid var(--c-ink);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.cat-pass-track {
+    display: flex;
+    overflow-x: auto;
+    padding: 1rem;
+    gap: 0.5rem;
+    background-color: var(--c-surface);
+    border-radius: 0.75rem;
+    border: 2px solid var(--c-ink);
+}
+.cat-pass-level {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    position: relative;
+    padding-top: 1.5rem;
+}
+.level-marker {
+    position: absolute;
+    top: 0;
+    width: 2rem;
+    height: 2rem;
+    background-color: var(--c-surface-darker);
+    border: 2px solid var(--c-ink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    color: var(--c-ink);
+    z-index: 2;
+}
+.reward-item {
+    width: 80px;
+    height: 80px;
+    border: 3px solid var(--c-ink-light);
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.2s;
+}
+.reward-item.premium {
+    background: linear-gradient(145deg, #fceabb, #f8b500);
+    border-color: #e6a800;
+}
+.reward-item.free {
+    background-color: var(--c-surface-darker);
+}
+.reward-item.unlocked {
+    border-color: var(--c-primary);
+}
+.reward-item.claimed {
+    opacity: 0.5;
+    filter: grayscale(80%);
+}
+.reward-item.locked {
+    background: #ccc;
+    filter: grayscale(100%);
+    opacity: 0.7;
+}
+.premium-lock {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: rgba(0,0,0,0.5);
+    color: white;
+    border-radius: 50%;
+    padding: 2px;
+}
+.claim-button {
+    position: absolute;
+    bottom: -10px;
+    background-color: var(--c-primary);
+    color: white;
+    font-family: var(--font-display);
+    padding: 0.1rem 0.8rem;
+    border-radius: 20px;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    cursor: pointer;
+    z-index: 3;
+}
+.reward-icon {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.reward-label {
+    font-family: var(--font-hand);
+    font-weight: bold;
+    font-size: 0.8rem;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 20px;
+  opacity: 0;
+  animation: confetti-fall 5s linear infinite;
+}
+
+/* Animations */
+@keyframes shiny-sweep { 0% { left: -150%; } 100% { left: 150%; } }
+@keyframes shiny-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes confetti-fall {
+  0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}

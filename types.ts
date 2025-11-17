@@ -1,0 +1,290 @@
+// types.ts
+
+import React from "react";
+
+export interface CatImage {
+  id: number;
+  url: string;
+  theme: string;
+  rarity: 'common' | 'rare' | 'epic';
+  isShiny?: boolean;
+  specialAbility?: 'lucky' | 'multiplier' | 'mission';
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+}
+
+export interface Phrase {
+  id: string;
+  text: string;
+  selectedImageId: number | null;
+  isCustom: boolean;
+  visibility: 'public' | 'friends' | 'private';
+  isArchived: boolean;
+  folderId?: string | null;
+}
+
+export interface PlayerStats {
+  level: number;
+  xp: number;
+  xpToNextLevel: number;
+}
+
+export type EnvelopeTypeId = 'bronze' | 'silver' | 'gold' | string;
+
+export interface Envelope {
+  id: EnvelopeTypeId;
+  name: string;
+  baseCost: number;
+  costIncreasePerLevel: number;
+  imageCount: number;
+  color: string;
+  description: string;
+  xp: number;
+  isFeatured?: boolean;
+  catThemePool: string[];
+}
+
+export type UpgradeId = 'goldenPaw' | 'betterBait' | 'extraTime' | string;
+
+export interface GameUpgrade {
+    id: UpgradeId;
+    name: string;
+    description: string;
+    cost: number;
+    levelRequired: number;
+    icon: 'coin' | 'mouse' | 'time';
+}
+
+export interface TradeOffer {
+  _id: string; // from MongoDB
+  fromUserId: string;
+  fromUsername: string;
+  fromUserVerified: boolean;
+  fromUserProfilePictureUrl?: string;
+  toUserId: string;
+  toUsername: string;
+  toUserVerified: boolean;
+  toUserProfilePictureUrl?: string;
+  offeredImages: CatImage[];
+  requestedImages: CatImage[];
+  status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
+  createdAt: string; // ISO string
+}
+
+// --- Friendship & Missions ---
+export interface Mission {
+    missionId: string;
+    progress: number;
+    goal: number;
+    isCompleted: boolean;
+}
+
+export interface Friendship {
+    _id: string; // MongoDB ObjectId as a string
+    userId: string;
+    level: number;
+    xp: number;
+    activeMission: Mission | null;
+}
+
+// --- New Progression System ---
+export interface CatPassData {
+    level: number;
+    paws: number; // XP for the pass
+    pawsToNextLevel: number;
+    isPremium: boolean;
+    claimedLevels: { free: number[]; premium: number[] };
+    seasonId: number;
+}
+
+export interface DailyMission {
+    id: string; // e.g., 'play_3_games'
+    description: string;
+    goal: number;
+    progress: number;
+    rewardPaws: number;
+    isCompleted: boolean;
+}
+
+export interface UserData {
+    coins: number;
+    fishTokens: number; // New premium currency
+    phrases: Phrase[];
+    folders: Folder[];
+    unlockedImageIds: number[];
+    playerStats: PlayerStats;
+    purchasedUpgrades: UpgradeId[];
+    bio: string;
+    profilePictureId: number | null;
+    friendships: Friendship[];
+    friendRequestsSent: string[]; // array of user IDs
+    friendRequestsReceived: string[]; // array of user IDs
+    tradeNotifications: number;
+    catPass: CatPassData;
+    dailyMissions: {
+        lastReset: string; // ISO date
+        missions: DailyMission[];
+    };
+    friends?: string[]; // Old structure, for migration purpose
+}
+
+export interface UserProfile {
+  id: string;
+  username: string;
+  role: 'admin' | 'mod' | 'user';
+  isVerified: boolean;
+  profilePictureUrl?: string;
+  data: UserData;
+}
+
+
+// --- Game Center Types ---
+export interface GameProps {
+  unlockedImages: CatImage[];
+  onGameEnd: (results: { score: number; coinsEarned: number; xpEarned: number }) => void;
+}
+
+export interface Game {
+  id: string;
+  name: string;
+  category: 'Asociación y memoria' | 'Creatividad y expresión' | 'Sonidos y reconocimiento' | 'Aprendizaje y lógica' | 'Mini-juegos más dinámicos' | 'Juegos Relajantes';
+  description: string;
+  component: React.FC<GameProps>;
+  minImagesRequired?: number;
+  icon: React.ReactNode;
+}
+
+
+// --- Admin Panel Types ---
+export interface AdminUserView {
+    id: string;
+    username: string;
+    email?: string;
+    role: 'admin' | 'mod' | 'user';
+    isVerified: boolean;
+    profilePictureUrl?: string;
+}
+
+export interface Comment {
+    _id: string;
+    publicPhraseId: string;
+    userId: string;
+    username: string;
+    role: 'admin' | 'mod' | 'user';
+    profilePictureUrl?: string;
+    text: string;
+    createdAt: string;
+}
+
+export interface Report {
+    _id: string;
+    reporterUserId: string;
+    reporterUsername: string;
+    type: 'phrase' | 'comment';
+    contentId: string; // publicPhraseId or commentId
+    contentText: string; // snapshot of the content
+    contentAuthorId: string;
+    contentAuthorUsername: string;
+    reason: string;
+    status: 'pending' | 'resolved';
+    createdAt: string;
+}
+
+export interface PublicPhrase {
+    publicPhraseId: string;
+    userId: string;
+    username: string;
+    role: 'admin' | 'mod' | 'user';
+    text: string;
+    imageUrl: string;
+    imageTheme: string;
+    comments: Comment[];
+    commentCount: number;
+}
+
+// --- Community/Public Profile Types ---
+
+export interface SearchableUser {
+    username: string;
+    isVerified: boolean;
+    profilePictureUrl?: string;
+}
+
+export interface PublicProfilePhrase {
+    publicPhraseId: string;
+    text: string;
+    imageUrl: string;
+    imageTheme: string;
+    likeCount: number;
+    isLikedByMe: boolean;
+    userId: string;
+    // Optional fields for when phrase is part of a feed
+    username?: string;
+    role?: 'admin' | 'mod' | 'user';
+    isUserVerified?: boolean;
+    profilePictureUrl?: string;
+    comments: Comment[];
+    commentCount: number;
+}
+
+export interface PublicProfileData {
+    userId: string;
+    username: string;
+    role: 'admin' | 'mod' | 'user';
+    isVerified: boolean;
+    bio: string;
+    profilePictureUrl?: string;
+    phrases: PublicProfilePhrase[];
+    unlockedImages: CatImage[];
+}
+
+export interface Friend {
+    userId: string;
+    username: string;
+    isVerified: boolean;
+    role: 'admin' | 'mod' | 'user';
+    profilePictureUrl?: string;
+    friendship: Friendship | null; // Detailed friendship data
+}
+
+export interface FriendRequest {
+    userId: string;
+    username: string;
+    profilePictureUrl?: string;
+}
+
+export interface FriendData {
+    friends: Friend[];
+    requests: FriendRequest[];
+}
+
+export interface Transaction {
+    _id: string;
+    userId: string;
+    date: string; // ISO String
+    description: string;
+    amount: number; // can be positive or negative
+    currency: 'coins' | 'fishTokens';
+}
+
+export interface FullDisplayData {
+  phrase: Phrase;
+  image: CatImage | null;
+}
+
+// --- New Shop & Pass Types ---
+export interface ShopFeaturedItem {
+    catId: number;
+    cost: number;
+    currency: 'fishTokens';
+    expiresAt: string; // ISO string for timer
+}
+
+export interface PassReward {
+    level: number;
+    free?: { type: 'coins' | 'envelope' | 'cat'; value: string | number; };
+    premium?: { type: 'coins' | 'fishTokens' | 'envelope' | 'cat'; value: string | number; };
+}

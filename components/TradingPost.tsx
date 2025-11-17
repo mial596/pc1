@@ -1,0 +1,300 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import * as apiService from '../services/apiService';
+import { UserProfile, TradeOffer, CatImage, Friend, PublicProfileData } from '../types';
+import { SpinnerIcon, TradeIcon, VerifiedIcon, ArrowLeftIcon, CloseIcon, CatSilhouetteIcon } from '../hooks/Icons';
+
+interface TradingPostProps {
+    currentUserProfile: UserProfile;
+    preselectedFriendName?: string | null;
+    onBack: () => void;
+    onProfileUpdate: () => void;
+}
+
+const RARITY_CLASSES: Record<string, string> = {
+    common: 'border-slate-400',
+    rare: 'border-blue-500',
+    epic: 'border-purple-600',
+};
+
+const TradeItem: React.FC<{ image: CatImage, onClick?: () => void, isSelected?: boolean }> = ({ image, onClick, isSelected }) => (
+    <div 
+        onClick={onClick} 
+        className={`aspect-square rounded-lg overflow-hidden border-4 transition-all duration-200 cursor-pointer relative ${RARITY_CLASSES[image.rarity]} ${isSelected ? 'ring-4 ring-offset-2 ring-primary scale-105 shadow-lg' : 'hover:scale-105'} ${image.isShiny ? 'shiny-effect' : ''}`}
+    >
+        <img src={image.url} className="w-full h-full object-cover" alt={image.theme} />
+    </div>
+);
+
+const TradeOfferCard: React.FC<{
+    trade: TradeOffer;
+    currentUserId: string;
+    onAccept: (id: string) => void;
+    onReject: (id: string) => void;
+    onCancel: (id: string) => void;
+}> = ({ trade, currentUserId, onAccept, onReject, onCancel }) => {
+    const isIncoming = trade.toUserId === currentUserId;
+    const partnerUsername = isIncoming ? trade.fromUsername : trade.toUsername;
+    const partnerAvatar = isIncoming ? trade.fromUserProfilePictureUrl : trade.toUserProfilePictureUrl;
+
+    return (
+        <div className="trade-offer-card bg-surface border-2 border-ink/20 rounded-lg p-4 mb-4">
+            <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-surface-darker border-2 border-primary flex items-center justify-center">
+                        {partnerAvatar ? (
+                            <img src={partnerAvatar} alt={partnerUsername} className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                            <CatSilhouetteIcon className="w-5 h-5 text-ink/70" />
+                        )}
+                    </div>
+                    <p className="font-bold text-lg">
+                        {isIncoming ? `Oferta de @${partnerUsername}` : `Oferta para @${partnerUsername}`}
+                    </p>
+                </div>
+                <span className="text-xs text-ink/60">{new Date(trade.createdAt).toLocaleDateString()}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <h4 className="font-semibold text-sm text-green-400 mb-2">{isIncoming ? 'Recibes:' : 'Ofreces:'}</h4>
+                    <div className="trade-item-grid bg-surface-darker p-2 rounded-md">
+                        {trade.offeredImages.map(img => <TradeItem key={img.id} image={img} />)}
+                    </div>
+                </div>
+                 <div>
+                    <h4 className="font-semibold text-sm text-red-400 mb-2">{isIncoming ? 'Ofreces:' : 'Pides:'}</h4>
+                    <div className="trade-item-grid bg-surface-darker p-2 rounded-md">
+                        {trade.requestedImages.map(img => <TradeItem key={img.id} image={img} />)}
+                    </div>
+                </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+                {isIncoming ? (
+                    <>
+                        <button onClick={() => onAccept(trade._id)} className="btn-themed btn-themed-primary !py-1 !px-3">Aceptar</button>
+                        <button onClick={() => onReject(trade._id)} className="btn-themed bg-gray-600 text-white !py-1 !px-3">Rechazar</button>
+                    </>
+                ) : (
+                    <button onClick={() => onCancel(trade._id)} className="btn-themed btn-themed-danger !py-1 !px-3">Cancelar</button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
+const TradingPost: React.FC<TradingPostProps> = ({ currentUserProfile, preselectedFriendName, onBack, onProfileUpdate }) => {
+    const [activeTab, setActiveTab] = useState<'offers' | 'new'>('offers');
+    const [trades, setTrades] = useState<TradeOffer[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [friends, setFriends] = useState<Friend[]>([]);
+
+    const [tradePartner, setTradePartner] = useState<PublicProfileData | null>(null);
+    const [myOffer, setMyOffer] = useState<number[]>([]);
+    const [theirRequest, setTheirRequest] = useState<number[]>([]);
+    const [myImages, setMyImages] = useState<CatImage[]>([]);
+    
+    const { getAccessTokenSilently } = useAuth0();
+
+    const fetchData = useCallback(async (selectFriend: string | null = null) => {
+        setIsLoading(true);
+        try {
+            const token = await getAccessTokenSilently();
+            const [tradeData, friendData, myProfileData] = await Promise.all([
+                apiService.getTrades(token),
+                apiService.getFriends(token),
+                apiService.getPublicProfile(token, currentUserProfile.username)
+            ]);
+            setTrades(tradeData);
+            setFriends(friendData.friends);
+            setMyImages(myProfileData.unlockedImages);
+
+            const friendToSelect = selectFriend || preselectedFriendName;
+            if (friendToSelect) {
+                const friend = friendData.friends.find(f => f.username === friendToSelect);
+                if (friend) {
+                    const profileData = await apiService.getPublicProfile(token, friend.username);
+                    setTradePartner(profileData);
+                }
+                setActiveTab('new');
+            }
+        } catch (error) {
+            console.error("Failed to fetch data for trading post", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [getAccessTokenSilently, preselectedFriendName, currentUserProfile.username]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const handleSelectFriend = async (friendId: string) => {
+        if (!friendId) {
+            setTradePartner(null);
+            return;
+        }
+        const friend = friends.find(f => f.userId === friendId);
+        if(!friend) return;
+        
+        const token = await getAccessTokenSilently();
+        const profileData = await apiService.getPublicProfile(token, friend.username);
+        setTradePartner(profileData);
+        setMyOffer([]);
+        setTheirRequest([]);
+    }
+    
+    const handleTradeResponse = async (tradeId: string, action: 'accept' | 'reject' | 'cancel') => {
+        try {
+            const token = await getAccessTokenSilently();
+            if (action === 'cancel') {
+                await apiService.cancelTrade(token, tradeId);
+            } else {
+                await apiService.respondToTrade(token, tradeId, action);
+            }
+            onProfileUpdate(); // Global refresh
+            fetchData(); // Local refresh
+        } catch (err) {
+            console.error(`Failed to ${action} trade`, err);
+        }
+    }
+    
+    const handleSendTrade = async () => {
+        if (!tradePartner || myOffer.length === 0 || theirRequest.length === 0) return;
+        try {
+            const token = await getAccessTokenSilently();
+            await apiService.createTrade(token, {
+                toUserId: tradePartner.userId,
+                offeredImageIds: myOffer,
+                requestedImageIds: theirRequest
+            });
+            setActiveTab('offers');
+            setTradePartner(null);
+            setMyOffer([]);
+            setTheirRequest([]);
+            fetchData();
+            onProfileUpdate();
+        } catch (err) {
+            console.error("Failed to create trade", err);
+        }
+    }
+    
+    const toggleItem = (list: number[], setter: React.Dispatch<React.SetStateAction<number[]>>, id: number) => {
+        setter(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    }
+
+    const { myTradableImages, partnerTradableImages } = useMemo(() => {
+        if (!tradePartner) return { myTradableImages: [], partnerTradableImages: [] };
+        const myUnlockedIds = new Set(myImages.map(img => img.id));
+        const partnerUnlockedIds = new Set(tradePartner.unlockedImages.map(img => img.id));
+        
+        const myTradables = myImages.filter(img => !partnerUnlockedIds.has(img.id));
+        const partnerTradables = tradePartner.unlockedImages.filter(img => !myUnlockedIds.has(img.id));
+        
+        return { myTradableImages: myTradables, partnerTradableImages: partnerTradables };
+    }, [myImages, tradePartner]);
+    
+    const offeredItems = useMemo(() => myImages.filter(img => myOffer.includes(img.id)), [myOffer, myImages]);
+    const requestedItems = useMemo(() => tradePartner?.unlockedImages.filter(img => theirRequest.includes(img.id)) || [], [theirRequest, tradePartner]);
+
+    const renderOffers = () => (
+        <div>
+            {trades.length === 0 && <p className="text-ink/70 text-center py-8">No tienes ofertas de intercambio activas.</p>}
+            {trades.map(trade => (
+                <TradeOfferCard
+                    key={trade._id}
+                    trade={trade}
+                    currentUserId={currentUserProfile.id}
+                    onAccept={(id) => handleTradeResponse(id, 'accept')}
+                    onReject={(id) => handleTradeResponse(id, 'reject')}
+                    onCancel={(id) => handleTradeResponse(id, 'cancel')}
+                />
+            ))}
+        </div>
+    );
+    
+    const renderNewTrade = () => (
+        <div className="relative">
+             <div className="mb-4">
+                 <select onChange={(e) => handleSelectFriend(e.target.value)} value={tradePartner?.userId || ''} className="input-themed w-full">
+                    <option value="">-- Selecciona un amigo para intercambiar --</option>
+                    {friends.map(friend => <option key={friend.userId} value={friend.userId}>{friend.username}</option>)}
+                </select>
+            </div>
+            {tradePartner ? (
+                <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 className="font-bold text-lg mb-2 text-primary">Tus Gatos Intercambiables</h4>
+                            <div className="trade-collection-grid">
+                               {myTradableImages.length > 0 ? myTradableImages.map(img => <TradeItem key={img.id} image={img} onClick={() => toggleItem(myOffer, setMyOffer, img.id)} isSelected={myOffer.includes(img.id)} />) : <p className="text-ink/60 p-4">No tienes gatos que le falten a este amigo.</p>}
+                            </div>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-lg mb-2 text-secondary">Sus Gatos Intercambiables</h4>
+                             <div className="trade-collection-grid">
+                               {partnerTradableImages.length > 0 ? partnerTradableImages.map(img => <TradeItem key={img.id} image={img} onClick={() => toggleItem(theirRequest, setTheirRequest, img.id)} isSelected={theirRequest.includes(img.id)} />) : <p className="text-ink/60 p-4">No le faltan gatos que puedas ofrecerle.</p>}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-paper p-4 border-t-4 border-ink mt-6 rounded-lg shadow-lg">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                            {/* You Give */}
+                            <div>
+                                <h5 className="font-bold text-sm text-red-500">Tú Ofreces</h5>
+                                <div className="trade-summary-box mt-1">
+                                    <div className="trade-summary-grid">
+                                        {offeredItems.map(img => <img key={img.id} src={img.url} className="summary-thumb" alt=""/>)}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Action Button */}
+                            <div className="text-center">
+                                <button onClick={handleSendTrade} disabled={myOffer.length === 0 || theirRequest.length === 0} className="btn-themed btn-themed-primary flex items-center justify-center gap-2 mx-auto">
+                                    <TradeIcon className="w-5 h-5" /> Enviar Oferta
+                                </button>
+                            </div>
+
+                            {/* You Get */}
+                             <div>
+                                <h5 className="font-bold text-sm text-green-500">Tú Pides</h5>
+                                <div className="trade-summary-box mt-1">
+                                    <div className="trade-summary-grid">
+                                        {requestedItems.map(img => <img key={img.id} src={img.url} className="summary-thumb" alt=""/>)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className="text-center py-20 text-ink/70">
+                    <p>Selecciona un amigo para empezar a intercambiar.</p>
+                </div>
+            )}
+        </div>
+    );
+
+
+    return (
+        <div>
+            {preselectedFriendName && activeTab === 'new' && (
+                 <button onClick={onBack} className="flex items-center gap-2 font-bold mb-4 text-ink/70 hover:text-ink">
+                    <ArrowLeftIcon className="w-5 h-5"/>
+                    Volver al perfil de @{preselectedFriendName}
+                </button>
+            )}
+            <div className="flex border-b-2 border-ink/20 mb-4">
+                 <button onClick={() => { setActiveTab('offers'); setTradePartner(null); }} className={`tab-solid ${activeTab === 'offers' ? 'tab-solid-active' : 'text-ink/70'}`}>Mis Ofertas</button>
+                 <button onClick={() => setActiveTab('new')} className={`tab-solid ${activeTab === 'new' ? 'tab-solid-active' : 'text-ink/70'}`}>Nuevo Intercambio</button>
+            </div>
+             {isLoading ? <div className="flex justify-center p-8"><SpinnerIcon className="w-8 h-8 animate-spin mx-auto mt-8" /></div> : (
+                activeTab === 'offers' ? renderOffers() : renderNewTrade()
+             )}
+        </div>
+    );
+};
+
+export default TradingPost;
